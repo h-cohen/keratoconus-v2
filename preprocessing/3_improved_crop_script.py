@@ -15,7 +15,7 @@ import glob
 from pathlib import Path
 
 
-def create_output_directory(output_dir="cropped_output_v2"):
+def create_output_directory(output_dir="data/cropped_output_v2"):
     """Create output directory if it doesn't exist."""
     Path(output_dir).mkdir(exist_ok=True)
     return output_dir
@@ -239,7 +239,7 @@ def analyze_crop_quality(image_path):
 
 
 def batch_crop_improved(input_pattern="data/image_scans/*.JPG", 
-                        output_dir="cropped_output_v2"):
+                        output_dir="data/cropped_output_v2"):
     """
     Process all images with improved cropping.
     """
@@ -268,7 +268,7 @@ def batch_crop_improved(input_pattern="data/image_scans/*.JPG",
     print(f"Processed: {processed}/{len(image_files)} images")
 
 
-def compare_old_vs_new(old_dir="cropped_output", new_dir="cropped_output_v2"):
+def compare_old_vs_new(old_dir="cropped_output", new_dir="data/cropped_output_v2"):
     """
     Compare quality metrics between old and new cropping.
     """

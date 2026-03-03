@@ -333,7 +333,7 @@ All hyperparameters are controlled via **YAML config files** in `configs/`. The 
 # Data
 data_csv: '../data/multimodal_dataset.csv'
 features_txt: '../data/multimodal_dataset_features.txt'
-image_dir: '../cropped_output_v2'
+image_dir: '../data/cropped_output_v2'
 kmax_filter: 55              # Remove easy cases with KMax > 55D
 
 # Architecture
