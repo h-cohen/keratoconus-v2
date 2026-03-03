@@ -1,0 +1,65 @@
+# V8 Config: Optimized + Adjusted Mixup
+# Built on V7 (with fixed data loader and hyperparameters)
+
+# Data
+data_csv: '../data/multimodal_dataset.csv'
+features_txt: '../data/multimodal_dataset_features.txt'
+image_dir: '../cropped_output_v2'
+output_dir: 'results'
+image_size: 224
+
+# Optimization (NEW)
+num_workers: 4
+pin_memory: false
+
+# Architecture (same as V4)
+backbone: 'resnet18'
+freeze_mode: 'partial'
+adapter_mode: 'per_branch'
+use_attention: true
+use_cross_modal_fusion: true
+n_select_features: 50
+
+# Training
+training_mode: 'hybrid_finetuned'
+batch_size: 32
+num_epochs: 20
+finetune_epochs: 40       # INCREASED from 15 to 40
+learning_rate: 0.00005
+backbone_lr: 0.00002      # INCREASED from 1e-5 to 2e-5
+weight_decay: 0.005
+dropout: 0.5
+patience: 10
+finetune_patience: 10     # INCREASED from 5 to 10
+warmup_epochs: 0
+
+# Augmentation (ENHANCED)
+use_augmentation: true
+use_mixup: true  
+mixup_alpha: 0.1          # DECREASED from 0.3 to 0.1
+
+# Imbalance
+imbalance_loss_type: 'focal'
+focal_gamma: 2.0
+use_weighted_sampler: true
+
+# XGBoost (same as V4)
+xgb_n_estimators: 200
+xgb_max_depth: 4
+xgb_learning_rate: 0.02
+xgb_colsample_bytree: 0.8
+xgb_subsample: 0.8
+
+# CV
+n_cv_folds: 5
+random_state: 42
+
+# Ensemble
+use_ensemble: true
+ensemble_method: 'average'
+
+# Wandb
+wandb_enabled: true
+wandb_project: 'kerv2'
+wandb_entity: 'hcohen'
+wandb_run_name: 'v8_optimized_mixup'

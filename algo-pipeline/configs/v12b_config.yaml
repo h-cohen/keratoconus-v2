@@ -1,0 +1,69 @@
+# V12b Config: Train Adapters Only (Frozen Backbone)
+# Built on V11 (best so far: AUC 0.6630 ± 0.0621, +0.0239 over baseline)
+# Key insight: V11's CNN fine-tuning was useless (Train AUC ~0.50) because
+# backbone_lr=1e-6 was too low. Instead of raising backbone LR (overfitting risk),
+# we freeze the backbone entirely and only train adapters + attention + bottleneck
+# at a much higher LR. XGBoost then handles the final classification.
+
+# Data
+data_csv: '../data/multimodal_dataset.csv'
+features_txt: '../data/multimodal_dataset_features.txt'
+image_dir: '../cropped_output_v2'
+output_dir: 'results'
+image_size: 224
+
+# Architecture
+backbone: 'resnet18'
+freeze_mode: 'all'              # Backbone FULLY frozen
+shared_backbone: true           # Single shared backbone
+adapter_mode: 'per_branch'      # Per-branch adapters (THESE are trained)
+use_attention: true             # Attention layers (THESE are trained)
+use_cross_modal_fusion: true
+bottleneck_dim: 128
+n_select_features: 50
+
+# Training — adapters-only fine-tuning
+training_mode: 'hybrid_finetuned'
+batch_size: 32
+num_epochs: 20
+finetune_epochs: 20             # Fewer epochs needed (adapters converge fast)
+learning_rate: 0.001            # HIGH LR for adapters + bottleneck + classifier
+backbone_lr: 0.0005            # Higher LR for adapters/attention (backbone is frozen)
+weight_decay: 0.01
+dropout: 0.4
+patience: 10
+finetune_patience: 7
+warmup_epochs: 2
+gradient_accumulation_steps: 2
+scheduler: 'cosine'
+
+# Augmentation
+use_augmentation: true
+use_mixup: true
+mixup_alpha: 0.3
+
+# Imbalance
+imbalance_loss_type: 'focal'
+focal_gamma: 2.0
+use_weighted_sampler: true
+
+# XGBoost
+xgb_n_estimators: 200
+xgb_max_depth: 4
+xgb_learning_rate: 0.02
+xgb_colsample_bytree: 0.8
+xgb_subsample: 0.8
+
+# CV
+n_cv_folds: 5
+random_state: 42
+
+# Ensemble
+use_ensemble: true
+ensemble_method: 'average'
+
+# Wandb
+wandb_enabled: true
+wandb_project: 'kerv2'
+wandb_entity: 'hcohen'
+wandb_run_name: 'v12b_adapters_only'

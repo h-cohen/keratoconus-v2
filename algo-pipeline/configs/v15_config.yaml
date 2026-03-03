@@ -1,0 +1,75 @@
+# V15 Config: Frozen CNN + XGBoost (No Fine-tuning)
+# Strategy: Skip expensive CNN fine-tuning entirely. Use frozen ImageNet 
+# features combined with numeric features through a well-tuned XGBoost.
+# This avoids the catastrophic overfitting we see with fine-tuning on 997 samples.
+
+# Data
+data_csv: '../data/multimodal_dataset.csv'
+features_txt: '../data/multimodal_dataset_features.txt'
+image_dir: '../cropped_output_v2'
+output_dir: 'results'
+image_size: 224
+
+# Data Filtering
+kmax_filter: 55
+
+# Architecture
+backbone: 'resnet18'
+freeze_mode: 'all'                  # Fully frozen — no fine-tuning
+shared_backbone: true
+adapter_mode: 'none'                # No adapters needed (frozen)
+use_attention: false                # No attention needed (frozen)
+use_cross_modal_fusion: false       # Simple concat instead
+bottleneck_dim: 128
+n_select_features: 30              # Tighter feature selection
+
+# Training — Frozen CNN + XGBoost (fast path)
+training_mode: 'hybrid_cnn_xgboost'
+batch_size: 32
+num_epochs: 50
+finetune_epochs: 50
+learning_rate: 0.001
+backbone_lr: 0.0003
+weight_decay: 0.03
+dropout: 0.5
+patience: 30
+finetune_patience: 30
+warmup_epochs: 3
+gradient_accumulation_steps: 2
+gradient_clip: 0.5
+scheduler: 'cosine'
+
+# Training Improvements
+label_smoothing: 0.0
+use_swa: false
+
+# Augmentation
+use_augmentation: false             # No augmentation needed (frozen features)
+use_mixup: false
+mixup_alpha: 0.0
+
+# Imbalance
+imbalance_loss_type: 'focal'
+focal_gamma: 2.0
+use_weighted_sampler: true
+
+# XGBoost — Large Ensemble, Regularized
+xgb_n_estimators: 500
+xgb_max_depth: 3
+xgb_learning_rate: 0.01
+xgb_colsample_bytree: 0.6
+xgb_subsample: 0.7
+
+# CV
+n_cv_folds: 5
+random_state: 42
+
+# Ensemble
+use_ensemble: true
+ensemble_method: 'average'
+
+# Wandb
+wandb_enabled: false
+wandb_project: 'kerv2'
+wandb_entity: 'hcohen'
+wandb_run_name: 'v15_frozen_xgboost'

@@ -1,0 +1,61 @@
+# V7 Config: Augmentation + Ensemble
+# Built on V4 baseline (best AUC: 0.6701)
+
+# Data
+data_csv: '../data/multimodal_dataset.csv'
+features_txt: '../data/multimodal_dataset_features.txt'
+image_dir: '../cropped_output_v2'
+output_dir: 'results'
+image_size: 224
+
+# Architecture (same as V4)
+backbone: 'resnet18'
+freeze_mode: 'partial'
+adapter_mode: 'per_branch'
+use_attention: true
+use_cross_modal_fusion: true
+n_select_features: 50
+
+# Training
+training_mode: 'hybrid_finetuned'
+batch_size: 32
+num_epochs: 20
+finetune_epochs: 15
+learning_rate: 0.00005
+backbone_lr: 0.00001  # V4 setting (worked best)
+weight_decay: 0.005
+dropout: 0.5
+patience: 10
+finetune_patience: 5
+warmup_epochs: 0
+
+# Augmentation (ENHANCED)
+use_augmentation: true
+use_mixup: true  # ENABLED - key change
+mixup_alpha: 0.3
+
+# Imbalance
+imbalance_loss_type: 'focal'
+focal_gamma: 2.0
+use_weighted_sampler: true
+
+# XGBoost (same as V4)
+xgb_n_estimators: 200
+xgb_max_depth: 4
+xgb_learning_rate: 0.02
+xgb_colsample_bytree: 0.8
+xgb_subsample: 0.8
+
+# CV
+n_cv_folds: 5
+random_state: 42
+
+# Ensemble (NEW)
+use_ensemble: true
+ensemble_method: 'average'
+
+# Wandb
+wandb_enabled: true
+wandb_project: 'kerv2'
+wandb_entity: 'hcohen'
+wandb_run_name: 'v7_mixup_ensemble'

@@ -1,0 +1,75 @@
+# V13 Config: Difficult Cases (KMax ≤ 55D)
+# Built on V12b architecture (shared backbone, per-branch adapters, frozen backbone)
+# Key change: Filter out obvious high-K keratoconus (KMax > 55D) to force the model
+# to learn subtler corneal features from more difficult cases.
+
+# Data
+data_csv: '../data/multimodal_dataset.csv'
+features_txt: '../data/multimodal_dataset_features.txt'
+image_dir: '../cropped_output_v2'
+output_dir: 'results'
+image_size: 224
+
+# Data Filtering
+kmax_filter: 55                 # Remove samples with KMax > 55D (easy cases)
+
+# Architecture (same as V12b)
+backbone: 'resnet18'
+freeze_mode: 'partial'              # Backbone FULLY frozen
+shared_backbone: true           # Single shared backbone
+adapter_mode: 'per_branch'      # Per-branch adapters (THESE are trained)
+use_attention: true             # Attention layers (THESE are trained)
+use_cross_modal_fusion: true
+bottleneck_dim: 128
+n_select_features: 50
+
+# Training — Phase 1 (cosine LR) + Phase 2 (SWA)
+training_mode: 'hybrid_finetuned'
+batch_size: 32
+num_epochs: 50                  # Total epochs (Phase 1: 1–30, Phase 2/SWA: 31–50)
+finetune_epochs: 50             # Total fine-tune epochs
+learning_rate: 0.001
+backbone_lr: 0.0003             # Slightly lower for stability (was 0.0005)
+weight_decay: 0.01
+dropout: 0.4
+patience: 30                    # Phase 1 only — early stop disabled during SWA
+finetune_patience: 30           # Phase 1 only
+warmup_epochs: 3
+gradient_accumulation_steps: 2
+gradient_clip: 0.5              # Tighter clipping (was 1.0)
+scheduler: 'cosine'
+
+# Training Improvements
+label_smoothing: 0.05           # Prevent overconfidence
+use_swa: true                   # SWA Phase 2: epochs 31–50 (20 weight snapshots)
+
+# Augmentation
+use_augmentation: true
+use_mixup: true
+mixup_alpha: 0.3
+
+# Imbalance
+imbalance_loss_type: 'focal'
+focal_gamma: 2.0
+use_weighted_sampler: true
+
+# XGBoost
+xgb_n_estimators: 200
+xgb_max_depth: 4
+xgb_learning_rate: 0.02
+xgb_colsample_bytree: 0.8
+xgb_subsample: 0.8
+
+# CV
+n_cv_folds: 5
+random_state: 41
+
+# Ensemble
+use_ensemble: true
+ensemble_method: 'average'
+
+# Wandb
+wandb_enabled: false
+wandb_project: 'kerv2'
+wandb_entity: 'hcohen'
+wandb_run_name: 'v13_difficult_cases'

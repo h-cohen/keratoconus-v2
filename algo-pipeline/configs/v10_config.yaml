@@ -1,0 +1,72 @@
+# V10 Config: "Balanced Multimodal Fine-tuning"
+# Built on V9 (EfficientNet-B0 + Full Unfreeze + Plateau Scheduler)
+# Changes: 
+# 1. Numeric features included in fine-tuning
+# 2. CNN Bottleneck layer (32 dim)
+# 3. Mixup enabled
+
+# Data
+data_csv: '../data/multimodal_dataset.csv'
+features_txt: '../data/multimodal_dataset_features.txt'
+image_dir: '../cropped_output_v2'
+output_dir: 'results'
+image_size: 224
+
+# Optimization
+num_workers: 4
+pin_memory: false
+
+# Architecture
+backbone: 'efficientnet_b0'
+freeze_mode: 'none'          # FULL UNFREEZE
+adapter_mode: 'per_branch'
+use_attention: true
+use_cross_modal_fusion: true
+n_select_features: 50
+
+# Training
+training_mode: 'hybrid_finetuned'
+batch_size: 32
+num_epochs: 20
+finetune_epochs: 50
+learning_rate: 0.0005      # Head LR: Reduced slightly for stability with mixup
+backbone_lr: 0.0001        # Backbone LR
+weight_decay: 0.01         # Increased weight decay
+dropout: 0.5
+patience: 15
+finetune_patience: 15
+warmup_epochs: 2
+
+# Scheduler
+scheduler: 'plateau'
+
+# Augmentation 
+use_augmentation: true
+use_mixup: true            # ENABLED for regularization
+mixup_alpha: 0.2
+
+# Imbalance
+imbalance_loss_type: 'focal'
+focal_gamma: 2.0
+use_weighted_sampler: true
+
+# XGBoost (Post-processing)
+xgb_n_estimators: 200
+xgb_max_depth: 4
+xgb_learning_rate: 0.02
+xgb_colsample_bytree: 0.8
+xgb_subsample: 0.8
+
+# CV
+n_cv_folds: 5
+random_state: 42
+
+# Ensemble
+use_ensemble: true
+ensemble_method: 'average'
+
+# Wandb
+wandb_enabled: true
+wandb_project: 'kerv2'
+wandb_entity: 'hcohen'
+wandb_run_name: 'v10_balanced_multimodal'

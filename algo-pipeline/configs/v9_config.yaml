@@ -1,0 +1,68 @@
+# V9 Config: "Unlock & Amplify"
+# Built on V8 (EfficientNet-B0 + Full Unfreeze + Plateau Scheduler)
+
+# Data
+data_csv: '../data/multimodal_dataset.csv'
+features_txt: '../data/multimodal_dataset_features.txt'
+image_dir: '../cropped_output_v2'
+output_dir: 'results'
+image_size: 224
+
+# Optimization
+num_workers: 4
+pin_memory: false
+
+# Architecture (NEW)
+backbone: 'efficientnet_b0'  # Switched from resnet18
+freeze_mode: 'none'          # FULL UNFREEZE
+adapter_mode: 'per_branch'
+use_attention: true
+use_cross_modal_fusion: true
+n_select_features: 50
+
+# Training
+training_mode: 'hybrid_finetuned'
+batch_size: 32
+num_epochs: 20
+finetune_epochs: 50       # INCREASED to 50
+learning_rate: 0.001      # Head LR: 1e-3 (High)
+backbone_lr: 0.0001       # Backbone LR: 1e-4 (Discriminative)
+weight_decay: 0.005
+dropout: 0.5
+patience: 15
+finetune_patience: 15     # INCREASED patience
+warmup_epochs: 2
+
+# Scheduler (NEW)
+scheduler: 'plateau'      # Use ReduceLROnPlateau
+
+# Augmentation 
+use_augmentation: true
+use_mixup: false          # DISABLED initially to ensure driving Train AUC up
+mixup_alpha: 0.2
+
+# Imbalance
+imbalance_loss_type: 'focal'
+focal_gamma: 2.0
+use_weighted_sampler: true
+
+# XGBoost (same as V4/V8)
+xgb_n_estimators: 200
+xgb_max_depth: 4
+xgb_learning_rate: 0.02
+xgb_colsample_bytree: 0.8
+xgb_subsample: 0.8
+
+# CV
+n_cv_folds: 5
+random_state: 42
+
+# Ensemble
+use_ensemble: true
+ensemble_method: 'average'
+
+# Wandb
+wandb_enabled: true
+wandb_project: 'kerv2'
+wandb_entity: 'hcohen'
+wandb_run_name: 'v9_effnet_unfrozen'

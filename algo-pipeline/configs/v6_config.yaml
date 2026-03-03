@@ -1,0 +1,55 @@
+# V6 Config: Frozen Pretrained Features (No Fine-tuning)
+# Hypothesis: Fine-tuning is unstable with limited data. Use frozen ResNet18 features directly.
+
+# Data
+data_csv: '../data/multimodal_dataset.csv'
+features_txt: '../data/multimodal_dataset_features.txt'
+image_dir: '../cropped_output_v2'
+output_dir: 'results'
+image_size: 224
+
+# Architecture
+backbone: 'resnet18'
+freeze_mode: 'all'  # Fully frozen backbone
+adapter_mode: 'per_branch'
+use_attention: true
+use_cross_modal_fusion: true
+n_select_features: 50  # Reverted to V4 value
+
+# Training
+training_mode: 'hybrid_cnn_xgboost'  # NO fine-tuning, just frozen features + XGBoost
+batch_size: 32
+num_epochs: 20  # Not used for hybrid_cnn_xgboost
+finetune_epochs: 15  # Not used
+learning_rate: 0.00005
+backbone_lr: 0.00001
+weight_decay: 0.005
+dropout: 0.5
+patience: 10
+finetune_patience: 5
+warmup_epochs: 0
+use_mixup: false
+mixup_alpha: 0.2
+use_augmentation: false  # No augmentation for frozen features
+
+# Imbalance
+imbalance_loss_type: 'focal'
+focal_gamma: 2.0
+use_weighted_sampler: true
+
+# XGBoost - Tuned for more regularization
+xgb_n_estimators: 300
+xgb_max_depth: 5
+xgb_learning_rate: 0.02
+xgb_colsample_bytree: 0.7
+xgb_subsample: 0.7
+
+# CV
+n_cv_folds: 5
+random_state: 42
+
+# Wandb
+wandb_enabled: true
+wandb_project: 'kerv2'
+wandb_entity: 'hcohen'
+wandb_run_name: 'v6_frozen_resnet18'
