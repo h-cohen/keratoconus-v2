@@ -46,6 +46,8 @@ from sklearn.metrics import (roc_curve, roc_auc_score, precision_recall_curve,
                              average_precision_score, confusion_matrix,
                              f1_score, precision_score, recall_score)
 from sklearn.calibration import calibration_curve
+from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
 from scipy import stats
 
 sys.path.append(str(Path(__file__).resolve().parent))
@@ -226,13 +228,28 @@ def plot_data_flow(config, out_dir):
     df2 = df1.dropna(subset=num_feats)
     n2 = len(df2)
 
-    kmax_filter = config.get('kmax_filter', None)
-    if kmax_filter is not None:
-        df3 = df2[df2['Km F (D):'] <= kmax_filter]
-    else:
-        df3 = df2
+    kmax_min_filter = config.get('kmax_min_filter', None)
+    kmax_max_filter = config.get('kmax_max_filter', config.get('kmax_filter', None))
+    exclusive_kmax_min = config.get('exclusive_kmax_min', True)
+    exclusive_kmax_max = config.get('exclusive_kmax_max', False)
+    
+    kmax_col = 'Km F (D):'
+    df3 = df2.copy()
+    if kmax_col in df3.columns:
+        if kmax_min_filter is not None:
+            if exclusive_kmax_min:
+                df3 = df3[df3[kmax_col] > kmax_min_filter]
+            else:
+                df3 = df3[df3[kmax_col] >= kmax_min_filter]
+                
+        if kmax_max_filter is not None:
+            if exclusive_kmax_max:
+                df3 = df3[df3[kmax_col] < kmax_max_filter]
+            else:
+                df3 = df3[df3[kmax_col] <= kmax_max_filter]
+
     n3 = len(df3)
-    n_pos_final = int((df3['y'] == 1).sum())
+    n_pos_final = int((df3['y'] == 1).sum()) if len(df3) > 0 and 'y' in df3.columns else 0
     n_neg_final = n3 - n_pos_final
 
     stages = [
@@ -240,8 +257,11 @@ def plot_data_flow(config, out_dir):
         (f'has_all_images\n{n1} samples\n(−{total - n1} removed)', '#bbdefb'),
         (f'dropna(numeric)\n{n2} samples\n(−{n1 - n2} removed)', '#90caf9'),
     ]
-    if kmax_filter is not None:
-        stages.append((f'KMax ≤ {kmax_filter}D\n{n3} samples\n(−{n2 - n3} removed)', '#64b5f6'))
+    if kmax_min_filter is not None or kmax_max_filter is not None:
+        filter_str = []
+        if kmax_min_filter is not None: filter_str.append(f">{'' if exclusive_kmax_min else '='}{kmax_min_filter}")
+        if kmax_max_filter is not None: filter_str.append(f"<{'' if exclusive_kmax_max else '='}{kmax_max_filter}")
+        stages.append((f'KMax {", ".join(filter_str)}\n{n3} samples\n(−{n2 - n3} removed)', '#64b5f6'))
     stages.append((f'Final Dataset\n{n3} samples\n({n_pos_final} CXL / {n_neg_final} Normal)', '#42a5f5'))
 
     fig, ax = plt.subplots(figsize=(4, 1.2 * len(stages) + 0.5))
@@ -338,36 +358,79 @@ def plot_pipeline_overview(config, out_dir):
 #  3. ROC-AUC Curves
 # ═══════════════════════════════════════════════════════════════════════════
 
-def plot_roc_curves(oof_df, out_dir):
+def plot_roc_curves(oof_df, df, out_dir, is_global=True):
     """Per-fold + mean ROC curves with CI bands."""
     fig, ax = plt.subplots(figsize=(4, 3.5))
-    mean_fpr = np.linspace(0, 1, 200)
-    tprs = []
+    
+    if is_global:
+        mean_fpr = np.linspace(0, 1, 200)
+        tprs = []
 
-    folds = sorted(oof_df['fold'].unique())
-    for fold in folds:
-        sub = oof_df[oof_df['fold'] == fold]
-        fpr, tpr, _ = roc_curve(sub['y_true'], sub['y_pred'])
-        interp_tpr = np.interp(mean_fpr, fpr, tpr)
-        interp_tpr[0] = 0.0
-        tprs.append(interp_tpr)
+        folds = sorted(oof_df['fold'].unique())
+        for fold in folds:
+            sub = oof_df[oof_df['fold'] == fold]
+            if len(np.unique(sub['y_true'])) < 2:
+                continue
+            fpr, tpr, _ = roc_curve(sub['y_true'], sub['y_pred'])
+            interp_tpr = np.interp(mean_fpr, fpr, tpr)
+            interp_tpr[0] = 0.0
+            tprs.append(interp_tpr)
 
-    mean_tpr = np.mean(tprs, axis=0)
-    mean_tpr[-1] = 1.0
-    std_tpr = np.std(tprs, axis=0)
-    fold_aucs = [roc_auc_score(oof_df[oof_df['fold'] == f]['y_true'],
-                               oof_df[oof_df['fold'] == f]['y_pred']) for f in folds]
-    mean_auc = np.mean(fold_aucs)  # Mean of per-fold AUCs (matches training report)
-    std_auc = np.std(fold_aucs)
+        mean_tpr = np.mean(tprs, axis=0) if tprs else np.zeros_like(mean_fpr)
+        if tprs:
+            mean_tpr[-1] = 1.0
+        std_tpr = np.std(tprs, axis=0) if tprs else np.zeros_like(mean_fpr)
+        
+        valid_folds_df = oof_df.groupby('fold').filter(lambda x: len(np.unique(x['y_true'])) > 1)
+        if valid_folds_df.empty:
+            valid_folds_df = oof_df # fallback
+            print("  ⚠ No valid folds for mean ROC calc, plotting mean overall")
+        
+        fold_aucs = [roc_auc_score(valid_folds_df[valid_folds_df['fold'] == f]['y_true'],
+                                   valid_folds_df[valid_folds_df['fold'] == f]['y_pred']) 
+                     for f in valid_folds_df['fold'].unique()]
+        mean_auc = np.mean(fold_aucs) if fold_aucs else roc_auc_score(oof_df['y_true'], oof_df['y_pred'])
+        std_auc = np.std(fold_aucs) if fold_aucs else 0.0
 
-    ax.plot(mean_fpr, mean_tpr, color=COLOR_MM, lw=2,
-            label=f'Mean (AUC={mean_auc:.3f} ± {std_auc:.3f})')
-    ax.fill_between(mean_fpr, np.clip(mean_tpr - std_tpr, 0, 1),
-                    np.clip(mean_tpr + std_tpr, 0, 1), color=COLOR_MM, alpha=0.15)
+        ax.plot(mean_fpr, mean_tpr, color=COLOR_MM, lw=2,
+                label=f'Mean (AUC={mean_auc:.3f} ± {std_auc:.3f})')
+        ax.fill_between(mean_fpr, np.clip(mean_tpr - std_tpr, 0, 1),
+                        np.clip(mean_tpr + std_tpr, 0, 1), color=COLOR_MM, alpha=0.15)
+        
+        # Also plot Pooled
+        pooled_fpr, pooled_tpr, _ = roc_curve(oof_df['y_true'], oof_df['y_pred'])
+        pooled_auc = roc_auc_score(oof_df['y_true'], oof_df['y_pred'])
+        ax.plot(pooled_fpr, pooled_tpr, color=COLOR_BL, lw=1.5, ls='--',
+                label=f'Pooled (AUC={pooled_auc:.3f})')
+        
+        # Baseline KMax ROC
+        kmax_candidates = ['KMax Sagittal Front (D)', 'Km F (D):']
+        kmax_col = next((c for c in kmax_candidates if c in df.columns), None)
+        if kmax_col:
+            # Map kmax to oof_df to ensure alignment
+            kmax_map = df.groupby('ideye')[kmax_col].first()
+            oof_valid = oof_df.copy()
+            oof_valid['kmax'] = oof_valid['ideye'].map(kmax_map)
+            oof_valid = oof_valid.dropna(subset=['kmax'])
+            if not oof_valid.empty:
+                bl_fpr, bl_tpr, _ = roc_curve(oof_valid['y_true'], oof_valid['kmax'])
+                bl_auc = roc_auc_score(oof_valid['y_true'], oof_valid['kmax'])
+                if bl_auc < 0.5: # If negatively correlated, flip it
+                    bl_auc = 1 - bl_auc
+                    bl_fpr, bl_tpr, _ = roc_curve(oof_valid['y_true'], -oof_valid['kmax'])
+                ax.plot(bl_fpr, bl_tpr, color='#888888', lw=1.5, ls=':',
+                        label=f'Baseline KMax (AUC={bl_auc:.3f})')
+    else:
+        # Subgroups: only plot pooled since folds might have very small sample sizes
+        pooled_fpr, pooled_tpr, _ = roc_curve(oof_df['y_true'], oof_df['y_pred'])
+        pooled_auc = roc_auc_score(oof_df['y_true'], oof_df['y_pred'])
+        ax.plot(pooled_fpr, pooled_tpr, color=COLOR_MM, lw=2,
+                label=f'Pooled (AUC={pooled_auc:.3f})')
+
     ax.plot([0, 1], [0, 1], 'k:', lw=0.8, alpha=0.5)
     ax.set_xlabel('False Positive Rate')
     ax.set_ylabel('True Positive Rate')
-    ax.set_title('ROC Curve (5-Fold CV)')
+    ax.set_title('ROC Curve (5-Fold CV)' if is_global else 'Pooled ROC Curve')
     ax.legend(fontsize=5, loc='lower right')
     ax.set_xlim([-0.02, 1.02])
     ax.set_ylim([-0.02, 1.02])
@@ -555,11 +618,11 @@ def plot_confusion_mat(oof_df, threshold, out_dir):
     """Confusion matrix at given threshold, plus a high-precision threshold variant."""
     y_true = oof_df['y_true'].values
     y_bin = (oof_df['y_pred'].values >= threshold).astype(int)
-    cm = confusion_matrix(y_true, y_bin)
+    cm = confusion_matrix(y_true, y_bin, labels=[0, 1])
     
     threshold_high = 0.55 # Explicit high-precision cutoff
     y_bin_high = (oof_df['y_pred'].values >= threshold_high).astype(int)
-    cm_high = confusion_matrix(y_true, y_bin_high)
+    cm_high = confusion_matrix(y_true, y_bin_high, labels=[0, 1])
 
     fig, axes = plt.subplots(1, 2, figsize=(6, 2.5))
     labels = ['Normal', 'CXL']
@@ -685,28 +748,34 @@ def plot_feature_violins(df, out_dir):
 #  10. Precision-Recall Curve
 # ═══════════════════════════════════════════════════════════════════════════
 
-def plot_pr_curve(oof_df, out_dir):
+def plot_pr_curve(oof_df, out_dir, is_global=True):
     """Precision-Recall curve with per-fold and mean."""
     fig, ax = plt.subplots(figsize=(4, 3.5))
-    folds = sorted(oof_df['fold'].unique())
-
-    for fold in folds:
-        sub = oof_df[oof_df['fold'] == fold]
-        prec, rec, _ = precision_recall_curve(sub['y_true'], sub['y_pred'])
-        ap = average_precision_score(sub['y_true'], sub['y_pred'])
-        ax.plot(rec, prec, color=FOLD_CMAP(fold - 1), alpha=0.3, lw=0.8,
-                label=f'Fold {fold} (AP={ap:.3f})')
-
+    
     prec_all, rec_all, _ = precision_recall_curve(oof_df['y_true'], oof_df['y_pred'])
     ap_all = average_precision_score(oof_df['y_true'], oof_df['y_pred'])
-    ax.plot(rec_all, prec_all, color=COLOR_MM, lw=2, label=f'Overall (AP={ap_all:.3f})')
+
+    if is_global:
+        folds = sorted(oof_df['fold'].unique())
+        for fold in folds:
+            sub = oof_df[oof_df['fold'] == fold]
+            if len(np.unique(sub['y_true'])) < 2:
+                continue
+            prec, rec, _ = precision_recall_curve(sub['y_true'], sub['y_pred'])
+            ap = average_precision_score(sub['y_true'], sub['y_pred'])
+            ax.plot(rec, prec, color=FOLD_CMAP(fold - 1), alpha=0.3, lw=0.8,
+                    label=f'Fold {fold} (AP={ap:.3f})')
+
+        ax.plot(rec_all, prec_all, color=COLOR_MM, lw=2, label=f'Pooled (AP={ap_all:.3f})')
+    else:
+        ax.plot(rec_all, prec_all, color=COLOR_MM, lw=2, label=f'Pooled (AP={ap_all:.3f})')
 
     prevalence = oof_df['y_true'].mean()
     ax.axhline(prevalence, color='grey', ls=':', lw=0.8, alpha=0.5, label=f'Prevalence ({prevalence:.2f})')
 
     ax.set_xlabel('Recall')
     ax.set_ylabel('Precision')
-    ax.set_title('Precision-Recall Curve')
+    ax.set_title('Precision-Recall Curve' if is_global else 'Pooled PR Curve')
     ax.legend(fontsize=5, loc='upper right')
     ax.set_xlim([-0.02, 1.02])
     ax.set_ylim([0, 1.05])
@@ -717,37 +786,61 @@ def plot_pr_curve(oof_df, out_dir):
 #  11. Summary Statistics Table
 # ═══════════════════════════════════════════════════════════════════════════
 
-def generate_summary_table(oof_df, best_threshold, out_dir):
+def generate_summary_table(oof_df, best_threshold, out_dir, is_global=True):
     """Generate LaTeX and CSV summary table."""
-    folds = sorted(oof_df['fold'].unique())
     rows = []
-    for fold in folds:
-        sub = oof_df[oof_df['fold'] == fold]
-        y_t, y_p = sub['y_true'].values, sub['y_pred'].values
-        y_bin = (y_p >= best_threshold).astype(int)
-        auc = roc_auc_score(y_t, y_p)
-        f1 = f1_score(y_t, y_bin, zero_division=0)
-        sens = recall_score(y_t, y_bin, zero_division=0)
-        tn, fp, fn, tp = confusion_matrix(y_t, y_bin).ravel()
-        spec = tn / (tn + fp) if (tn + fp) > 0 else 0
-        rows.append({'Fold': fold, 'AUC': auc, 'F1': f1,
-                     'Sensitivity': sens, 'Specificity': spec,
-                     'TP': tp, 'FP': fp, 'FN': fn, 'TN': tn})
+    
+    if is_global:
+        folds = sorted(oof_df['fold'].unique())
+        for fold in folds:
+            sub = oof_df[oof_df['fold'] == fold]
+            y_t, y_p = sub['y_true'].values, sub['y_pred'].values
+            if len(np.unique(y_t)) < 2:
+                continue
+            y_bin = (y_p >= best_threshold).astype(int)
+            auc = roc_auc_score(y_t, y_p)
+            f1 = f1_score(y_t, y_bin, zero_division=0)
+            sens = recall_score(y_t, y_bin, zero_division=0)
+            tn, fp, fn, tp = confusion_matrix(y_t, y_bin, labels=[0, 1]).ravel()
+            spec = tn / (tn + fp) if (tn + fp) > 0 else 0
+            rows.append({'Fold': fold, 'AUC': auc, 'F1': f1,
+                         'Sensitivity': sens, 'Specificity': spec,
+                         'TP': tp, 'FP': fp, 'FN': fn, 'TN': tn})
 
-    tbl = pd.DataFrame(rows)
+        tbl = pd.DataFrame(rows)
 
-    # Add mean ± std row
-    mean_row = {'Fold': 'Mean±SD'}
-    for col in ['AUC', 'F1', 'Sensitivity', 'Specificity']:
-        mean_row[col] = f"{tbl[col].mean():.3f}±{tbl[col].std():.3f}"
-    for col in ['TP', 'FP', 'FN', 'TN']:
-        mean_row[col] = ''
-    tbl = pd.concat([tbl, pd.DataFrame([mean_row])], ignore_index=True)
+        # Add mean ± std row
+        mean_row = {'Fold': 'Mean±SD'}
+        for col in ['AUC', 'F1', 'Sensitivity', 'Specificity']:
+            if not tbl.empty:
+                mean_row[col] = f"{tbl[col].mean():.3f}±{tbl[col].std():.3f}"
+            else:
+                mean_row[col] = "N/A"
+        for col in ['TP', 'FP', 'FN', 'TN']:
+            mean_row[col] = ''
+        tbl = pd.concat([tbl, pd.DataFrame([mean_row])], ignore_index=True)
+    else:
+        tbl = pd.DataFrame(columns=['Fold', 'AUC', 'F1', 'Sensitivity', 'Specificity', 'TP', 'FP', 'FN', 'TN'])
+
+    # Always add pooled row
+    y_t, y_p = oof_df['y_true'].values, oof_df['y_pred'].values
+    y_bin = (y_p >= best_threshold).astype(int)
+    tn, fp, fn, tp = confusion_matrix(y_t, y_bin, labels=[0, 1]).ravel()
+    pooled_row = {
+        'Fold': 'Pooled',
+        'AUC': roc_auc_score(y_t, y_p) if len(np.unique(y_t)) > 1 else np.nan,
+        'F1': f1_score(y_t, y_bin, zero_division=0),
+        'Sensitivity': recall_score(y_t, y_bin, zero_division=0),
+        'Specificity': tn / (tn + fp) if (tn + fp) > 0 else 0,
+        'TP': tp, 'FP': fp, 'FN': fn, 'TN': tn
+    }
+    
+    tbl = pd.concat([tbl, pd.DataFrame([pooled_row])], ignore_index=True)
 
     tbl.to_csv(out_dir / 'summary_table.csv', index=False)
     # LaTeX
     with open(out_dir / 'summary_table.tex', 'w') as f:
-        f.write(tbl.to_latex(index=False, float_format='%.3f'))
+        f.write(tbl.to_latex(index=False))
     print(f"  ✓ summary_table (.csv + .tex)")
 
 
@@ -901,9 +994,9 @@ def plot_subgroup_analysis(oof_df, df_full, out_dir):
     oof = oof.dropna(subset=['kmax'])
 
     # Define severity subgroups
-    bins = [0, 46, 49, 52, 56]
-    labels_short = ['≤46D', '46–49D', '49–52D', '52–55D']
-    labels_long  = ['≤46D\n(Subclinical)', '46–49D\n(Mild)', '49–52D\n(Moderate)', '52–55D\n(Advanced)']
+    bins = [0, 46.5, 48, 53, 55]
+    labels_short = ['<46.5D', '46.5–48D', '48–53D','53-55D']
+    labels_long  = ['<46.5\n(Stage0)','46.5-48D\n(Stage 1)', '48–53D\n(Stage 2)', '53–55D\n(Stage 3)']
     oof['severity'] = pd.cut(oof['kmax'], bins=bins, labels=labels_short, include_lowest=True)
 
     subgroups = []
@@ -935,7 +1028,7 @@ def plot_subgroup_analysis(oof_df, df_full, out_dir):
 
     for i, (_, row) in enumerate(valid.iterrows()):
         ax.text(i, row['AUC'] + 0.015,
-                f"AUC = {row['AUC']:.3f}\nn = {row['N']} ({row['N_CXL']} CXL)",
+                f"AUC = {row['AUC']:.3f}",
                 ha='center', va='bottom', fontsize=6, fontweight='bold')
 
     ax.set_xticks(list(x))
@@ -1183,6 +1276,292 @@ def plot_exemplar_cases(oof_df, df_full, config, out_dir):
 #  Main
 # ═══════════════════════════════════════════════════════════════════════════
 
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  New Figures
+# ═══════════════════════════════════════════════════════════════════════════
+
+def plot_tsne_embeddings(oof_df, df_full, config, results_dir, numeric_features, out_dir):
+    """t-SNE visualization of the multimodal embeddings before XGBoost."""
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    n_folds = config.get('n_cv_folds', 5)
+    ideye_to_label = df_full.groupby('ideye')['y'].first()
+    unique_ideyes = ideye_to_label.index.values
+    ideye_labels = ideye_to_label.values
+    
+    # We will just compute the embeddings for the best fold to visualize the space
+    valid_folds = [f for f in range(1, n_folds+1) if f in oof_df['fold'].values]
+    if not valid_folds: return
+    
+    fold_aucs = [roc_auc_score(oof_df[oof_df['fold']==f]['y_true'], oof_df[oof_df['fold']==f]['y_pred']) for f in valid_folds]
+    if not fold_aucs: return
+    best_fold = valid_folds[np.argmax(fold_aucs)]
+    
+    cv = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=config['random_state'])
+    image_dir = Path(config['image_dir'])
+    
+    X, Y = None, None
+    for fold, (train_idx, test_idx) in enumerate(cv.split(unique_ideyes, ideye_labels), 1):
+        if fold != best_fold: continue
+        models = load_fold_models(fold, Path(config['_results_dir']), device, config)
+        if models is None: return
+        test_ideyes = set(unique_ideyes[test_idx])
+        test_df = df_full[df_full['ideye'].isin(test_ideyes)].copy()
+        
+        # Safe transform loading
+        test_transform = get_image_transform(training=False, size=config.get('image_size', 224))
+        ds = KeratoconusDataset(test_df, image_dir, numeric_features,
+                                test_transform, IMAGE_TYPES)
+        loader = DataLoader(ds, batch_size=config.get('batch_size', 16),
+                            collate_fn=collate_keratoconus, num_workers=0)
+        embs, nums, ys = [], [], []
+        with torch.no_grad():
+            from tqdm import tqdm
+            for imgs, nm, lb in tqdm(loader, desc="Extracting features for t-SNE", leave=False):
+                imgs = {k: v.to(device) for k, v in imgs.items()}
+                embs.append(models['cnn'](imgs).cpu().numpy())
+                nums.append(nm.numpy())
+                ys.append(lb.numpy())
+        if not embs: return
+        
+        emb = np.vstack(embs)
+        num = np.vstack(nums)
+        emb_proc = models['scaler_cnn'].transform(emb) if models['scaler_cnn'] else emb
+        if models['selector']: emb_proc = models['selector'].transform(emb_proc)
+        num_proc = models['scaler_num'].transform(num) if models['scaler_num'] else num
+        X = np.hstack([emb_proc, num_proc])
+        Y = np.concatenate(ys)
+        
+    if X is None or len(X) < 5: return
+    
+    pca = PCA(n_components=min(50, X.shape[1], X.shape[0]))
+    X_pca = pca.fit_transform(X)
+    tsne = TSNE(n_components=2, perplexity=min(30, len(X)-1), random_state=42)
+    X_tsne = tsne.fit_transform(X_pca)
+    
+    fig, ax = plt.subplots(figsize=(4, 4))
+    scatter = ax.scatter(X_tsne[:, 0], X_tsne[:, 1], c=Y, cmap=plt.cm.coolwarm, alpha=0.7, edgecolors='k', linewidth=0.5)
+    
+    legend_elements = [mpatches.Patch(facecolor=plt.cm.coolwarm(0.0), edgecolor='k', label='Normal'),
+                       mpatches.Patch(facecolor=plt.cm.coolwarm(1.0), edgecolor='k', label='CXL')]
+    ax.legend(handles=legend_elements, loc='best', fontsize=7)
+    
+    ax.set_title('t-SNE Latent Space Visualization', fontsize=9, fontweight='bold')
+    ax.axis('off')
+    save_fig(fig, out_dir, 'fig17_tsne_embeddings')
+
+def plot_error_analysis(oof_df, df_full, out_dir):
+    """Misclassification profiling (Clinical metrics of TP, TN, FP, FN)."""
+    kmax_candidates = ['KMax Sagittal Front (D)', 'Km F (D):']
+    kmax_col = next((c for c in kmax_candidates if c in df_full.columns), None)
+    if not kmax_col: return
+    
+    kmax_map = df_full.groupby('ideye')[kmax_col].first()
+    
+    pachy_candidates = ['Pachy Min:', 'Pachymetry Min']
+    pachy_col = next((c for c in pachy_candidates if c in df_full.columns), None)
+    pachy_map = df_full.groupby('ideye')[pachy_col].first() if pachy_col else None
+
+    oof = oof_df.copy()
+    oof['kmax'] = oof['ideye'].map(kmax_map)
+    if pachy_map is not None:
+        oof['pachy'] = oof['ideye'].map(pachy_map)
+        
+    # Get optimal threshold to define TP/FP/TN/FN
+    fpr, tpr, thresh = roc_curve(oof['y_true'], oof['y_pred'])
+    best_t = thresh[np.argmax(tpr - fpr)]
+    oof['y_bin'] = (oof['y_pred'] >= best_t).astype(int)
+    
+    def get_outcome(row):
+        if row['y_true'] == 1 and row['y_bin'] == 1: return 'TP'
+        if row['y_true'] == 0 and row['y_bin'] == 0: return 'TN'
+        if row['y_true'] == 0 and row['y_bin'] == 1: return 'FP'
+        return 'FN'
+        
+    oof['outcome'] = oof.apply(get_outcome, axis=1)
+    
+    fig, axes = plt.subplots(1, 2 if pachy_col else 1, figsize=(6 if pachy_col else 3, 3))
+    axes = [axes] if not pachy_col else axes
+    
+    order = ['TN', 'FP', 'FN', 'TP']
+    palette = {'TN': '#4393c3', 'FP': '#ff9800', 'FN': '#f44336', 'TP': '#d6604d'}
+    
+    sns.violinplot(data=oof, x='outcome', y='kmax', order=order, ax=axes[0], palette=palette, inner='quartile', linewidth=0.8)
+    axes[0].set_title('KMax Distribution by Outcome', fontsize=8)
+    axes[0].set_xlabel('')
+    axes[0].set_ylabel('KMax (D)')
+    
+    if pachy_col:
+        sns.violinplot(data=oof, x='outcome', y='pachy', order=order, ax=axes[1], palette=palette, inner='quartile', linewidth=0.8)
+        axes[1].set_title('Pachymetry Distribution by Outcome', fontsize=8)
+        axes[1].set_xlabel('')
+        axes[1].set_ylabel('Min Pachymetry (μm)')
+        
+    plt.tight_layout()
+    save_fig(fig, out_dir, 'fig18_error_profiling')
+
+def plot_demographic_fairness(oof_df, df_full, out_dir):
+    """Algorithmic fairness across age and gender subgroups."""
+    gender_col = 'Gender:' if 'Gender:' in df_full.columns else ('Sex:' if 'Sex:' in df_full.columns else None)
+    import re
+    age_col = next((c for c in df_full.columns if re.search(r'(?i)^age', c)), None)
+    
+    if not gender_col and not age_col: return
+    
+    oof = oof_df.copy()
+    if age_col:
+        age_map = df_full.groupby('ideye')[age_col].first()
+        oof['age'] = pd.to_numeric(oof['ideye'].map(age_map), errors='coerce')
+        oof['age_group'] = pd.cut(oof['age'], bins=[0, 30, 45, 120], labels=['<30', '30-45', '>45'])
+    if gender_col:
+        gender_map = df_full.groupby('ideye')[gender_col].first()
+        oof['gender'] = oof['ideye'].map(gender_map)
+        
+    results = []
+    
+    def eval_subgroup(sub, group_name):
+        if len(sub) < 10 or len(sub['y_true'].unique()) < 2: return None
+        return {'Subgroup': group_name, 'AUC': roc_auc_score(sub['y_true'], sub['y_pred']), 'N': len(sub)}
+        
+    if gender_col:
+        for g in oof['gender'].dropna().unique():
+            res = eval_subgroup(oof[oof['gender'] == g], f"Gender: {g}")
+            if res: results.append(res)
+            
+    if age_col:
+        for a in ['<30', '30-45', '>45']:
+            res = eval_subgroup(oof[oof['age_group'] == a], f"Age: {a}")
+            if res: results.append(res)
+            
+    res_df = pd.DataFrame(results)
+    if res_df.empty: return
+    
+    fig, ax = plt.subplots(figsize=(4, len(res_df)*0.5 + 1.5))
+    sns.barplot(data=res_df, y='Subgroup', x='AUC', ax=ax, palette='Blues_d', edgecolor='k')
+    for i, (_, row) in enumerate(res_df.iterrows()):
+        ax.text(row['AUC'] + 0.02, i, f"{row['AUC']:.3f} (N={int(row['N'])})", va='center', fontsize=7)
+    
+    ax.set_xlim([0, 1.05])
+    ax.axvline(0.5, color='grey', ls=':')
+    ax.set_title('Demographic Fairness (AUC)', fontsize=9, fontweight='bold')
+    plt.tight_layout()
+    save_fig(fig, out_dir, 'fig19_demographic_fairness')
+    res_df.to_csv(out_dir / 'demographic_fairness.csv', index=False)
+
+def generate_clinical_operating_points(oof_df, out_dir):
+    """Generates metrics tightly coupled to clinical triage settings."""
+    y_true, y_pred = oof_df['y_true'].values, oof_df['y_pred'].values
+    fpr, tpr, thresh = roc_curve(y_true, y_pred)
+    
+    # 1. Screening (High Sensitivity >= 0.95)
+    idx_sens = np.where(tpr >= 0.95)[0]
+    best_screening_idx = idx_sens[0] if len(idx_sens) > 0 else np.argmax(tpr)
+    
+    # 2. Balanced (Youden's J)
+    best_balanced_idx = np.argmax(tpr - fpr)
+    
+    # 3. Confirmatory (High Specificity >= 0.95)
+    spec = 1 - fpr
+    idx_spec = np.where(spec >= 0.95)[0]
+    best_confirmatory_idx = idx_spec[-1] if len(idx_spec) > 0 else np.argmax(spec)
+    
+    modes = [
+        ('Screening (High Sens)', best_screening_idx),
+        ('Balanced (Optimal F1)', best_balanced_idx),
+        ('Confirmatory (High Spec)', best_confirmatory_idx)
+    ]
+    
+    rows = []
+    for mode, idx in modes:
+        t = thresh[idx]
+        y_bin = (y_pred >= t).astype(int)
+        tn, fp, fn, tp = confusion_matrix(y_true, y_bin, labels=[0, 1]).ravel()
+        rows.append({
+            'Mode': mode, 'Threshold': t,
+            'Sensitivity': tp/(tp+fn) if tp+fn >0 else 0,
+            'Specificity': tn/(tn+fp) if tn+fp >0 else 0,
+            'F1': f1_score(y_true, y_bin),
+            'PPV': tp/(tp+fp) if tp+fp>0 else 0,
+            'NPV': tn/(tn+fn) if tn+fn>0 else 0
+        })
+        
+    df_op = pd.DataFrame(rows)
+    df_op.to_csv(out_dir / 'clinical_operating_points.csv', index=False)
+    with open(out_dir / 'clinical_operating_points.tex', 'w') as f:
+        f.write(df_op.to_latex(index=False, float_format='%.3f'))
+    print("  ✓ clinical_operating_points (.csv + .tex)")
+
+
+def generate_evaluation_suite(oof_df, df, fold_xgb_models, config, results_dir, numeric_features, out_dir, is_global=True):
+    print(f"\n── Generating figures in {out_dir} ──")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    
+    # 3: ROC
+    plot_roc_curves(oof_df, df, out_dir, is_global)
+    
+    # 4: Metrics vs Threshold
+    best_t = plot_metrics_vs_threshold(oof_df, out_dir)
+    
+    # 6: Calibration
+    plot_calibration(oof_df, out_dir)
+    
+    # 7: Confusion Matrix
+    plot_confusion_mat(oof_df, best_t, out_dir)
+    
+    # 9: Feature Violins
+    plot_feature_violins(df, out_dir)
+    
+    # 10: PR Curve
+    plot_pr_curve(oof_df, out_dir, is_global)
+    
+    # 11: Summary Table
+    generate_summary_table(oof_df, best_t, out_dir, is_global)
+    
+    # 12: Table 1 — Demographics
+    generate_table1(df, out_dir)
+    
+    # 13: Decision Curve Analysis
+    plot_decision_curve(oof_df, out_dir)
+    
+    # 16: Exemplar Case Panels
+    plot_exemplar_cases(oof_df, df, config, out_dir)
+    
+    if is_global:
+        # 1 & 2: Static diagrams
+        plot_data_flow(config, out_dir)
+        
+        # New Additions
+        plot_tsne_embeddings(oof_df, df, config, results_dir, numeric_features, out_dir)
+        plot_error_analysis(oof_df, df, out_dir)
+        plot_demographic_fairness(oof_df, df, out_dir)
+        generate_clinical_operating_points(oof_df, out_dir)
+
+        plot_pipeline_overview(config, out_dir)
+        
+        # 8: Training Curves
+        plot_training_curves(results_dir, out_dir)
+        
+        # 14: Subgroup Analysis by KMax
+        plot_subgroup_analysis(oof_df, df, out_dir)
+        
+        # 15: Image Modality Contribution
+        plot_modality_contribution(fold_xgb_models, config, results_dir, out_dir)
+        
+        # 5: SHAP
+        print("\n── SHAP Analysis ──")
+        plot_shap_analysis(oof_df, fold_xgb_models, config, df, numeric_features, out_dir)
+        
+        # 5.b: CNN Interpretation
+        # print("\n── CNN Feature Interpretations ──")
+        # try:
+        #     from interpret_cnn_features import run_cnn_interpretation
+        #     cnn_out_dir = Path(out_dir) / 'cnn_interpret'
+        #     cnn_out_dir.mkdir(parents=True, exist_ok=True)
+        #     run_cnn_interpretation(config, results_dir, df, numeric_features, oof_df, fold_xgb_models, cnn_out_dir)
+        # except ImportError:
+        #     print("  ⚠ Interpret CNN module not found, skipping.")
+
 def main():
     parser = argparse.ArgumentParser(description='Generate publication-quality results')
     parser.add_argument('--results_dir', type=str, required=True)
@@ -1207,80 +1586,44 @@ def main():
     logger.addHandler(logging.StreamHandler())
     df, numeric_features = load_data(config, logger)
 
-    # 1 & 2: Static diagrams
-    print("\n── Generating diagrams ──")
-    plot_data_flow(config, out_dir)
-    plot_pipeline_overview(config, out_dir)
-
     # OOF Inference
     print("\n── Running out-of-fold inference ──")
     oof_df, fold_xgb_models = run_oof_inference(df, config, results_dir, device, numeric_features)
     print(f"  Total OOF predictions: {len(oof_df)}")
 
-    # 3: ROC
-    print("\n── Generating ROC-AUC curves ──")
-    plot_roc_curves(oof_df, out_dir)
+    # Stage Groupings
+    kmax_candidates = ['KMax Sagittal Front (D)', 'Km F (D):']
+    kmax_col = None
+    for c in kmax_candidates:
+        if c in df.columns:
+            kmax_col = c
+            break
 
-    # 4: Metrics vs Threshold
-    print("\n── Metrics vs Threshold ──")
-    best_t = plot_metrics_vs_threshold(oof_df, out_dir)
+    if kmax_col is not None:
+        kmax_map = df.groupby('ideye')[kmax_col].first()
+        oof_df['kmax'] = oof_df['ideye'].map(kmax_map)
+        bins = [0, 46.5, 48, 53, 55]
+        labels_stage = ['Stage0', 'Stage1', 'Stage2', 'Stage3']
+        oof_df['stage'] = pd.cut(oof_df['kmax'], bins=bins, labels=labels_stage, include_lowest=True)
+        df['stage'] = pd.cut(df[kmax_col], bins=bins, labels=labels_stage, include_lowest=True)
+    else:
+        labels_stage = []
+        print("  ⚠ No KMax column found for stage segregation.")
 
-    # 5: SHAP
-    print("\n── SHAP Analysis ──")
-    plot_shap_analysis(oof_df, fold_xgb_models, config, df, numeric_features, out_dir)
+    # 1. Global Metrics
+    global_dir = out_dir / 'global'
+    generate_evaluation_suite(oof_df, df, fold_xgb_models, config, results_dir, numeric_features, global_dir, is_global=True)
     
-    # 5.b: CNN Interpretation
-    print("\n── CNN Feature Interpretations ──")
-    from interpret_cnn_features import run_cnn_interpretation
-    cnn_out_dir = Path(out_dir) / 'cnn_interpret'
-    cnn_out_dir.mkdir(parents=True, exist_ok=True)
-    run_cnn_interpretation(config, results_dir, df, numeric_features, oof_df, fold_xgb_models, cnn_out_dir)
-
-    # 6: Calibration
-    print("\n── Calibration ──")
-    plot_calibration(oof_df, out_dir)
-
-    # 7: Confusion Matrix
-    print("\n── Confusion Matrix ──")
-    plot_confusion_mat(oof_df, best_t, out_dir)
-
-    # 8: Training Curves
-    print("\n── Training Curves ──")
-    plot_training_curves(results_dir, out_dir)
-
-    # 9: Feature Violins
-    print("\n── Feature Distributions ──")
-    plot_feature_violins(df, out_dir)
-
-    # 10: PR Curve
-    print("\n── Precision-Recall Curve ──")
-    plot_pr_curve(oof_df, out_dir)
-
-    # 11: Summary Table
-    print("\n── Summary Table ──")
-    generate_summary_table(oof_df, best_t, out_dir)
-
-    # ── NEW: Publication-critical figures ──
-
-    # 12: Table 1 — Demographics
-    print("\n── Table 1: Patient Demographics ──")
-    generate_table1(df, out_dir)
-
-    # 13: Decision Curve Analysis
-    print("\n── Decision Curve Analysis ──")
-    plot_decision_curve(oof_df, out_dir)
-
-    # 14: Subgroup Analysis by KMax
-    print("\n── Subgroup Analysis (KMax Severity) ──")
-    plot_subgroup_analysis(oof_df, df, out_dir)
-
-    # 15: Image Modality Contribution
-    print("\n── Image Modality Contribution ──")
-    plot_modality_contribution(fold_xgb_models, config, results_dir, out_dir)
-
-    # 16: Exemplar Case Panels
-    print("\n── Exemplar Case Panels ──")
-    plot_exemplar_cases(oof_df, df, config, out_dir)
+    # 2. Per-Stage Metrics
+    for stage in labels_stage:
+        stage_oof = oof_df[oof_df['stage'] == stage].copy()
+        stage_df = df[df['stage'] == stage].copy()
+        
+        # Only run if there is adequate data to actually predict on
+        if len(stage_oof) > 10 and len(stage_oof['y_true'].unique()) > 1:
+            stage_dir = out_dir / stage
+            print(f"\n======== Running Evaluation for {stage} ========")
+            generate_evaluation_suite(stage_oof, stage_df, fold_xgb_models, config, results_dir, numeric_features, stage_dir, is_global=False)
 
     print(f"\n✅ All figures saved to {out_dir}")
 

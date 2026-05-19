@@ -11,6 +11,28 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import seaborn as sns
+
+try:
+    import scienceplots
+    plt.style.use(['science', 'nature', 'no-latex'])
+    plt.rcParams.update({
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+        "mathtext.fontset": "stixsans",
+    })
+except ImportError:
+    pass
+
+sns.set_theme(context='paper', style='white', font_scale=1.2)
+plt.rcParams.update({
+    'figure.dpi': 300,
+    'text.color': '#2A2A2A',
+    'axes.labelcolor': '#2A2A2A',
+    'xtick.color': '#2A2A2A',
+    'ytick.color': '#2A2A2A'
+})
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -30,7 +52,7 @@ from src.utils import load_config
 from src.data import load_data, IMAGE_TYPES, get_image_transform, KeratoconusDataset, collate_keratoconus
 from src.visualization import (
     GradCAM, get_target_layer_for_branch, denormalize_image,
-    create_heatmap_overlay, extract_attention_maps
+    create_heatmap_overlay, extract_attention_maps, compute_corneal_mask
 )
 from generate_results import load_fold_models
 
@@ -116,6 +138,10 @@ def plot_feature_grid(
         # Raw
         if img_type in raw_images:
             axes[0, col_idx].imshow(raw_images[img_type])
+            # Compute corneal mask for this image
+            corneal_mask = compute_corneal_mask(raw_images[img_type])
+        else:
+            corneal_mask = None
         axes[0, col_idx].set_title(img_type.replace('_', ' ').title(), fontsize=10)
         axes[0, col_idx].axis('off')
         
@@ -124,7 +150,7 @@ def plot_feature_grid(
         # Attn
         if has_attn:
             if img_type in attention_maps:
-                overlay_attn = create_heatmap_overlay(raw_images[img_type], attention_maps[img_type], alpha=0.5)
+                overlay_attn = create_heatmap_overlay(raw_images[img_type], attention_maps[img_type], alpha=0.5, mask=corneal_mask)
                 axes[current_row, col_idx].imshow(overlay_attn)
             else:
                 axes[current_row, col_idx].imshow(raw_images[img_type])
@@ -133,7 +159,7 @@ def plot_feature_grid(
             
         # GradCAM
         if img_type in gradcam_maps:
-            overlay_gc = create_heatmap_overlay(raw_images[img_type], gradcam_maps[img_type], alpha=0.5)
+            overlay_gc = create_heatmap_overlay(raw_images[img_type], gradcam_maps[img_type], alpha=0.5, mask=corneal_mask)
             axes[current_row, col_idx].imshow(overlay_gc)
         else:
             import numpy as np
@@ -154,10 +180,10 @@ def plot_feature_grid(
     fig.suptitle(f'Sample: {sample_id} | Class: {label_str} | Feature: {feat_name}', fontsize=14, fontweight='bold')
     
     cbar_ax = fig.add_axes([0.92, 0.05, 0.02, 0.25])
-    cbar = plt.colorbar(plt.cm.ScalarMappable(cmap='jet'), cax=cbar_ax)
+    cbar = plt.colorbar(plt.cm.ScalarMappable(cmap='turbo'), cax=cbar_ax)
     cbar.set_label('Activation', rotation=270, labelpad=15)
     
-    plt.tight_layout(rect=[0, 0, 0.9, 0.95])
+    plt.tight_layout(rect=[0, 0, 0.9, 0.95], h_pad=2.0)
     fig.savefig(out_path, bbox_inches='tight')
     plt.close(fig)
 

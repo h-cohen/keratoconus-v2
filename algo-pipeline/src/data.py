@@ -105,13 +105,29 @@ def load_data(config: Dict, logger: logging.Logger) -> Tuple[pd.DataFrame, List[
     
     df_clean = df[df['has_all_images']].dropna(subset=numeric_features).copy()
     
-    kmax_filter = config.get('kmax_filter', None)
-    if kmax_filter is not None:
+    kmax_min_filter = config.get('kmax_min_filter', None)
+    kmax_max_filter = config.get('kmax_max_filter', config.get('kmax_filter', None))
+    exclusive_kmax_min = config.get('exclusive_kmax_min', True)
+    exclusive_kmax_max = config.get('exclusive_kmax_max', False)
+    
+    if kmax_min_filter is not None or kmax_max_filter is not None:
         kmax_col = 'Km F (D):'
         before = len(df_clean)
-        df_clean = df_clean[df_clean[kmax_col] <= kmax_filter].copy()
+        
+        if kmax_min_filter is not None:
+            if exclusive_kmax_min:
+                df_clean = df_clean[df_clean[kmax_col] > kmax_min_filter].copy()
+            else:
+                df_clean = df_clean[df_clean[kmax_col] >= kmax_min_filter].copy()
+                
+        if kmax_max_filter is not None:
+            if exclusive_kmax_max:
+                df_clean = df_clean[df_clean[kmax_col] < kmax_max_filter].copy()
+            else:
+                df_clean = df_clean[df_clean[kmax_col] <= kmax_max_filter].copy()
+                
         removed = before - len(df_clean)
-        logger.info(f"K-value filter (KMax <= {kmax_filter}D): removed {removed} samples, {len(df_clean)} remaining")
+        logger.info(f"KMax filtering boundaries applied: removed {removed} samples out of bounds, {len(df_clean)} remaining.")
     
     logger.info(f"Loaded {len(df_clean)} samples with complete data.")
     return df_clean, numeric_features

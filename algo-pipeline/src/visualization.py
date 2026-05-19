@@ -250,13 +250,64 @@ def denormalize_image(img: np.ndarray) -> np.ndarray:
     return img
 
 
+def compute_corneal_mask(image: np.ndarray, threshold: float = 0.08) -> np.ndarray:
+    """
+    Derive a binary circular mask from the raw corneal image.
+    
+    The Pentacam images are circular with a black background. Pixels where
+    all channels are below the threshold are considered background (mask=0).
+    Morphological closing fills small gaps inside the corneal region.
+    
+    Args:
+        image: Denormalized image [H, W, 3] in range [0, 1]
+        threshold: Brightness threshold below which pixels are considered black background
+        
+    Returns:
+        Binary mask [H, W] with 1 inside the corneal region, 0 outside
+    """
+    import cv2
+    
+    if image.max() > 1:
+        img = image / 255.0
+    else:
+        img = image.copy()
+    
+    # Pixel is foreground if any channel is above threshold
+    brightness = np.max(img, axis=2)
+    mask = (brightness > threshold).astype(np.uint8)
+    
+    # Morphological closing to fill small gaps and smooth edges
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    
+    # Optional: find the largest contour to remove noise
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        largest = max(contours, key=cv2.contourArea)
+        mask = np.zeros_like(mask)
+        cv2.drawContours(mask, [largest], -1, 1, -1)
+    
+    return mask.astype(np.float32)
+
+
 def create_heatmap_overlay(
     original: np.ndarray,
     heatmap: np.ndarray,
     alpha: float = 0.5,
-    colormap: str = 'jet'
+    colormap: str = 'turbo',
+    mask: np.ndarray = None
 ) -> np.ndarray:
-    """Create overlay of heatmap on original image."""
+    """
+    Create overlay of heatmap on original image.
+    
+    Args:
+        original: Raw image [H, W, 3]
+        heatmap: Activation map [H, W] in range [0, 1]
+        alpha: Blend factor for heatmap vs original
+        colormap: Matplotlib colormap name
+        mask: Optional binary mask [H, W]. If provided, heatmap is only
+              applied within the mask region; background is left unchanged.
+    """
     # Apply colormap to heatmap
     cmap = plt.cm.get_cmap(colormap)
     heatmap_colored = cmap(heatmap)[:, :, :3]  # Remove alpha channel
@@ -265,8 +316,17 @@ def create_heatmap_overlay(
     if original.max() > 1:
         original = original / 255.0
     
-    # Create overlay
-    overlay = alpha * heatmap_colored + (1 - alpha) * original
+    if mask is not None:
+        # Expand mask to 3 channels
+        mask_3d = mask[:, :, np.newaxis]
+        # Within mask: blend heatmap with original
+        blended = alpha * heatmap_colored + (1 - alpha) * original
+        blended = np.clip(blended, 0, 1)
+        # Outside mask: keep original dark background
+        overlay = mask_3d * blended + (1 - mask_3d) * original
+    else:
+        overlay = alpha * heatmap_colored + (1 - alpha) * original
+    
     overlay = np.clip(overlay, 0, 1)
     
     return overlay
@@ -300,20 +360,23 @@ def plot_heatmaps_grid(
         axes = axes.reshape(-1, 1)
     
     for idx, (img_type, (original, heatmap)) in enumerate(heatmap_results.items()):
+        # Compute corneal mask for this image
+        mask = compute_corneal_mask(original)
+        
         # Original image
         axes[0, idx].imshow(original)
         axes[0, idx].set_title(f'{img_type}\n(Original)')
         axes[0, idx].axis('off')
         
         # Heatmap overlay
-        overlay = create_heatmap_overlay(original, heatmap)
+        overlay = create_heatmap_overlay(original, heatmap, mask=mask)
         axes[1, idx].imshow(overlay)
         axes[1, idx].set_title(f'{img_type}\n(Grad-CAM)')
         axes[1, idx].axis('off')
     
     # Add colorbar
     cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.3])
-    cbar = plt.colorbar(plt.cm.ScalarMappable(cmap='jet'), cax=cbar_ax)
+    cbar = plt.colorbar(plt.cm.ScalarMappable(cmap='turbo'), cax=cbar_ax)
     cbar.set_label('Attention', rotation=270, labelpad=15)
     
     
@@ -327,7 +390,7 @@ def plot_heatmaps_grid(
         
     fig.suptitle(title, fontsize=14, fontweight='bold')
     
-    plt.tight_layout(rect=[0, 0, 0.9, 0.95])
+    plt.tight_layout(rect=[0, 0, 0.9, 0.95], h_pad=2.0)
     
     return fig
 
@@ -656,6 +719,9 @@ def plot_heatmaps_3row_grid(
     row_labels = ['Raw Image', 'Attention (CBAM)', 'Grad-CAM']
     
     for col_idx, img_type in enumerate(image_types):
+        # Compute corneal mask
+        corneal_mask = compute_corneal_mask(raw_images[img_type]) if img_type in raw_images else None
+        
         # Row 1: Raw image
         if img_type in raw_images:
             axes[0, col_idx].imshow(raw_images[img_type])
@@ -664,7 +730,7 @@ def plot_heatmaps_3row_grid(
         
         # Row 2: Attention overlay
         if img_type in raw_images and img_type in attention_maps:
-            overlay_attn = create_heatmap_overlay(raw_images[img_type], attention_maps[img_type], alpha=0.5)
+            overlay_attn = create_heatmap_overlay(raw_images[img_type], attention_maps[img_type], alpha=0.5, mask=corneal_mask)
             axes[1, col_idx].imshow(overlay_attn)
         elif img_type in raw_images:
             axes[1, col_idx].imshow(raw_images[img_type])
@@ -674,7 +740,7 @@ def plot_heatmaps_3row_grid(
         
         # Row 3: Grad-CAM overlay
         if img_type in raw_images and img_type in gradcam_maps:
-            overlay_gc = create_heatmap_overlay(raw_images[img_type], gradcam_maps[img_type], alpha=0.5)
+            overlay_gc = create_heatmap_overlay(raw_images[img_type], gradcam_maps[img_type], alpha=0.5, mask=corneal_mask)
             axes[2, col_idx].imshow(overlay_gc)
         elif img_type in raw_images:
             axes[2, col_idx].imshow(raw_images[img_type])
@@ -724,10 +790,10 @@ def plot_heatmaps_3row_grid(
     
     # Colorbar
     cbar_ax = fig.add_axes([0.92, 0.05, 0.02, 0.25])
-    cbar = plt.colorbar(plt.cm.ScalarMappable(cmap='jet'), cax=cbar_ax)
+    cbar = plt.colorbar(plt.cm.ScalarMappable(cmap='turbo'), cax=cbar_ax)
     cbar.set_label('Activation', rotation=270, labelpad=15)
     
-    plt.tight_layout(rect=[0, 0, 0.9, 0.95])
+    plt.tight_layout(rect=[0, 0, 0.9, 0.95], h_pad=2.0)
     
     return fig
 
