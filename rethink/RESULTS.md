@@ -86,6 +86,20 @@ C tuned by inner CV; PCA refit inside each inner fold. No GPU; features extracte
 in E00). Routes that depend on frozen ImageNet-style features look exhausted. Fine-tuning and
 physical-scale map inversion remain untested.
 
+## E05 — extra indices from the raw Pentacam export (`prepare_raw.py`, `exp05_raw.py`)
+
+The raw export (`Raw_Combined_IdsMesh.xlsx`, 11,760 rows) matches all 944 cohort scans on patient
+id, eye and exam time (not date: the export has day/month swaps). Its shared numerics agree with
+the cohort. Extra columns used: TKC grade (ordinal; 74 free-text annotations → NaN), pupil and
+pachymetric-minimum positions, RSagMin, axis sin/cos. `KC diagnosis`, CXL, keratoplasty and
+notes are never used.
+
+| run | AUC [CI] | rep | first-visit | ΔAUC vs age |
+|---|---|---|---|---|
+| E05_raw_extra_lr | 0.603 [0.535–0.669] | 0.604 | 0.633 | see compare.py |
+
+TKC alone: AUC 0.516 (no signal). The extra indices add nothing over age.
+
 ## Harness / protocol notes
 - `harness.summarise` now returns NaN for the first-visit AUC when a subset has no first-visit scans
   (needed for E03). Earlier numbers are unchanged.
