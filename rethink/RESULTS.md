@@ -72,6 +72,20 @@ Log note: re-running `exp03_history.py` re-logged the E03_age and E03_hist_lr ro
 its arguments and runs all runs). The duplicates are kept, per the "never delete rows" rule. Count
 them as one configuration each when reporting.
 
+## E04 — frozen DINOv2-small image features (`extract_dino.py`, `exp04_dino.py`)
+
+4 maps × (CLS + mean patch) × 384 → per-map standardise + PCA(10) fitted in-fold → L2 LR with age.
+C tuned by inner CV; PCA refit inside each inner fold. No GPU; features extracted on CPU
+(unsupervised, so lockbox images were processed but never scored).
+
+| run | AUC [CI] | rep | first-visit | ΔAUC vs age |
+|---|---|---|---|---|
+| E04_dino_pca10_lr | 0.656 [0.585–0.723] | 0.647 | 0.669 | −0.001 [−0.072, +0.071] |
+
+**Interpretation:** generic frozen encoders add nothing over age (same result as frozen ResNet-18
+in E00). Routes that depend on frozen ImageNet-style features look exhausted. Fine-tuning and
+physical-scale map inversion remain untested.
+
 ## Harness / protocol notes
 - `harness.summarise` now returns NaN for the first-visit AUC when a subset has no first-visit scans
   (needed for E03). Earlier numbers are unchanged.
