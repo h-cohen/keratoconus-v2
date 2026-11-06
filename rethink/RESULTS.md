@@ -122,6 +122,22 @@ configurations were chosen on dev results, so the pooled AUC is optimistic. Tota
 logged so far, counting repeats: 18 distinct runs (E00 ×7, E01 ×3, E02 ×2, E03 ×3, E04 ×1, E05 ×1,
 E06 ×2). The lockbox is **not scored**, because no candidate has passed criterion 2 robustly.
 
+## LOCKBOX (one-shot, 2026-11-06) — spent
+
+Fitted on all 713 dev scans (seed 2026), scored once on the 231 lockbox scans (96 patients, 42
+positive scans). Candidates were declared in PROTOCOL.md before scoring (commit `2cc8d6a`).
+
+| candidate | lockbox AUC [CI] | ΔAUC vs age [CI] |
+|---|---|---|
+| E02_fellow_lr | **0.693** [0.591–0.785] | +0.018 [−0.064, +0.108] |
+| E06b_fellow_mono_lgbm (primary) | 0.686 [0.589–0.785] | +0.010 [−0.094, +0.111] |
+| E06a_fellow_dino_lr | 0.641 [0.529–0.746] | −0.036 [−0.143, +0.061] |
+| age-only LR (reference) | 0.673 | — |
+
+**Result: no candidate reaches 0.70 on the lockbox, and none beats age significantly.** The headline
+lockbox AUC is 0.693 (E02, best of the three). The dev-set 0.72 did not hold up. The lockbox is now
+spent; further claims need a new, untouched cohort (the protocol forbids re-drawing it).
+
 ## Harness / protocol notes
 - `harness.summarise` now returns NaN for the first-visit AUC when a subset has no first-visit scans
   (needed for E03). Earlier numbers are unchanged.
