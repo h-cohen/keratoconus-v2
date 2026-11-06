@@ -11,7 +11,8 @@ borderline on criterion 1 (pooled 0.701/0.704, but repeat-mean 0.693/0.692) and 
 (paired ΔAUC CI includes 0). Lockbox not scored, because no candidate has passed.
 
 Routes tested: E01 tabular, E02 fellow eye, E03 prior scans, E04 frozen DINOv2 maps, E05 raw-export
-indices. Not tested: image fine-tuning, physical-scale map inversion (needs the Pentacam colour
+indices, E06 pre-declared combinations (E06b gives dev AUC 0.723, but its significance vs age is
+borderline and seed-unstable; see the E06 section). Not tested: image fine-tuning, physical-scale map inversion (needs the Pentacam colour
 LUT, which is not in the repo), and E06 stacking (not worth running when no component passes).
 
 ## E00 (reproduced exactly from the handoff)
@@ -104,6 +105,22 @@ notes are never used.
 | E05_raw_extra_lr | 0.603 [0.535–0.669] | 0.604 | 0.633 | −0.052 [−0.096, −0.006] |
 
 TKC alone: AUC 0.516 (no signal). The extra indices add nothing over age.
+
+## E06 — pre-declared combinations (`exp06_combo.py`)
+
+| run | AUC [CI] | rep | first-visit | ΔAUC vs age [CI] |
+|---|---|---|---|---|
+| E06a_fellow_dino_lr (E02 features + E04 PCA10 + age, L2 LR) | 0.712 [0.638–0.779] | 0.705 | 0.739 | +0.057 [−0.014, +0.126] |
+| E06b_fellow_mono_lgbm (E02 features + age, monotone LightGBM) | 0.723 [0.661–0.785] | 0.726 | 0.748 | +0.068 [+0.000, +0.138] |
+
+Bootstrap-seed check on the paired ΔAUC lower bound (seeds 0, 1, 2):
+- E06b: +0.0003, −0.0034, −0.0003. **Sign flips, so criterion 2 is not reliably met.**
+- E06a: −0.0145, −0.0154, −0.0146. Fails.
+
+Both pass criterion 1 on the pooled dev AUC (≥ 0.70). Neither reliably passes criterion 2. The
+configurations were chosen on dev results, so the pooled AUC is optimistic. Total configurations
+logged so far, counting repeats: 18 distinct runs (E00 ×7, E01 ×3, E02 ×2, E03 ×3, E04 ×1, E05 ×1,
+E06 ×2). The lockbox is **not scored**, because no candidate has passed criterion 2 robustly.
 
 ## Harness / protocol notes
 - `harness.summarise` now returns NaN for the first-visit AUC when a subset has no first-visit scans
