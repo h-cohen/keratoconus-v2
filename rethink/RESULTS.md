@@ -239,6 +239,38 @@ them (numerics and maps) predicts referral well beyond age. Without the fellow e
 Clinical framing: the model is a **bilateral-visit** tool. For single-eye visits, use age (or say
 that no model helps).
 
+## E14 — bilateral-visit specialist with mirror-aligned map differences
+
+Left-eye 4×4 cell grids are flipped into the right-eye layout before own − fellow differences are
+taken; E10c had subtracted unaligned PCA scores. The models are trained and evaluated only on the
+360 scans (131 patients, 86 positive) with a same-day fellow scan.
+
+| run (bilateral subset) | AUC [CI] | first-visit | ΔAUC vs age (0.671) |
+|---|---|---|---|
+| E14a fellow numerics, no flag | 0.724 [0.644–0.803] | 0.737 | +0.053 [−0.031, +0.138] |
+| E14b + own DINOv2 + mirrored differences | 0.737 [0.663–0.813] | 0.755 | +0.068 [−0.019, +0.155] |
+| E14c mean(E14a, E14b) | 0.747 [0.669–0.824] | 0.765 | +0.077 [−0.008, +0.160] |
+| routed: E14c for bilateral scans, age otherwise (all 944) | 0.712 [0.653–0.768] | — | +0.051 [+0.007, +0.094] |
+
+The mirrored maps add +0.015 [−0.034, +0.067] over the numerics. The specialist loses to E13
+(trained on all 944 scans), which scores 0.785 on the same scans. Training on all scans gives better
+estimates of the age and own-eye effects. Conclusion: keep all-data training and add the mirrored
+differences to it (E15).
+
+## E15 — mirrored map differences in the all-data model
+
+| run (all 944) | AUC [CI] | first-visit | ΔAUC vs age | bilateral AUC | single-eye AUC |
+|---|---|---|---|---|---|
+| E15a E02 numerics + own DINOv2 + mirrored diffs, LR | 0.685 [0.626–0.740] | 0.710 | +0.024 [−0.039, +0.085] | 0.729 | 0.598 |
+| E15b rank-avg E12b + E15a | 0.705 | 0.736 | +0.044 [−0.007, +0.096] | 0.755 | 0.609 |
+| E15c rank-avg E12b + E10c + E15a | 0.712 | 0.739 | +0.051 [−0.001, +0.107] | 0.776 | 0.615 |
+| E13 rank-avg E12b + E10c (best) | **0.719** | **0.743** | **+0.058 [+0.009, +0.109]** | **0.785** | 0.620 |
+
+In the all-data model, mirror alignment does not help: E15a 0.685 vs E10c 0.697, and adding E15a to
+E13 lowers it. The small mirror gain seen in E14 does not carry over. **E13 stays the final model.**
+Variants of the inter-eye approach now sit at 0.70–0.72; further variants would mostly add to the
+configuration count. Weak spot shared by every model: single-eye scans (≈ 0.60–0.62 vs age 0.641).
+
 ## Frozen models for external validation
 
 `freeze_models.py` fits age-only, E02 (C=0.03) and E06b (100 trees, 2 leaves) on all 944 scans and
