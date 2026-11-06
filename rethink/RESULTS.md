@@ -169,6 +169,65 @@ positive scans). Candidates were declared in PROTOCOL.md before scoring (commit 
 lockbox AUC is 0.693 (E02, best of the three). The dev-set 0.72 did not hold up. The lockbox is now
 spent; further claims need a new, untouched cohort (the protocol forbids re-drawing it).
 
+## E11 — visit + history from the full raw exam record (separate claim)
+
+`prepare_history.py` rebuilds the raw exam record: 11,704 Pentacam exams for 2,624 patients. The
+record is two stacked exports: rows < 10125 have month-first text dates and day/month-swapped Excel
+datetimes. Index dates match the cohort for 944/944 scans. Subset H holds scans with a prior exam of
+the same eye ≥ 91 days earlier, within a 3-year look-back: 481 scans, 252 eyes, 203 patients and only
+52 positives. Because having a history is itself a proxy for follow-up (positive rate 10.8% with a
+history vs 24.8% without), the history models are evaluated only within H and are never pooled with
+scans that lack one.
+
+| run (subset H, n=481) | AUC [CI] | ΔAUC vs age on H |
+|---|---|---|
+| E11_age_lr_H | 0.604 [0.517–0.690] | — |
+| E11a history LR (Theil–Sen slopes of KMax, K2F, K2B, Pachy min; time since last) | 0.599 | −0.004 [−0.092, +0.089] |
+| E11b same, monotone LightGBM | 0.626 | +0.023 [−0.071, +0.107] |
+| E11c + fellow-eye slopes | 0.589 | −0.013 [−0.096, +0.076] |
+
+**Interpretation:** prior-exam slopes do not predict referral beyond age, even in this subset. With
+52 positives the CI is ±0.09, so this is underpowered, not proof of no effect. The earlier paper's
+0.75 on serial exams is not reproduced under patient-grouped CV.
+
+## E10 — spatial image features (pre-declared closing image test, all 944)
+
+DINOv2 on the full uncropped map: 16×16 patches pooled to a 4×4 grid, 4 maps, PCA(10) per map
+fitted in-fold. Plus a colour (HSV) 4×4 grid, joined with the 55 numerics.
+
+| run | AUC [CI] | vs age 0.661 |
+|---|---|---|
+| E10a spatial DINOv2 + numerics, LR | 0.663 | ≈ 0 |
+| E10b spatial + colour + numerics, LightGBM | 0.664 | ≈ 0 |
+
+(E10c fellow image difference and E10d stack: see below once finished.)
+
+## Frozen models for external validation
+
+`freeze_models.py` fits age-only, E02 (C=0.03) and E06b (100 trees, 2 leaves) on all 944 scans and
+writes `rethink/frozen/models.pkl` (gitignored). `score_external.py FILE [--mapping cols.csv]` prints
+only aggregate metrics: AUC with patient-cluster CI, paired ΔAUC vs age, and first-visit AUC. The
+smoke test on the training data gives apparent AUCs of 0.79 (E06b) and 0.76 (E02). Expect about 0.09
+of optimism; the honest estimate is the CV 0.70.
+
+## Reviewer analyses on the all-data OOF predictions (`analysis_e07.py` → `results/analysis_e07.txt`)
+
+E07_E06b_all vs E07_age_all, all 944 scans.
+- **Age strata:** <25 E06b 0.617 vs age 0.476; 25–29 0.480 vs 0.513; ≥30 0.664 vs 0.600 (20 pos).
+  Below 25 the fellow-eye model carries real within-stratum signal that age cannot.
+- **TKC stage:** none/possible 0.667 vs 0.567; KC1 0.727 vs 0.628; KC2 0.713 vs 0.700; KC3–4 0.675
+  vs 0.786. The model helps most in early disease. In advanced eyes, age dominates.
+- **Operating point** (threshold chosen on the other half of patients): E06b sens 0.83, spec 0.49,
+  PPV 0.26, NPV 0.93. Age: 0.83 / 0.47 / 0.25 / 0.93.
+- **Calibration:** E06b is mis-calibrated (mean prediction 0.42 vs prevalence 0.18, from
+  scale_pos_weight; Brier 0.200 vs 0.140 for age). As a result, its net benefit falls below age at
+  thresholds ≥ 0.15. Recalibration is needed before any clinical use; see E12b.
+- **Time to CXL:** positives 0–6 months before CXL, E06b 0.716; 6–12 months 0.653; 12–24 months
+  0.718; > 24 months 0.653 (11 positives).
+- **Secondary endpoint**, KMax rise ≥ 1 D at an exam 6–15 months later and before CXL: 344 scans,
+  40 progressed, only 8 of them also positive for CXL. E06b 0.574, age 0.522. Single-visit data
+  barely predicts objective progression.
+
 ## Harness / protocol notes
 - `harness.summarise` now returns NaN for the first-visit AUC when a subset has no first-visit scans
   (needed for E03). Earlier numbers are unchanged.

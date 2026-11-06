@@ -1,0 +1,31 @@
+OOF analyses, all 944 scans (167 positive), models: {'E06b': 'E07_E06b_all', 'age': 'E07_age_all'}
+1a. age strata
+  <25            n= 380 pos= 95  E06b 0.617 [0.526-0.709]  age 0.476 [0.383-0.573]
+  25-29          n= 196 pos= 52  E06b 0.480 [0.361-0.604]  age 0.513 [0.400-0.622]
+  >=30           n= 368 pos= 20  E06b 0.664 [0.506-0.818]  age 0.600 [0.438-0.770]
+1b. TKC stage (Pentacam topographic KC grade)
+  none/poss.     n= 301 pos= 50  E06b 0.667 [0.572-0.757]  age 0.567 [0.465-0.662]
+  KC1-1.5        n= 199 pos= 31  E06b 0.727 [0.612-0.825]  age 0.628 [0.494-0.747]
+  KC2-2.5        n= 272 pos= 56  E06b 0.713 [0.626-0.797]  age 0.700 [0.609-0.783]
+  KC3-4          n= 172 pos= 30  E06b 0.675 [0.567-0.796]  age 0.786 [0.652-0.905]
+2. operating point (Youden threshold from the other half of patients)
+  E06b  sens 0.83  spec 0.49  ppv 0.26  npv 0.93
+  age   sens 0.83  spec 0.47  ppv 0.25  npv 0.93
+3. calibration
+  E06b  citl -1.376  slope 1.125  brier 0.200  mean_p 0.424
+  age   citl -0.007  slope 0.944  brier 0.140  mean_p 0.178
+4. net benefit (treat-all in brackets)
+  t=0.10 E06b +0.087  age +0.102  [all +0.085]
+  t=0.15 E06b +0.039  age +0.075  [all +0.032]
+  t=0.20 E06b +0.018  age +0.029  [all -0.029]
+  t=0.25 E06b -0.025  age +0.003  [all -0.097]
+  t=0.30 E06b -0.065  age -0.024  [all -0.176]
+  t=0.40 E06b -0.140  age +0.000  [all -0.372]
+5. positives by months to CXL vs all negatives
+  0-6            n= 868 pos= 91  E06b 0.716 [0.652-0.774]  age 0.656 [0.592-0.720]
+  6-12           n= 818 pos= 41  E06b 0.653 [0.572-0.729]  age 0.629 [0.549-0.716]
+  12-24          n= 801 pos= 24  E06b 0.718 [0.638-0.800]  age 0.692 [0.601-0.778]
+  >24            n= 788 pos= 11  E06b 0.653 [0.523-0.837]  age 0.749 [0.669-0.825]
+6. secondary endpoint: KMax rise >= 1 D at an exam 6-15 months later (before CXL)
+  scans with qualifying follow-up: 344, progressed: 40, overlap with CXL label: 8
+  progression    n= 344 pos= 40  E06b 0.574 [0.464-0.672]  age 0.522 [0.423-0.618]
