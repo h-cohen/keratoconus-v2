@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 DATA = Path(__file__).parent / 'data'
-out = DATA / 'lockbox_pids.csv'
+out = Path(__file__).parent / 'lockbox_pids.csv'
 assert not out.exists(), 'lockbox already drawn - do not redraw'
 df = pd.read_parquet(DATA / 'cohort.parquet')
 pat = df.groupby('pid').y.max()

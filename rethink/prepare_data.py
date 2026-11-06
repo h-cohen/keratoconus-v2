@@ -20,6 +20,7 @@ Cohort rules (frozen 2026-11-06, see PROTOCOL.md):
   4. drop scans taken on/after a keratoplasty date in that eye
 """
 import argparse
+import os
 import datetime
 import hashlib
 from pathlib import Path
@@ -45,7 +46,8 @@ def pid_of(x):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--src', default='/mnt/user-data/uploads/keratoconus-v2')
+    ap.add_argument('--src', default=os.environ.get('KC_SRC', str(Path(__file__).resolve().parents[1])),
+                    help='repo checkout that holds data/ and results/age_subanalysis/ (env KC_SRC)')
     ap.add_argument('--out', default=str(Path(__file__).parent / 'data'))
     a = ap.parse_args()
     src, out = Path(a.src), Path(a.out)

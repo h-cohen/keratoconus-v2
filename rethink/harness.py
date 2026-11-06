@@ -30,7 +30,7 @@ def load(split='dev'):
     cnn = np.load(DATA / 'cnn_frozen.npy')
     if split == 'all':
         return df.reset_index(drop=True), cnn
-    lock = set(pd.read_csv(DATA / 'lockbox_pids.csv').pid)
+    lock = set(pd.read_csv(ROOT / 'lockbox_pids.csv').pid)
     m = df.pid.isin(lock).values
     m = m if split == 'lockbox' else ~m
     return df[m].reset_index(drop=True), cnn[m]
