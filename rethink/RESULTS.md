@@ -273,11 +273,37 @@ configuration count. Weak spot shared by every model: single-eye scans (≈ 0.60
 
 ## Frozen models for external validation
 
-`freeze_models.py` fits age-only, E02 (C=0.03) and E06b (100 trees, 2 leaves) on all 944 scans and
-writes `rethink/frozen/models.pkl` (gitignored). `score_external.py FILE [--mapping cols.csv]` prints
-only aggregate metrics: AUC with patient-cluster CI, paired ΔAUC vs age, and first-visit AUC. The
-smoke test on the training data gives apparent AUCs of 0.79 (E06b) and 0.76 (E02). Expect about 0.09
-of optimism; the honest estimate is the CV 0.70.
+`freeze_models.py` fits every candidate on all 944 scans and writes `rethink/frozen/models.pkl`
+(gitignored; trained on patient data):
+- age only;
+- E02 (C=0.03);
+- E06b (100 trees, 2 leaves);
+- E12b (E02 + E06b quantile average, Platt-calibrated on inner OOF);
+- E10c (C=0.3, DINOv2 PCA fitted on all 944);
+- **E13**, the final model: mean quantile of E12b and E10c. It is a ranking score; use E12b for
+  calibrated risk.
+
+`score_external.py FILE [--mapping cols.csv] [--images DIR]` prints aggregates only. The input
+format is in its docstring. Output:
+- AUC with a patient-cluster CI and paired ΔAUC vs age for every model;
+- first-visit AUC;
+- AUC on bilateral vs single-eye visits;
+- E12b calibration.
+
+E10c and E13 need the four map images (`DIR/<image_stem>_<map>.jpg`, same crop as
+`cropped_output_v2`) and the `facebook/dinov2-small` weights.
+
+Checks:
+- Tested in an isolated copy holding only the code, `models.pkl` and `numeric_features.txt`, with
+  no cohort data: 143 scans, 60 patients, about 1 minute including image extraction.
+- Image features re-extracted by the scorer match the training features exactly (max |Δ| = 0.0).
+- Apparent AUCs on training scans are inflated by design: E13 about 0.90, E10c 0.91 vs its CV
+  0.697. On a new cohort, expect the CV values: E13 about 0.72, E12b about 0.70.
+
+Supporting changes, behaviour-preserving:
+- the data loads in `exp04_dino`/`exp10_spatial` are lazy;
+- `harness.numeric_features()` falls back to `numeric_features.txt` (names only) when the cohort is
+  absent.
 
 ## Reviewer analyses on the all-data OOF predictions (`analysis_e07.py` → `results/analysis_e07.txt`)
 

@@ -12,6 +12,7 @@ E10b_spatial_color_lgbm: [S | C | numerics] -> LightGBM (small fixed trees)
 E10c_spatial_diff_lr   : [S | numerics | D] -> L2 LR (C by inner CV)
 E10d_stack             : late fusion. Image LR on [S | C] and numeric LightGBM, inner OOF, logistic combiner.
 """
+import functools
 import sys
 from pathlib import Path
 
@@ -32,8 +33,16 @@ MAPS = ['corneal_thickness', 'curvature_front', 'elevation_front', 'elevation_ba
 NUM = numeric_features()
 K = 10
 LR = lambda C: make_pipeline(StandardScaler(), LogisticRegression(C=C, max_iter=5000))  # noqa: E731
-GRID = np.concatenate([np.load(DATA / f'dinogrid_{m}.npy').reshape(-1, 16 * 384) for m in MAPS], 1)
-COLOR = np.load(DATA / 'colorgrid.npy').reshape(-1, 4 * 16 * 4)
+
+
+@functools.cache
+def _grid():
+    return np.concatenate([np.load(DATA / f'dinogrid_{m}.npy').reshape(-1, 16 * 384) for m in MAPS], 1)
+
+
+@functools.cache
+def _color():
+    return np.load(DATA / 'colorgrid.npy').reshape(-1, 4 * 16 * 4)
 
 
 def fellow_index(df):
@@ -49,6 +58,7 @@ def fellow_index(df):
 
 def pca_blocks(crow_fit, crow_apply, k=K, seed=0):
     """Per-map (S) and colour (C) PCA fitted on crow_fit rows, applied to crow_apply rows."""
+    GRID, COLOR = _grid(), _color()
     S_fit, S_app = [], []
     for j in range(len(MAPS)):
         X = GRID[:, j * 16 * 384:(j + 1) * 16 * 384]

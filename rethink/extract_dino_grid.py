@@ -18,25 +18,35 @@ MAPS = ['corneal_thickness', 'curvature_front', 'elevation_front', 'elevation_ba
 MODEL = 'facebook/dinov2-small'
 
 
+def load_encoder():
+    proc = AutoImageProcessor.from_pretrained(MODEL, do_center_crop=False, size={'height': 224, 'width': 224})
+    return proc, AutoModel.from_pretrained(MODEL).eval()
+
+
+def grid_features(paths, proc, model, batch=32, log=None):
+    """(len(paths), 16 cells, 384) DINOv2 features: full map at 224, 16x16 patches pooled to 4x4."""
+    feats = []
+    for i in range(0, len(paths), batch):
+        ims = [Image.open(p).convert('RGB') for p in paths[i:i + batch]]
+        with torch.no_grad():
+            h = model(**proc(images=ims, return_tensors='pt')).last_hidden_state[:, 1:]  # drop CLS
+        h = h.reshape(len(ims), 16, 16, -1).permute(0, 3, 1, 2)
+        feats.append(torch.nn.functional.adaptive_avg_pool2d(h, 4).flatten(2).permute(0, 2, 1).numpy())
+        if log:
+            log(i)
+    return np.concatenate(feats).astype(np.float32)
+
+
 def main():
     torch.set_num_threads(8)
     keys = pd.read_csv(DATA / 'private_keys.csv')
-    proc = AutoImageProcessor.from_pretrained(MODEL, do_center_crop=False, size={'height': 224, 'width': 224})
-    model = AutoModel.from_pretrained(MODEL).eval()
+    proc, model = load_encoder()
     for m in MAPS:
         out = DATA / f'dinogrid_{m}.npy'
         if out.exists():
             continue
-        feats = []
-        for i in range(0, len(keys), 32):
-            ims = [Image.open(IMG / f"{f[:-4]}_{m}.jpg").convert('RGB') for f in keys.filename.iloc[i:i + 32]]
-            with torch.no_grad():
-                h = model(**proc(images=ims, return_tensors='pt')).last_hidden_state[:, 1:]  # drop CLS
-            h = h.reshape(len(ims), 16, 16, -1).permute(0, 3, 1, 2)
-            pooled = torch.nn.functional.adaptive_avg_pool2d(h, 4).flatten(2).permute(0, 2, 1)  # (B,16,384)
-            feats.append(pooled.numpy())
-            print(m, i, flush=True)
-        np.save(out, np.concatenate(feats).astype(np.float32))
+        paths = [IMG / f"{f[:-4]}_{m}.jpg" for f in keys.filename]
+        np.save(out, grid_features(paths, proc, model, log=lambda i: print(m, i, flush=True)))
     print('done', flush=True)
 
 

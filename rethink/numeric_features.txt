@@ -1,0 +1,55 @@
+age
+Rf F (mm):
+Rs F (mm):
+Rh F (mm):
+Rv F (mm):
+K1 F (D):
+K2 F (D):
+Rm F (mm):
+Km F (D):
+Astig F (D):
+R Per F (mm)
+R Min (mm)
+Num. Ecc. F:
+Asph. Q F:
+Rf B (mm):
+Rs B (mm):
+Rh B (mm):
+Rv B (mm):
+K1 B (D):
+K2 B (D):
+Rm B (mm):
+Km B (mm):
+Astig B (D):
+R Per B (mm):
+R Min B (mm):
+Num. Ecc. B:
+Asph. Q B:
+Pachy Apex:
+Pachy Pupil:
+Pachy Min:
+Pachy Min Pos X:
+Pachy Min Pos Y:
+C.Vol D 3mm:
+C.Vol D 5mm:
+C.Vol D 7mm:
+C.Vol D 10mm:
+ISV:
+IVA:
+KI:
+CKI:
+IHA:
+IHD:
+RSagMin:
+D0mm Pachy
+D2mm Pachy
+D4mm Pachy
+D6mm Pachy
+D8mm Pachy
+D10mm Pachy
+D2mm Prog
+D4mm Prog
+D6mm Prog
+D8mm Prog
+D10mm Prog
+KMax Sagittal Front (D)

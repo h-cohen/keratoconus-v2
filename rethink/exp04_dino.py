@@ -3,6 +3,7 @@
 Age is always included. PCA size (k per map) and C are chosen by inner patient-grouped CV on the
 training fold only. Features come from extract_dino.py, which reads no labels.
 """
+import functools
 import sys
 from pathlib import Path
 
@@ -18,14 +19,16 @@ sys.path.insert(0, str(Path(__file__).parent))
 from harness import DATA, evaluate, load  # noqa: E402
 
 MAPS = ['corneal_thickness', 'curvature_front', 'elevation_front', 'elevation_back']
-ALL = np.concatenate([np.load(DATA / f'dino_{m}.npy') for m in MAPS], 1)  # rows = cohort.parquet
+@functools.cache
+def _all():
+    return np.concatenate([np.load(DATA / f'dino_{m}.npy') for m in MAPS], 1)  # rows = cohort.parquet
 
 
 def dino_block(idx_tr, idx_te, k, seed):
     """Within-fold: per-map standardise + PCA(k) fitted on training rows only."""
     tr_parts, te_parts = [], []
     for j in range(len(MAPS)):
-        X = ALL[:, j * 768:(j + 1) * 768]
+        X = _all()[:, j * 768:(j + 1) * 768]
         sc = StandardScaler().fit(X[idx_tr])
         p = PCA(n_components=k, random_state=seed).fit(sc.transform(X[idx_tr]))
         tr_parts.append(p.transform(sc.transform(X[idx_tr])))

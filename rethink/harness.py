@@ -37,6 +37,10 @@ def load(split='dev'):
 
 
 def numeric_features():
+    """Age + 55 Pentacam numerics. Falls back to numeric_features.txt (names only) where the cohort is
+    absent, e.g. when score_external.py runs on another system."""
+    if not (DATA / 'cohort.parquet').exists():
+        return (ROOT / 'numeric_features.txt').read_text().split('\n')[:-1]
     df = pd.read_parquet(DATA / 'cohort.parquet')
     meta = {'pid', 'eid', 'eye', 'scan_date', 'visit_idx', 'first_visit', 'y', 'months_to_cxl', 'legacy_row'}
     return [c for c in df.columns if c not in meta]
