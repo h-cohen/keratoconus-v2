@@ -72,10 +72,14 @@ def summarise(df, oof):
     p = oof.mean(0)
     fv = df.first_visit.values
     lo, hi = cluster_boot_auc(y, p, g)
-    flo, fhi = cluster_boot_auc(y[fv], p[fv], g[fv])
+    if fv.any():
+        flo, fhi = cluster_boot_auc(y[fv], p[fv], g[fv])
+        first = roc_auc_score(y[fv], p[fv])
+    else:  # history subsets contain no first visits
+        flo, fhi, first = np.nan, np.nan, np.nan
     return dict(auc=roc_auc_score(y, p), auc_lo=lo, auc_hi=hi,
                 auc_rep_mean=float(np.mean(rep)), auc_rep_sd=float(np.std(rep)),
-                auc_first=roc_auc_score(y[fv], p[fv]), auc_first_lo=flo, auc_first_hi=fhi,
+                auc_first=first, auc_first_lo=flo, auc_first_hi=fhi,
                 n=len(y), n_pos=int(y.sum()))
 
 

@@ -81,3 +81,7 @@ At most **3** pre-declared candidates are scored on the lockbox.
 
 ## Change log
 - 2026-11-06 frozen.
+- 2026-11-06 (during E03): `harness.summarise` returns NaN for first-visit AUC when a subset has no
+  first-visit scans. Needed for the history subset; does not change any existing number.
+- 2026-11-06: added `rethink/compare.py` (paired cluster bootstrap of ΔAUC vs a reference run),
+  which the protocol's success criterion 2 requires.
