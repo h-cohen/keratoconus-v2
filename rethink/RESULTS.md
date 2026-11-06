@@ -200,7 +200,44 @@ fitted in-fold. Plus a colour (HSV) 4×4 grid, joined with the 55 numerics.
 | E10a spatial DINOv2 + numerics, LR | 0.663 | ≈ 0 |
 | E10b spatial + colour + numerics, LightGBM | 0.664 | ≈ 0 |
 
-(E10c fellow image difference and E10d stack: see below once finished.)
+| E10c spatial + numerics + fellow-eye image difference, LR | **0.697** [0.644–0.746], first 0.710 | +0.036 [−0.026, +0.101] |
+| E10d late-fusion stack | 0.631 | below age |
+
+The fellow-eye image difference is the first image signal: E10c vs E10a gives +0.033 [−0.004, +0.074].
+The maps carry nothing on their own, but the difference between the two eyes' maps does.
+
+## E12 / E13 — ensembles on all 944 scans (outer CV, same folds)
+
+| run | AUC [CI] | rep mean | first-visit | ΔAUC vs age (3 bootstrap seeds) |
+|---|---|---|---|---|
+| E07_age_all (reference) | 0.661 [0.598–0.723] | 0.661 | 0.680 | — |
+| E07_E06b_all | 0.697 | 0.705 | 0.727 | +0.037 [−0.024, +0.093] |
+| E12a E02 fellow LR | 0.684 | 0.676 | 0.716 | +0.023 [−0.029, +0.073] |
+| E12b rank-avg E02 + E06b, Platt-recalibrated in-fold | **0.701** [0.642–0.759] | 0.697 | 0.732 | +0.040 [−0.010, +0.089], P=0.94 |
+| **E13 rank-avg E12b + E10c** | **0.719** [0.667–0.768] | 0.711 | **0.743** | **+0.058 [+0.009, +0.109]**, stable across seeds, P=0.99 |
+
+E12b is calibrated: mean prediction 0.181 vs prevalence 0.177, slope 1.15, Brier 0.135 (age 0.140).
+Its net benefit is at or above age at every threshold, and above it from 0.25 up.
+
+**E13 is the first run that meets both dev criteria: AUC ≥ 0.70 and ΔAUC vs age with a CI that
+excludes 0.** Caveats, all of which must be reported:
+- E13 was chosen after seeing E12b and E10c, so it is post-hoc. About 45 configurations have now
+  been logged in total.
+- The lockbox is spent, so this is a CV estimate on all data, not a held-out score. The user's
+  external validation set is the confirmatory test.
+
+**Where the signal lives (has_fellow strata).** The flag alone gives AUC 0.58 (positive rate 0.24
+with a same-day fellow scan vs 0.14 without), a workflow confound. Within strata:
+
+| stratum | n / pos | E13 | age | ΔAUC |
+|---|---|---|---|---|
+| same-day fellow scan | 360 / 86 | **0.785** | 0.680 | **+0.106 [+0.029, +0.185]** |
+| no fellow scan | 584 / 81 | 0.620 | 0.641 | −0.021 [−0.077, +0.031] |
+
+The gain is real inter-eye signal, not the flag. When both eyes are imaged at the visit, comparing
+them (numerics and maps) predicts referral well beyond age. Without the fellow eye, nothing beats age.
+Clinical framing: the model is a **bilateral-visit** tool. For single-eye visits, use age (or say
+that no model helps).
 
 ## Frozen models for external validation
 
