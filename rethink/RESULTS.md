@@ -138,6 +138,21 @@ before it finished and is NOT logged. The user then asked to restrict work to im
 **Interpretation:** frozen generic image features carry little signal on their own (lower CI bound
 ≈ 0.50). The age-free image signal is weak.
 
+## E09 — IMAGE + RAW NUMERIC fusion, all 944 scans (`exp09_fusion.py`)
+
+Image: DINOv2-small, 4 maps, per-map PCA(5) fitted in-fold. Raw: the 55 Pentacam numerics incl. age.
+
+| run | AUC [CI] | rep | first-visit | ΔAUC vs age, all 944 [CI] |
+|---|---|---|---|---|
+| Age only, all 944 (reference) | 0.661 [0.598–0.723] | — | — | — |
+| E09a concat → LR | 0.662 [0.607–0.716] | 0.654 | 0.690 | +0.002 [−0.058, +0.062] |
+| E09b concat → LightGBM | 0.664 [0.602–0.724] | 0.656 | 0.681 | +0.003 [−0.069, +0.076] |
+| E09c late fusion (stack) | 0.635 [0.577–0.696] | 0.624 | 0.674 | −0.025 [−0.075, +0.024] |
+
+**Interpretation:** adding the DINOv2 map features to the Pentacam numerics does not improve on age
+alone. Concatenation and late fusion both come out level with or below age. The images add no
+signal beyond what the numerics and age already give.
+
 ## LOCKBOX (one-shot, 2026-11-06) — spent
 
 Fitted on all 713 dev scans (seed 2026), scored once on the 231 lockbox scans (96 patients, 42
