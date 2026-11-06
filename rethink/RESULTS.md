@@ -6,8 +6,13 @@ Paired ΔAUC vs age-only (LR) uses `rethink/compare.py` (same patient clusters r
 
 ## Status vs. success criteria (PROTOCOL.md)
 
-No model yet meets all three criteria. Best dev candidate so far: **E02b / E02** (see below),
-which is borderline on criterion 1 and does not clear criterion 2.
+No model meets all three criteria. Best dev candidate: **E02 / E02b** (same-visit fellow eye),
+borderline on criterion 1 (pooled 0.701/0.704, but repeat-mean 0.693/0.692) and failing criterion 2
+(paired ΔAUC CI includes 0). Lockbox not scored, because no candidate has passed.
+
+Routes tested: E01 tabular, E02 fellow eye, E03 prior scans, E04 frozen DINOv2 maps, E05 raw-export
+indices. Not tested: image fine-tuning, physical-scale map inversion (needs the Pentacam colour
+LUT, which is not in the repo), and E06 stacking (not worth running when no component passes).
 
 ## E00 (reproduced exactly from the handoff)
 See `results/experiments.csv`. Age-only LR AUC 0.656 [0.584–0.724]; first-visit 0.680.
@@ -96,7 +101,7 @@ notes are never used.
 
 | run | AUC [CI] | rep | first-visit | ΔAUC vs age |
 |---|---|---|---|---|
-| E05_raw_extra_lr | 0.603 [0.535–0.669] | 0.604 | 0.633 | see compare.py |
+| E05_raw_extra_lr | 0.603 [0.535–0.669] | 0.604 | 0.633 | −0.052 [−0.096, −0.006] |
 
 TKC alone: AUC 0.516 (no signal). The extra indices add nothing over age.
 
