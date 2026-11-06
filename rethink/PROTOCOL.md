@@ -85,3 +85,10 @@ At most **3** pre-declared candidates are scored on the lockbox.
   first-visit scans. Needed for the history subset; does not change any existing number.
 - 2026-11-06: added `rethink/compare.py` (paired cluster bootstrap of ΔAUC vs a reference run),
   which the protocol's success criterion 2 requires.
+- 2026-11-06 **Lockbox candidates declared (3, max allowed)**, before any lockbox score:
+  1. `E06b_fellow_mono_lgbm` (E02 fellow-eye features + age, monotone LightGBM) — primary;
+  2. `E06a_fellow_dino_lr` (E02 features + E04 DINOv2 PCA10 + age, L2 LR);
+  3. `E02_fellow_lr` (E02 features + age, L2 LR).
+  Each is fitted once on the full dev set (713 scans) with seed 2026 and scored once on the lockbox
+  (231 scans). The lockbox is spent after this step; any later experiment is judged on dev only.
+
