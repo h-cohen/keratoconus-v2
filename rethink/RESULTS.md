@@ -122,6 +122,22 @@ configurations were chosen on dev results, so the pooled AUC is optimistic. Tota
 logged so far, counting repeats: 18 distinct runs (E00 ×7, E01 ×3, E02 ×2, E03 ×3, E04 ×1, E05 ×1,
 E06 ×2). The lockbox is **not scored**, because no candidate has passed criterion 2 robustly.
 
+## E07 — all-data baselines (nested run stopped by the user)
+
+Two valid runs on all 944 scans were logged (`E07_age_all`, `E07_E06b_all`); their AUCs are in
+`results/experiments.csv`. The nested-selection run (`E07_nested_select_all`) was stopped by the user
+before it finished and is NOT logged. The user then asked to restrict work to image-based directions.
+
+## E08 — IMAGE-ONLY (DINOv2 on the four maps, no age, no numerics), all 944 scans
+
+| run | AUC [CI] | rep | first-visit |
+|---|---|---|---|
+| E08_dino_imageonly_pca5 | 0.563 [0.500–0.623] | 0.560 | 0.572 |
+| E08_dino_imageonly_pca20 | 0.559 [0.505–0.614] | 0.552 | 0.578 |
+
+**Interpretation:** frozen generic image features carry little signal on their own (lower CI bound
+≈ 0.50). The age-free image signal is weak.
+
 ## LOCKBOX (one-shot, 2026-11-06) — spent
 
 Fitted on all 713 dev scans (seed 2026), scored once on the 231 lockbox scans (96 patients, 42
