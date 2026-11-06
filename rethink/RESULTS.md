@@ -271,6 +271,40 @@ E13 lowers it. The small mirror gain seen in E14 does not carry over. **E13 stay
 Variants of the inter-eye approach now sit at 0.70–0.72; further variants would mostly add to the
 configuration count. Weak spot shared by every model: single-eye scans (≈ 0.60–0.62 vs age 0.641).
 
+## E16 — fully nested classifier selection on all 944 scans (the clean headline)
+
+The outer folds are the harness folds (5×5, patient-grouped), the same as every other all-data run.
+Inside each outer training fold, a 4-fold patient-grouped inner CV scores every candidate in a
+pre-declared pool. The best candidate is refit on the outer training fold and scored on the outer
+test fold. Nothing is chosen by looking at outer results, so this removes the post-hoc choice of
+E13. Choices are in `results/nested16_choices.csv`.
+
+| | pooled OOF AUC [CI] | first-visit | mean within-fold AUC (25 folds) | Δ vs age, pooled | folds beating age |
+|---|---|---|---|---|---|
+| age only (E07) | 0.661 [0.598–0.723] | 0.680 | 0.669 | — | — |
+| **E16a pool A, single eye** | 0.644 [0.585–0.700] | 0.660 | 0.647 | −0.017 [−0.061, +0.030] | 1/25 |
+| **E16b pool B, + same-day fellow** | **0.695** [0.640–0.750] | **0.723** | **0.707** | +0.035 [−0.019, +0.086], P=0.89 | **19/25** |
+| fixed E13 (for comparison, post-hoc) | 0.719 | 0.743 | 0.715 | +0.058 | 19/25 |
+
+Pools:
+- A: age LR, numerics LR, numerics LightGBM, images+numerics LR, images+numerics LightGBM.
+- B: A plus E02, E06b, E12b, E10c_fast and E13.
+
+Choices:
+- Pool A picked age only in 15 of 25 folds, and an image model in 9.
+- Pool B never picked a single-eye model: E06b 14, E13 6, E12b 5.
+
+E16b's per-repeat AUC (0.654) is far below its pooled AUC. The fold-specific winners have different
+score scales: E06b is uncalibrated (mean ≈ 0.42), while E12b and E13 are calibrated. Pooling the
+mixed scales penalises the per-repeat AUC. The mean within-fold AUC is the fair figure for a
+selection procedure: 0.707.
+
+**Interpretation:**
+- Under fully nested selection, single-eye information does not beat age: 0.644–0.647 vs 0.661–0.669.
+- With the fellow eye, the selection procedure reaches 0.695 pooled and 0.707 within fold. It beats
+  age in 19 of 25 folds, but the paired-bootstrap CI includes 0.
+- The post-hoc E13 (0.719) is about 0.01–0.02 optimistic relative to the honest nested 0.707.
+
 ## Frozen models for external validation
 
 `freeze_models.py` fits every candidate on all 944 scans and writes `rethink/frozen/models.pkl`
