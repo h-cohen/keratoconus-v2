@@ -379,6 +379,34 @@ Pre-OP, Holladay EKR, Belin/Ambrósio with BAD-D). They exist for only 380 cohor
 are negatives. They were exported for non-referred patients, so their availability almost reveals the
 label. They are not used as features.
 
+## E19 — self-supervised image representation (`decode_all.py`, `exp19_ssl.py`)
+
+1. **Decoding:** every "4 Maps Selectable" composite in `image_scans/` (2,259 exams: 944 cohort, 650
+   other visits of cohort patients, 665 of 199 patients outside the cohort) is decoded to physical maps.
+   The cohort scans' decoded maps match `decode_maps.py` exactly.
+2. **Pretraining:** a small CNN masked autoencoder is pretrained on the four maps.
+   - Inputs: the normalised maps plus visibility channels.
+   - Pretext: 50% of 8×8 patches are hidden independently per map, so the net must infer one map from
+     the others.
+   - Settings: 40 epochs, shifts of up to 3 px as augmentation.
+   - A fresh encoder is trained for every outer fold, on images of non-cohort patients and outer-training
+     patients only (~1,900 images); test-fold patients' images are never seen.
+   - Reconstruction loss fell from ~1.0 to 0.19–0.31 in 24 of 25 encoders; one ended at 0.63.
+3. **Downstream:** the encoder is used frozen as a 64-d embedding in an L2 LR with nested C.
+
+| run (all 944, single eye) | AUC [CI] | first-visit | ΔAUC vs age |
+|---|---|---|---|
+| E19a age + SSL embedding, LR | 0.614 [0.549–0.671] | 0.646 | −0.048 [−0.092, −0.009] |
+| E19b SSL embedding + 55 numerics, LR | 0.628 [0.569–0.681] | 0.671 | −0.033 [−0.083, +0.014] |
+| E19c nested selection, pool A + both | 0.644 [0.585–0.700] | 0.660 | −0.017 [−0.061, +0.030] (= E16a) |
+
+E19c never chose an SSL candidate (age 15, images + numerics LightGBM 5, images + numerics LR 4,
+numerics LightGBM 1).
+
+**Interpretation:** a representation learned from the maps themselves does no better than ImageNet
+ResNet, DINOv2, colour grids or decoded indices. Adding it to age makes things significantly worse
+(more noise dimensions). The map content does not carry referral information beyond age.
+
 ## Frozen models for external validation
 
 `freeze_models.py` fits every candidate on all 944 scans and writes `rethink/frozen/models.pkl`
