@@ -345,6 +345,40 @@ None of it predicts referral beyond age. A soon-to-be-treated eye looks like any
 eye of the same age at one visit. The referral decision depends on progression (seen over time)
 and on the patient as a whole (both eyes), not on a single-eye snapshot.
 
+## E18 — single eye trained on more labelled exams (`prepare_extra.py`, `exp18_augment.py`)
+
+The raw export carries the 55 numerics and the CXL fields for exams without images. Checks against
+the cohort: the label agrees for 944/944 scans; the numerics are identical, apart from the sign of
+`Pachy Min Pos X:` for right eyes, which is harmonised; age is exactly scan year − birth year.
+
+Extra training exams: 1,487 pre-CXL exams of CXL-clinic patients that are not cohort scans, 299 of
+them positive.
+- 587 are from 269 patients outside the cohort; they are always used for training.
+- 900 are other exams of cohort patients; they are used only when that patient is in the training
+  fold.
+
+Patients outside the clinic sheet are excluded: all of them carry label 0, so their label does not
+mean the same thing. Evaluation is unchanged (cohort scans, same folds).
+
+| run (all 944, single eye) | AUC [CI] | first-visit | ΔAUC vs age |
+|---|---|---|---|
+| E18a numerics LR, status-OK extras (558) | 0.652 [0.595–0.709] | 0.677 | −0.009 [−0.051, +0.032] |
+| E18b numerics LightGBM, status-OK extras | 0.613 [0.553–0.671] | 0.645 | −0.047 [−0.103, +0.010] |
+| E18c numerics LR, all extras (1,487) | 0.650 [0.589–0.711] | 0.670 | −0.011 [−0.045, +0.022] |
+| E18d numerics LightGBM, all extras | 0.626 [0.566–0.684] | 0.652 | −0.035 [−0.082, +0.012] |
+| E18_age_aug age only, all extras (control) | 0.663 [0.600–0.724] | 0.680 | +0.002 [−0.002, +0.005] |
+| E18e nested selection, pool A + the five | 0.635 [0.576–0.692] | 0.659 | −0.026 [−0.067, +0.017] |
+
+E18e chose age 15 times out of 25; it chose an augmented candidate once.
+
+**Interpretation:** the extra exams nearly double the positives seen in training (167 → 466 at most),
+but the numeric models stay at or below age.
+
+Side finding: the `.DCM` files in `image_scans/` are 5-page Pentacam PDFs (4 Maps Refractive, Cataract
+Pre-OP, Holladay EKR, Belin/Ambrósio with BAD-D). They exist for only 380 cohort scans, and 98% of those
+are negatives. They were exported for non-referred patients, so their availability almost reveals the
+label. They are not used as features.
+
 ## Frozen models for external validation
 
 `freeze_models.py` fits every candidate on all 944 scans and writes `rethink/frozen/models.pkl`
