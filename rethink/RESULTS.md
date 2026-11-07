@@ -305,6 +305,46 @@ selection procedure: 0.707.
   age in 19 of 25 folds, but the paired-bootstrap CI includes 0.
 - The post-hoc E13 (0.719) is about 0.01–0.02 optimistic relative to the honest nested 0.707.
 
+## E17 — single-visit raw data squeezed from the composites (single eye)
+
+New information extracted from the full "4 Maps Selectable" composites (`data/image_scans/`, one per
+scan, all 944). The tabular raw exports hold nothing beyond the 55 numerics plus the E05 extras.
+
+1. **Panel OCR** (`ocr_panel.py`): template-matching OCR of the printed values. It is 100% exact
+   on held-out known fields (pachymetry at pupil / apex / thinnest point, thinnest y, KMax, pupil
+   x/y; 472 images each). New fields: KMax location, cornea volume, KPD, chamber volume / angle /
+   depth, pupil diameter, IOP correction. Finding along the way: the export flips the x sign for
+   right eyes relative to the screen.
+2. **Physical map decoding** (`decode_maps.py`): each image's own 31-step colour bars invert the
+   four maps to µm / D. Checks:
+   - the decoded thinnest band matches the printed thinnest pachymetry to the 20 µm quantum (mean
+     difference 0.1 µm);
+   - the scale is 28.9 / 27.3 px/mm, calibrated on the printed thinnest location (r = 0.99 / 0.95);
+   - under 1% of central pixels are undecodable.
+   Clinical indices derived from the decoded maps: back and front elevation at the thinnest point,
+   max elevation in the central 4 mm, I-S curvature and thickness, cone area, area of back elevation
+   ≥ +20 µm, plus ring/sector means.
+
+| run (all 944, single eye) | AUC [CI] | first-visit | ΔAUC vs age |
+|---|---|---|---|
+| E17a 55 numerics + panel + map indices, LR | 0.612 [0.553–0.673] | 0.646 | −0.048 [−0.099, +0.003] |
+| E17b same, LightGBM | 0.630 [0.571–0.691] | 0.660 | −0.030 [−0.098, +0.039] |
+| E17c + ring/sector PCA, LR | 0.591 [0.532–0.652] | 0.619 | −0.070 [−0.130, −0.012] |
+| E17d nested selection, pool A + the three | 0.644 [0.585–0.700] | 0.660 | −0.017 (identical to E16a) |
+
+The 19 new features have univariate AUCs of 0.50–0.56. The best are anterior-chamber depth, volume
+and angle (0.54–0.56), which correlate with age (r ≈ −0.2). The nested selection never picked a
+raw-data candidate. Mean inner AUC: age 0.665 > images + numerics LightGBM 0.647 > raw LightGBM
+0.626.
+
+**Interpretation:** the single-visit, single-eye information is exhausted. The data used are:
+- the 55 numerics, the 10 export extras and 11 printed panel values;
+- the physically decoded maps and their clinical indices;
+- DINOv2, spatial and colour image features.
+None of it predicts referral beyond age. A soon-to-be-treated eye looks like any other keratoconic
+eye of the same age at one visit. The referral decision depends on progression (seen over time)
+and on the patient as a whole (both eyes), not on a single-eye snapshot.
+
 ## Frozen models for external validation
 
 `freeze_models.py` fits every candidate on all 944 scans and writes `rethink/frozen/models.pkl`
