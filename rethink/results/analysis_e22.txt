@@ -1,0 +1,125 @@
+# E22 analyses (all 944 scans, pooled OOF over 5 repeats)
+
+## 1. Headline and every candidate
+               run   auc    lo    hi  first  d_ref                                               d_ref_ci  P_ref  d_age                                               d_age_ci  P_age
+       E22n_nested 0.780 0.727 0.829  0.784  0.131 [+0.069, +0.190] / [+0.068, +0.195] / [+0.065, +0.201]  1.000  0.120 [+0.052, +0.185] / [+0.052, +0.185] / [+0.054, +0.188]  1.000
+          E22n_noH 0.731 0.676 0.784  0.758  0.081                                       [+0.023, +0.138]  0.995  0.071                                       [+0.004, +0.139]  0.983
+       E22_negctrl 0.633 0.573 0.688  0.672 -0.018                                       [-0.072, +0.036]  0.268 -0.029                                       [-0.078, +0.020]  0.108
+E22_ref_single_num 0.650 0.593 0.708  0.683  0.000                                       [+0.000, +0.000]  0.000 -0.011                                       [-0.078, +0.053]  0.387
+       E07_age_all 0.661 0.598 0.723  0.680  0.011                                       [-0.053, +0.078]  0.613  0.000                                       [+0.000, +0.000]  0.000
+         E22_bn_lr 0.751 0.695 0.802  0.757  0.101                                       [+0.025, +0.176]  0.997  0.090                                       [+0.020, +0.163]  0.994
+       E22_bn_lgbm 0.780 0.729 0.827  0.770  0.130                                       [+0.074, +0.187]  1.000  0.119                                       [+0.054, +0.184]  1.000
+     E22_bn_aug_lr 0.768 0.712 0.818  0.770  0.118                                       [+0.041, +0.193]  1.000  0.107                                       [+0.041, +0.174]  0.998
+   E22_bn_aug_lgbm 0.780 0.728 0.830  0.778  0.130                                       [+0.065, +0.197]  1.000  0.120                                       [+0.054, +0.189]  1.000
+       E22_bnpm_lr 0.745 0.687 0.797  0.760  0.095                                       [+0.025, +0.168]  0.995  0.084                                       [+0.015, +0.162]  0.990
+     E22_bnpm_lgbm 0.786 0.737 0.833  0.784  0.137                                       [+0.079, +0.195]  1.000  0.126                                       [+0.058, +0.193]  1.000
+       E22_bi_Z_lr 0.751 0.696 0.803  0.765  0.102                                       [+0.028, +0.178]  0.997  0.091                                       [+0.018, +0.169]  0.991
+     E22_bi_Z_lgbm 0.787 0.736 0.834  0.779  0.138                                       [+0.078, +0.197]  1.000  0.127                                       [+0.057, +0.194]  1.000
+       E22_bi_D_lr 0.768 0.713 0.818  0.780  0.119                                       [+0.042, +0.192]  1.000  0.108                                       [+0.039, +0.183]  0.999
+     E22_bi_D_lgbm 0.792 0.745 0.837  0.784  0.143                                       [+0.088, +0.201]  1.000  0.132                                       [+0.066, +0.198]  1.000
+       E22_bi_L_lr 0.759 0.703 0.809  0.767  0.109                                       [+0.033, +0.183]  1.000  0.098                                       [+0.025, +0.174]  0.996
+     E22_bi_L_lgbm 0.790 0.741 0.836  0.786  0.140                                       [+0.080, +0.202]  1.000  0.130                                       [+0.059, +0.199]  1.000
+       E22_bi_X_lr 0.745 0.688 0.794  0.750  0.095                                       [+0.020, +0.169]  0.996  0.084                                       [+0.015, +0.156]  0.991
+     E22_bi_X_lgbm 0.781 0.732 0.827  0.773  0.131                                       [+0.077, +0.191]  1.000  0.121                                       [+0.054, +0.184]  1.000
+       E22_bi_T_lr 0.749 0.689 0.802  0.758  0.099                                       [+0.022, +0.177]  0.994  0.089                                       [+0.017, +0.165]  0.991
+     E22_bi_T_lgbm 0.798 0.751 0.842  0.788  0.149                                       [+0.091, +0.205]  1.000  0.138                                       [+0.068, +0.205]  1.000
+         E22_ens_Z 0.780 0.724 0.830  0.789  0.131                                       [+0.065, +0.200]  1.000  0.120                                       [+0.049, +0.190]  1.000
+         E22_ens_D 0.789 0.736 0.837  0.795  0.139                                       [+0.071, +0.206]  1.000  0.129                                       [+0.060, +0.198]  1.000
+         E22_ens_L 0.783 0.730 0.830  0.789  0.133                                       [+0.066, +0.200]  1.000  0.123                                       [+0.052, +0.192]  1.000
+         E22_ens_X 0.776 0.723 0.826  0.783  0.126                                       [+0.059, +0.193]  1.000  0.116                                       [+0.045, +0.185]  1.000
+         E22_ens_T 0.779 0.725 0.830  0.785  0.129                                       [+0.060, +0.196]  1.000  0.118                                       [+0.048, +0.189]  0.999
+
+E22n choices (25 outer folds): {'ens_D': 7, 'bi_D_lgbm': 5, 'bi_L_lgbm': 4, 'ens_L': 2, 'bnpm_lgbm': 2, 'bi_D_lr': 1, 'bi_Z_lgbm': 1, 'bi_T_lgbm': 1, 'ens_Z': 1, 'bn_aug_lgbm': 1}
+noH choices: {'noH_ens_D': 10, 'noH_bn_aug_lgbm': 3, 'noH_bi_T_lgbm': 3, 'noH_bi_D_lgbm': 3, 'noH_bi_L_lgbm': 2, 'noH_bi_D_lr': 1, 'noH_bi_Z_lgbm': 1, 'noH_bn_lgbm': 1, 'noH_ens_L': 1}
+neg choices: {'neg_bn_aug_lr': 9, 'neg_bn_lgbm': 9, 'neg_bn_aug_lgbm': 7}
+ref choices: {'num_lgbm': 19, 'num_lr': 6}
+E22n per-repeat AUC 0.760 +- 0.013
+E22n mean within-fold AUC 0.779; ref 0.642; folds where E22n > ref: 25/25
+
+## 2. Severity: KMax of the scanned eye (original bins + > 55 D)
+     stage   n  pos                E22n      ref_single_num                 age             dAUC vs ref
+ S0 <=46.5 222   44 0.821 [0.731-0.892] 0.651 [0.546-0.754] 0.584 [0.470-0.692] +0.170 [+0.071, +0.269]
+S1 46.5-48 101   13 0.843 [0.654-0.969] 0.580 [0.391-0.776] 0.552 [0.376-0.732] +0.257 [+0.053, +0.475]
+  S2 48-53 232   38 0.800 [0.699-0.903] 0.622 [0.494-0.747] 0.633 [0.503-0.754] +0.184 [+0.047, +0.317]
+  S3 53-55 102   20 0.607 [0.447-0.771] 0.634 [0.482-0.795] 0.607 [0.464-0.764] -0.026 [-0.168, +0.112]
+    S4 >55 287   52 0.753 [0.669-0.840] 0.706 [0.598-0.805] 0.795 [0.701-0.874] +0.048 [-0.067, +0.159]
+stage x model interaction: (gain at KMax <= 48) - (gain at KMax > 48) = +0.125 [-0.007, +0.249] (n early 323, pos 57)
+
+## 3. Fellow strata (mutually exclusive, in this order)
+                    stratum   n  pos                E22n      ref_single_num                 age                 noH
+   fellow composite (image) 552   94 0.759 [0.700-0.818] 0.719 [0.654-0.780] 0.721 [0.646-0.796] 0.751 [0.688-0.813]
+ fellow numerics only (raw) 147   59 0.710 [0.589-0.820] 0.586 [0.440-0.724] 0.640 [0.500-0.758] 0.713 [0.585-0.824]
+fellow treated before visit 244   14 0.611 [0.442-0.758] 0.552 [0.343-0.718] 0.516 [0.372-0.639] 0.652 [0.450-0.803]
+                  no fellow   1    0                 n/a                 n/a                 n/a                 n/a
+has_fellow_image alone: AUC 0.480; fellow treated alone: 0.394
+
+## 4. Label-free sensitivity and negative control
+E22n_noH: AUC 0.731 [0.676-0.784] | vs ref +0.081 [+0.023, +0.138] | E22n minus it +0.049 [+0.020, +0.076]
+E22_negctrl: AUC 0.633 [0.573-0.688] | vs ref -0.018 [-0.072, +0.036] | E22n minus it +0.148 [+0.090, +0.205]
+
+## 5. Age strata and first visit
+    stratum   n  pos                E22n      ref_single_num                 age             dAUC vs ref
+        <25 380   95 0.722 [0.631-0.804] 0.521 [0.430-0.616] 0.476 [0.383-0.573] +0.202 [+0.093, +0.316]
+      25-29 196   52 0.662 [0.552-0.784] 0.429 [0.315-0.545] 0.513 [0.400-0.622] +0.240 [+0.085, +0.396]
+       >=30 368   20 0.822 [0.720-0.914] 0.529 [0.387-0.720] 0.600 [0.438-0.770] +0.286 [+0.128, +0.437]
+first visit 523  125 0.784 [0.738-0.828] 0.683 [0.632-0.732] 0.680 [0.621-0.734] +0.101 [+0.054, +0.148]
+
+## 6. Operating point (Youden, in fold), calibration (raw and Platt in fold), decision curve
+                     0               1      2
+model             E22n  ref_single_num    age
+sens             0.751           0.665  0.857
+spec             0.632           0.516  0.443
+ppv              0.306           0.228  0.249
+npv              0.922           0.878  0.935
+raw_slope        1.157           0.584  0.944
+raw_intercept   -0.994          -1.174 -0.085
+raw_brier        0.155           0.182   0.14
+raw_mean_pred     0.34           0.345  0.178
+platt_slope      1.204           1.179  0.891
+platt_intercept  0.238           0.274 -0.169
+platt_brier      0.127           0.141   0.14
+platt_mean_pred  0.179           0.176  0.179
+
+net benefit (Platt-calibrated in fold; treat none = 0):
+model        E22n     age  ref_single_num  treat all
+threshold                                           
+0.05       0.1362  0.1340          0.1330     0.1336
+0.10       0.1060  0.0978          0.0843     0.0855
+0.15       0.0813  0.0696          0.0515     0.0317
+0.20       0.0583  0.0263          0.0290    -0.0289
+0.25       0.0372 -0.0052         -0.0078    -0.0975
+0.30       0.0192 -0.0121         -0.0096    -0.1758
+0.35       0.0129 -0.0086         -0.0041    -0.2663
+0.40       0.0023 -0.0035         -0.0012    -0.3718
+0.45      -0.0059 -0.0014          0.0000    -0.4965
+0.50      -0.0089  0.0000          0.0000    -0.6462
+
+## 7. Leakage checks: each new block on its own (univariate, descriptive)
+H fellow_cxl_before_visit: AUC 0.394
+H years_since_fellow_cxl: AUC 0.389
+H fellow_kp_before_visit: AUC 0.490
+H fellow_cxl_unknown: AUC 0.499
+I_Z: max univariate |AUC-0.5| own 0.086 (median 0.020), own-fellow 0.100 (median 0.025), dims 135
+I_D: max univariate |AUC-0.5| own 0.121 (median 0.020), own-fellow 0.111 (median 0.027), dims 1536
+I_L: max univariate |AUC-0.5| own 0.099 (median 0.023), own-fellow 0.111 (median 0.039), dims 384
+I_X: max univariate |AUC-0.5| own 0.082 (median 0.020), own-fellow 0.099 (median 0.021), dims 384
+I_T: max univariate |AUC-0.5| own 0.094 (median 0.023), own-fellow 0.110 (median 0.029), dims 384
+
+## 8. Interpretation (descriptive; numeric bilateral LGBM bn_lgbm fitted on all 944)
+hyper-parameters {'n_estimators': 100, 'num_leaves': 2}; mean |SHAP| by family: fel 0.622, age 0.338, H (fellow treatment) 0.314, own 0.249, asym 0.038, worse 0.000
+top 15 features by mean |SHAP|:
+age                        0.3379
+years_since_fellow_cxl     0.2618
+pachy_min_per_age          0.2474
+fel_D4mm Prog              0.1848
+fel_IHD:                   0.1088
+fel_kmax_minus_km          0.0599
+fel_R Min (mm)             0.0540
+fellow_cxl_before_visit    0.0524
+fel_Pachy Pupil:           0.0453
+fel_KI:                    0.0283
+fel_D6mm Prog              0.0217
+fel_RSagMin:               0.0166
+fel_IVA:                   0.0166
+asym_C.Vol D 5mm:          0.0153
+fel_pachy_drop_4mm         0.0137

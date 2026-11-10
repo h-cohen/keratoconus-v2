@@ -1,0 +1,211 @@
+,0
+age,0.3378820930606661
+years_since_fellow_cxl,0.2618477970978381
+pachy_min_per_age,0.2474145090759001
+fel_D4mm Prog,0.18478692959922582
+fel_IHD:,0.10880549487758827
+fel_kmax_minus_km,0.059854113724843276
+fel_R Min (mm),0.05396966014800894
+fellow_cxl_before_visit,0.052439905779250964
+fel_Pachy Pupil:,0.04528717361601551
+fel_KI:,0.02826694560908951
+fel_D6mm Prog,0.02169496500654425
+fel_RSagMin:,0.016645586420834076
+fel_IVA:,0.01659820249303799
+asym_C.Vol D 5mm:,0.015292687931891704
+fel_pachy_drop_4mm,0.013728186079103533
+fel_Pachy Min:,0.012951096913157456
+fel_C.Vol D 5mm:,0.012436548275392726
+fel_Pachy Apex:,0.012301574608156713
+fel_pachy_min_per_age,0.012164062847843308
+asym_C.Vol D 3mm:,0.011793353894245028
+fel_D0mm Pachy,0.011768930075743627
+asym_C.Vol D 10mm:,0.011090644579338503
+fel_D2mm Pachy,0.010534027375159006
+Asph. Q F:,0.0018019573493483513
+K1 B (D):,0.0
+K2 B (D):,0.0
+Asph. Q B:,0.0
+Pachy Apex:,0.0
+Pachy Pupil:,0.0
+Pachy Min:,0.0
+Astig B (D):,0.0
+R Per B (mm):,0.0
+Rm B (mm):,0.0
+Km B (mm):,0.0
+Rv B (mm):,0.0
+Rh B (mm):,0.0
+ISV:,0.0
+IVA:,0.0
+KI:,0.0
+CKI:,0.0
+IHA:,0.0
+IHD:,0.0
+RSagMin:,0.0
+D0mm Pachy,0.0
+D2mm Pachy,0.0
+D4mm Pachy,0.0
+D6mm Pachy,0.0
+D8mm Pachy,0.0
+C.Vol D 3mm:,0.0
+C.Vol D 5mm:,0.0
+D2mm Prog,0.0
+D10mm Pachy,0.0
+D8mm Prog,0.0
+D4mm Prog,0.0
+KMax Sagittal Front (D),0.0
+kmax_minus_km,0.0
+pachy_min_over_apex,0.0
+D6mm Prog,0.0
+pachy_min_over_pupil,0.0
+prog_mean,0.0
+prog_max,0.0
+pachy_drop_4mm,0.0
+Pachy Min Pos X:,0.0
+Pachy Min Pos Y:,0.0
+R Min B (mm):,0.0
+Num. Ecc. B:,0.0
+C.Vol D 7mm:,0.0
+C.Vol D 10mm:,0.0
+Rf F (mm):,0.0
+Rs F (mm):,0.0
+K2 F (D):,0.0
+Rm F (mm):,0.0
+Rv F (mm):,0.0
+Rh F (mm):,0.0
+Astig F (D):,0.0
+R Per F (mm),0.0
+R Min (mm),0.0
+Num. Ecc. F:,0.0
+Rf B (mm):,0.0
+Rs B (mm):,0.0
+Km F (D):,0.0
+K1 F (D):,0.0
+fel_Rh B (mm):,0.0
+fel_Rs B (mm):,0.0
+fel_Rf B (mm):,0.0
+fel_Asph. Q F:,0.0
+fel_Num. Ecc. F:,0.0
+fel_R Per F (mm),0.0
+fel_Astig F (D):,0.0
+fel_Km F (D):,0.0
+fel_Rv F (mm):,0.0
+fel_Rm F (mm):,0.0
+fel_K2 F (D):,0.0
+fel_K1 F (D):,0.0
+fel_Rs F (mm):,0.0
+fel_Rh F (mm):,0.0
+fel_Rf F (mm):,0.0
+cvol_ratio,0.0
+D10mm Prog,0.0
+elev_ratio,0.0
+asph_ratio,0.0
+ecc_front_back,0.0
+fel_C.Vol D 3mm:,0.0
+fel_Pachy Min Pos Y:,0.0
+fel_Pachy Min Pos X:,0.0
+fel_C.Vol D 7mm:,0.0
+fel_IHA:,0.0
+fel_CKI:,0.0
+fel_C.Vol D 10mm:,0.0
+fel_Num. Ecc. B:,0.0
+fel_Asph. Q B:,0.0
+fel_Astig B (D):,0.0
+fel_R Per B (mm):,0.0
+fel_R Min B (mm):,0.0
+fel_D10mm Pachy,0.0
+fel_D8mm Pachy,0.0
+fel_D6mm Pachy,0.0
+fel_D4mm Pachy,0.0
+fel_ISV:,0.0
+fel_D10mm Prog,0.0
+fel_D8mm Prog,0.0
+fel_D2mm Prog,0.0
+fel_pachy_min_over_apex,0.0
+fel_KMax Sagittal Front (D),0.0
+fel_prog_mean,0.0
+fel_pachy_min_over_pupil,0.0
+fel_prog_max,0.0
+fel_ecc_front_back,0.0
+fel_asph_ratio,0.0
+fel_elev_ratio,0.0
+fel_cvol_ratio,0.0
+asym_Rf F (mm):,0.0
+asym_Rs F (mm):,0.0
+asym_Rh F (mm):,0.0
+asym_Rv F (mm):,0.0
+asym_K1 F (D):,0.0
+asym_K2 F (D):,0.0
+asym_Rm F (mm):,0.0
+asym_Km F (D):,0.0
+asym_Astig F (D):,0.0
+asym_R Per F (mm),0.0
+fel_Rv B (mm):,0.0
+fel_Km B (mm):,0.0
+fel_K1 B (D):,0.0
+fel_K2 B (D):,0.0
+fel_Rm B (mm):,0.0
+asym_Rs B (mm):,0.0
+asym_Rf B (mm):,0.0
+asym_Asph. Q F:,0.0
+asym_Num. Ecc. F:,0.0
+asym_R Min (mm),0.0
+asym_Rv B (mm):,0.0
+asym_Rm B (mm):,0.0
+asym_Rh B (mm):,0.0
+asym_R Min B (mm):,0.0
+asym_Num. Ecc. B:,0.0
+asym_Asph. Q B:,0.0
+asym_Pachy Apex:,0.0
+asym_Pachy Pupil:,0.0
+asym_Km B (mm):,0.0
+asym_K1 B (D):,0.0
+asym_K2 B (D):,0.0
+asym_Pachy Min Pos Y:,0.0
+asym_Pachy Min Pos X:,0.0
+asym_Pachy Min:,0.0
+asym_C.Vol D 7mm:,0.0
+asym_ISV:,0.0
+asym_IVA:,0.0
+asym_KI:,0.0
+asym_CKI:,0.0
+asym_IHA:,0.0
+asym_IHD:,0.0
+asym_RSagMin:,0.0
+asym_D0mm Pachy,0.0
+asym_D2mm Pachy,0.0
+asym_D4mm Pachy,0.0
+asym_Astig B (D):,0.0
+asym_R Per B (mm):,0.0
+asym_D8mm Pachy,0.0
+asym_D6mm Pachy,0.0
+asym_D10mm Pachy,0.0
+asym_D2mm Prog,0.0
+asym_D8mm Prog,0.0
+asym_D10mm Prog,0.0
+asym_D4mm Prog,0.0
+asym_D6mm Prog,0.0
+asym_pachy_min_over_apex,0.0
+asym_pachy_min_over_pupil,0.0
+asym_pachy_min_per_age,0.0
+asym_prog_mean,0.0
+asym_prog_max,0.0
+asym_pachy_drop_4mm,0.0
+asym_KMax Sagittal Front (D),0.0
+asym_kmax_minus_km,0.0
+asym_asph_ratio,0.0
+asym_ecc_front_back,0.0
+asym_elev_ratio,0.0
+asym_cvol_ratio,0.0
+worse_K2 F (D):,0.0
+worse_ISV:,0.0
+has_fellow,0.0
+worse_KMax Sagittal Front (D),0.0
+worse_IHD:,0.0
+worse_KI:,0.0
+worse_prog_max,0.0
+worse_IVA:,0.0
+worse_Pachy Min:,0.0
+fellow_kp_before_visit,0.0
+fellow_cxl_unknown,0.0
+fellow_tx_missing,0.0

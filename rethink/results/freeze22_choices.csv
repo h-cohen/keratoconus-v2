@@ -1,0 +1,5 @@
+slot,chosen,inner_auc
+headline,bi_L_lgbm,0.7987
+fallback_a,noH_bi_L_lgbm,0.7558
+fallback_b,noH_bn_lgbm,0.7402
+ref,num_lgbm,0.627

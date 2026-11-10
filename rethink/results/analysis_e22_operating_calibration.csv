@@ -1,0 +1,4 @@
+model,sens,spec,ppv,npv,raw_slope,raw_intercept,raw_brier,raw_mean_pred,platt_slope,platt_intercept,platt_brier,platt_mean_pred
+E22n,0.751,0.632,0.306,0.922,1.157,-0.994,0.155,0.34,1.204,0.238,0.127,0.179
+ref_single_num,0.665,0.516,0.228,0.878,0.584,-1.174,0.182,0.345,1.179,0.274,0.141,0.176
+age,0.857,0.443,0.249,0.935,0.944,-0.085,0.14,0.178,0.891,-0.169,0.14,0.179

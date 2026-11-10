@@ -616,3 +616,95 @@ Supporting tables for E22 blocks: `panel_all.py` (P and M for all 2,260 composit
 DINOv2-small mean-pooled patch tokens per map, 4 × 384 = 1,536 dims — above the 384 cap before in-fold PCA;
 left eyes flipped; 2,259/2,260 complete, one composite has no crops). Cohort scans with a same-day fellow
 composite (any composite, cohort or not): 563 / 944; with same-day fellow numerics: 941 / 944.
+
+### E22 results (`exp22_bilateral.py`, `analysis_e22.py` → `results/analysis_e22.txt` and `analysis_e22_*.csv`)
+
+All 944 scans, harness folds (5 × 5, seeds 2026–2030), paired cluster bootstrap. Full tables in
+`results/analysis_e22.txt`.
+
+**Headline — `E22n_nested`** (inner-CV selection over the 21 candidates per outer fold):
+**AUC 0.780 [0.727–0.829]**, first visit 0.784, per-repeat 0.760 ± 0.013, mean within-fold 0.779.
+- vs `E22_ref_single_num` (0.650 [0.593–0.708], first visit 0.683; primary): ΔAUC +0.131, CI over bootstrap seeds
+  0/1/2 [+0.069, +0.190] / [+0.068, +0.195] / [+0.065, +0.201]; E22n beats ref in 25/25 outer folds.
+- vs `E07_age_all` (0.661): +0.120, [+0.052, +0.185] / [+0.052, +0.185] / [+0.054, +0.188].
+- Choices (25 folds): ens_D 7, bi_D_lgbm 5, bi_L_lgbm 4, ens_L 2, bnpm_lgbm 2, bi_D_lr, bi_Z_lgbm, bi_T_lgbm,
+  ens_Z, bn_aug_lgbm 1 each. The ref chose num_lgbm 19, num_lr 6.
+
+| candidate | AUC | first | Δ vs ref | | candidate | AUC | first | Δ vs ref |
+|---|---|---|---|---|---|---|---|---|
+| bn_lr | 0.751 | 0.757 | +0.101 | | bi_L_lr | 0.759 | 0.767 | +0.109 |
+| bn_lgbm | 0.780 | 0.770 | +0.130 | | bi_L_lgbm | 0.790 | 0.786 | +0.140 |
+| bn_aug_lr | 0.768 | 0.770 | +0.118 | | bi_X_lr | 0.745 | 0.750 | +0.095 |
+| bn_aug_lgbm | 0.780 | 0.778 | +0.130 | | bi_X_lgbm | 0.781 | 0.773 | +0.131 |
+| bnpm_lr | 0.745 | 0.760 | +0.095 | | bi_T_lr | 0.749 | 0.758 | +0.099 |
+| bnpm_lgbm | 0.786 | 0.784 | +0.137 | | bi_T_lgbm | 0.798 | 0.788 | +0.149 |
+| bi_Z_lr | 0.751 | 0.765 | +0.102 | | ens_Z | 0.780 | 0.789 | +0.131 |
+| bi_Z_lgbm | 0.787 | 0.779 | +0.138 | | ens_D | 0.789 | 0.795 | +0.139 |
+| bi_D_lr | 0.768 | 0.780 | +0.119 | | ens_L | 0.783 | 0.789 | +0.133 |
+| bi_D_lgbm | 0.792 | 0.784 | +0.143 | | ens_X | 0.776 | 0.783 | +0.126 |
+| | | | | | ens_T | 0.779 | 0.785 | +0.129 |
+
+Every Δ vs ref has a CI excluding 0 (per-candidate CIs in `analysis_e22_candidates.csv`). Images add little over
+numerics: best image candidate 0.798 (bi_T_lgbm, post-hoc) vs bn_lgbm 0.780; the nested headline (0.780) equals
+the numeric-only bn_lgbm. The SSL encoders are not better than Zernike or frozen DINOv2.
+
+**Label-free sensitivity / negative control.**
+- `E22n_noH` 0.731 [0.676–0.784], first 0.758; vs ref +0.081 [+0.023, +0.138]; the treatment block H adds
+  +0.049 [+0.020, +0.076].
+- `E22_negctrl` (whole fellow from a random patient ±2 y of age, nested over 4 bn) 0.633 [0.573–0.688]; vs ref
+  −0.018 [−0.072, +0.036]. The gain is the patient's own fellow eye, not population structure.
+
+**Severity (KMax of the scanned eye; original four bins exact, plus > 55 D).**
+
+| stage | n / pos | E22n | ref | age | Δ vs ref |
+|---|---|---|---|---|---|
+| ≤ 46.5 | 222 / 44 | 0.821 | 0.651 | 0.584 | +0.170 [+0.071, +0.269] |
+| 46.5–48 | 101 / 13 | 0.843 | 0.580 | 0.552 | +0.257 [+0.053, +0.475] |
+| 48–53 | 232 / 38 | 0.800 | 0.622 | 0.633 | +0.184 [+0.047, +0.317] |
+| 53–55 | 102 / 20 | 0.607 | 0.634 | 0.607 | −0.026 [−0.168, +0.112] |
+| > 55 | 287 / 52 | 0.753 | 0.706 | 0.795 | +0.048 [−0.067, +0.159] |
+
+Interaction (gain at KMax ≤ 48 minus gain > 48): +0.125 [−0.007, +0.249]. The bilateral gain is in early and
+moderate disease; above 53 D it is not shown, and above 55 D age alone does as well.
+
+**Fellow strata** (mutually exclusive): fellow composite 552 / 94: E22n 0.759 vs ref 0.719 vs age 0.721;
+fellow numerics only 147 / 59: 0.710 vs 0.586 vs 0.640; fellow treated before the visit 244 / 14: 0.611 vs 0.552
+vs 0.516; no fellow 1 / 0. `has_fellow_image` alone 0.480.
+
+**Age strata / first visit.** < 25 (380 / 95): 0.722 vs ref 0.521; 25–29 (196 / 52): 0.662 vs 0.429; ≥ 30
+(368 / 20): 0.822 vs 0.529; first visit (523 / 125): 0.784 vs 0.683, Δ +0.101 [+0.054, +0.148]. The model
+is not "age": it beats age-only within every age band.
+
+**Operating point, calibration, DCA** (Youden threshold and Platt map fitted on the other folds): E22n sens
+0.751, spec 0.632, PPV 0.306, NPV 0.922 (ref 0.665 / 0.516 / 0.228 / 0.878; age 0.857 / 0.443 / 0.249 / 0.935).
+Raw E22n is uncalibrated (mean prediction 0.34 vs prevalence 0.177, from `scale_pos_weight`); after in-fold Platt:
+slope 1.20, intercept 0.24, Brier 0.127 (ref 0.141, age 0.140). Net benefit is above age, ref and treat-all at
+every threshold 0.10–0.40 (e.g. 0.20: 0.058 vs age 0.026, ref 0.029); ≈ 0 from 0.45.
+
+**Leakage checks.** Block H alone 0.39 (= 0.61 inverted), as expected for "fellow already treated → less
+referral". Encoder dimensions alone: max univariate |AUC − 0.5| ≤ 0.12 (medians 0.02–0.04). `has_fellow_image`
+0.48. Negative control at chance vs ref. One flag to report, not a leak: the "fellow numerics only" stratum has a
+40% positive rate (59 / 147) vs 17% with a fellow composite — whether the other eye's composite was exported is a
+workflow difference correlated with referral. No candidate uses an image-availability flag except via
+`has_fellow_image` (block I / PM), which alone is at chance; the numeric-only bn models reach the same AUC.
+
+**Interpretation (SHAP, numeric bilateral LGBM on all 944, descriptive):** mean |SHAP| by family: fellow-eye
+numerics 0.62, age 0.34, fellow treatment H 0.31, own eye 0.25, own − fellow 0.04. Top: age, years since fellow
+CXL, Pachy Min / age, fellow D4mm Prog, fellow IHD, fellow KMax − Km. The signal is mostly the **fellow eye's
+severity** and whether/when it was already treated, i.e. a patient-level picture at the visit.
+
+**Configuration count:** `experiments.csv` now 127 rows; E22 added 25 (ref, 21 candidates, E22n, noH, negctrl)
+→ 88 + 25 = **113 distinct configurations**.
+
+### E22 freeze (`freeze_bilateral.py` → `rethink/frozen/bilateral.pkl`, `enc_L.pt`; `score_external.py`)
+
+Inner selection once on all 944 scans (4-fold patient-grouped, seed 2026), winner refitted on all 944 (+ aug rows
+if used): headline **bi_L_lgbm** (inner 0.799); fallback (a) without H **noH_bi_L_lgbm** (0.756); fallback (b)
+numerics N only **noH_bn_lgbm** (0.740); ref num_lgbm (0.627); age LR. Encoder L weights saved.
+`score_external.py` builds every block from raw inputs (fellow rows with empty y, `--tx` dates table, `--composites`
+dir), scores whichever models the input supports, prints aggregates only. `test_score_external.py` ran it from a
+code-only copy (no `data/`, no `rethink/data/`) on 60 cohort patients (159 scored scans, 157 fellow-only rows,
+187 composites under neutral names): its AUCs equal the internal frozen path exactly (headline 0.858, (a) 0.871,
+(b) 0.851, ref 0.917 — apparent, on training patients, inflated by design), and it correctly declines the headline
+without `--tx` and (a) without composites. The frozen LGBM outputs are ranking scores (mean ≈ 0.42); recalibrate
+(Platt) on the external set before reading them as risks.
