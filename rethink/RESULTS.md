@@ -514,6 +514,11 @@ E07_E06b_all vs E07_age_all, all 944 scans.
   barely predicts objective progression.
 
 ## Harness / protocol notes
+
+- 2026-11-10: the last 7 rows of `experiments.csv` (E00_*, git 07455a2) are an accidental re-run of
+  E00 caused by importing `exp00_baselines.py` (it then had no `__main__` guard). Their numbers equal
+  the original E00 rows exactly. They are kept, per the never-delete rule, but are not new
+  configurations: 95 rows, 88 distinct configurations.
 - `harness.summarise` now returns NaN for the first-visit AUC when a subset has no first-visit scans
   (needed for E03). Earlier numbers are unchanged.
 - E00 was rerun during setup, which appended a second copy of each E00 row to `experiments.csv`.

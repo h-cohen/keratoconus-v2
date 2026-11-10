@@ -2,6 +2,7 @@
 is split into a 4x4 grid; each cell gives mean hue as sin/cos (hue is circular), mean saturation and
 mean value (HSV). Output rethink/data/colorgrid.npy, shape (N, 4 maps, 16 cells, 4). Unsupervised.
 """
+import os
 import sys
 from pathlib import Path
 
@@ -11,7 +12,7 @@ from PIL import Image
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
-IMG = Path('/home/hadar/Cloud/Work/projects/keratoconus-v2/data/cropped_output_v2')
+IMG = Path(os.environ.get('KC_SRC', '/home/hadar/Cloud/Work/projects/keratoconus-v2'), 'data/cropped_output_v2')
 MAPS = ['corneal_thickness', 'curvature_front', 'elevation_front', 'elevation_back']
 
 

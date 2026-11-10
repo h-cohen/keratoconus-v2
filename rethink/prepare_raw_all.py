@@ -5,6 +5,7 @@ read, so whether a scan gets a fellow cannot depend on any label or treatment da
 Output rethink/data/raw_all_exams.parquet: pid (cohort hash), eye, date, status_ok, age + 54 numerics
 (cohort sign convention; NaN where the export has none).
 """
+import os
 import sys
 from pathlib import Path
 
@@ -15,7 +16,7 @@ from prepare_data import pid_of  # noqa: E402
 from prepare_history import parse_date  # noqa: E402
 
 ROOT = Path(__file__).parent
-SRC = Path('/home/hadar/Cloud/Work/projects/keratoconus-v2/data/221204_v2/Raw_Combined_IdsMesh.xlsx')
+SRC = Path(os.environ.get('KC_SRC', '/home/hadar/Cloud/Work/projects/keratoconus-v2'), 'data/221204_v2/Raw_Combined_IdsMesh.xlsx')
 
 
 def main():

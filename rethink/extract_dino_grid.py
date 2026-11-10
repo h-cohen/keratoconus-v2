@@ -2,6 +2,7 @@
 pooled to 4x4 cells. Output rethink/data/dinogrid_<map>.npy, shape (N, 16 cells, 384), rows aligned
 with cohort.parquet. Unsupervised: no labels read.
 """
+import os
 import sys
 from pathlib import Path
 
@@ -13,7 +14,7 @@ from transformers import AutoImageProcessor, AutoModel
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
-IMG = Path('/home/hadar/Cloud/Work/projects/keratoconus-v2/data/cropped_output_v2')
+IMG = Path(os.environ.get('KC_SRC', '/home/hadar/Cloud/Work/projects/keratoconus-v2'), 'data/cropped_output_v2')
 MAPS = ['corneal_thickness', 'curvature_front', 'elevation_front', 'elevation_back']
 MODEL = 'facebook/dinov2-small'
 

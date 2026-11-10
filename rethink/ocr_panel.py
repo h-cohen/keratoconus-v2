@@ -8,6 +8,7 @@ values ARE in the export (pachymetry at pupil / apex / thinnest point, thinnest 
 on half of the images; accuracy is measured on the other half before the new fields are read.
 Output: rethink/data/panel_ocr.parquet (cohort order); never reads labels.
 """
+import os
 import sys
 from pathlib import Path
 
@@ -17,7 +18,7 @@ from PIL import Image
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
-IMG = Path('/home/hadar/Cloud/Work/projects/keratoconus-v2/data/image_scans')
+IMG = Path(os.environ.get('KC_SRC', '/home/hadar/Cloud/Work/projects/keratoconus-v2'), 'data/image_scans')
 # name: (x0, x1, y_centre) of the value box
 FIELDS = {
     'pachy_pupil': (136, 202, 609), 'pupil_x': (229, 264, 609), 'pupil_y': (283, 318, 609),

@@ -10,6 +10,7 @@ Output rethink/data/raw_exams.parquet: pid (same salted hash as cohort.parquet),
 status, and the scan's numeric indices. Names, birth dates, ids, notes, KC diagnosis, CXL and
 keratoplasty fields are dropped.
 """
+import os
 import datetime as dt
 import re
 import sys
@@ -22,7 +23,7 @@ from prepare_data import pid_of  # noqa: E402
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
-SRC = Path('/home/hadar/Cloud/Work/projects/keratoconus-v2/data/221204_v2/Raw_Combined_IdsMesh.xlsx')
+SRC = Path(os.environ.get('KC_SRC', '/home/hadar/Cloud/Work/projects/keratoconus-v2'), 'data/221204_v2/Raw_Combined_IdsMesh.xlsx')
 NEW_EXPORT_FROM = 10125
 KEEP = ['Km F (D):', 'K1 F (D):', 'K2 F (D):', 'Astig F (D):', 'K1 B (D):', 'K2 B (D):', 'Pachy Apex:',
         'Pachy Min:', 'ISV:', 'IVA:', 'KI:', 'CKI:', 'IHA:', 'IHD:', 'RSagMin:', 'KMax Sagittal Front (D)',

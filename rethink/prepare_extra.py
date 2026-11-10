@@ -12,6 +12,7 @@ Output rethink/data/extra_exams.parquet: pid (cohort hash), eye, date, y, status
 age + 54 numerics. No names, ids or dates of birth. Extras of cohort patients may only be used when the
 patient is in the training fold (exp18_augment.py enforces this).
 """
+import os
 import re
 import sys
 from pathlib import Path
@@ -25,7 +26,7 @@ from prepare_history import parse_date  # noqa: E402
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
-SRC = Path('/home/hadar/Cloud/Work/projects/keratoconus-v2/data/221204_v2')
+SRC = Path(os.environ.get('KC_SRC', '/home/hadar/Cloud/Work/projects/keratoconus-v2'), 'data/221204_v2')
 
 
 def main():

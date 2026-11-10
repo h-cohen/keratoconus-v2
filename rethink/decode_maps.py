@@ -11,6 +11,7 @@ cohort order: rethink/data/decoded_maps.npy (N, 4, 58, 58) float32, 5x5-pixel bl
 rethink/data/decoded_meta.parquet (palette check, thinnest-band centroid in px for scale calibration).
 No labels are read.
 """
+import os
 import sys
 from pathlib import Path
 
@@ -20,7 +21,7 @@ from PIL import Image
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
-IMG = Path('/home/hadar/Cloud/Work/projects/keratoconus-v2/data/image_scans')
+IMG = Path(os.environ.get('KC_SRC', '/home/hadar/Cloud/Work/projects/keratoconus-v2'), 'data/image_scans')
 MAPS = ['corneal_thickness', 'curvature_front', 'elevation_front', 'elevation_back']
 CENTRE = {'corneal_thickness': (593, 243), 'curvature_front': (967, 243),
           'elevation_front': (593, 641), 'elevation_back': (967, 641)}

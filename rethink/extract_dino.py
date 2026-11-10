@@ -3,6 +3,7 @@
 Unsupervised: no labels are read. Output rethink/data/dino_<map>.npy, rows aligned with cohort.parquet.
 Per map: CLS token + mean of patch tokens (2 x 384). Image preprocessing is the model's default.
 """
+import os
 import sys
 from pathlib import Path
 
@@ -14,7 +15,7 @@ from transformers import AutoImageProcessor, AutoModel
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
-IMG = Path('/home/hadar/Cloud/Work/projects/keratoconus-v2/data/cropped_output_v2')
+IMG = Path(os.environ.get('KC_SRC', '/home/hadar/Cloud/Work/projects/keratoconus-v2'), 'data/cropped_output_v2')
 MAPS = ['corneal_thickness', 'curvature_front', 'elevation_front', 'elevation_back']
 MODEL = 'facebook/dinov2-small'
 
