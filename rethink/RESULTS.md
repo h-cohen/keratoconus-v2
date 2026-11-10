@@ -407,6 +407,60 @@ numerics LightGBM 1).
 ResNet, DINOv2, colour grids or decoded indices. Adding it to age makes things significantly worse
 (more noise dimensions). The map content does not carry referral information beyond age.
 
+## E20 / E21 — bilateral single visit with fellows recovered from the raw export (`exp20_bilateral.py`, `prepare_raw_all.py`, `exp21_bilateral_clean.py`)
+
+Three changes over E02/E13:
+1. **Recovered fellows.** The other eye's same-day exam is taken from the raw export when it has no
+   image.
+2. **Full features.** All 54 numerics + 12 indices for own eye, fellow and own − fellow, plus
+   worse-eye flags. E02 used 12 indices only.
+3. **Bilateral training augmentation.** The extra labelled exams, each with its own fellow, are added
+   to training rows only.
+
+Candidates are LR and age-monotone LightGBM, each on the engineered and full feature sets, with and
+without augmentation. Nested selection works as in E16. Strata are by E20 fellow source:
+- image: 360 scans, 23.9% positive;
+- raw: 268 scans, 19.0% positive;
+- none: 316 scans, 9.5% positive.
+
+**E20 fellow definition.** E20 takes fellows from `extra_exams.parquet`, which keeps only pre-CXL
+exams. Of the 316 scans without a fellow, 273 have a fellow eye cross-linked before or at the visit,
+and 1 has an undated CXL. So `has_fellow` effectively means "the other eye is not yet treated".
+- This is past information, known at the visit (no future leak).
+- It comes from the clinical sheet, not the scan.
+- The image fellows of E02/E13 behave the same way, because the cohort excludes post-CXL scans.
+- **User decision 2026-11-10:** fellow treatment status as of the visit is a valid input.
+
+**E21** uses a label-free definition: any same-day exam of the other eye in the raw export, preferring
+status OK. This gives 941/944 scans a fellow, and the flag alone has AUC 0.502. The old fellow
+candidates are not in its pool.
+
+| run (all 944) | AUC [CI] | first-visit | ΔAUC vs age [CI] | image / raw / none (age) |
+|---|---|---|---|---|
+| E20_b_eng_lgbm | 0.774 [0.724–0.822] | 0.777 | +0.114 [+0.055, +0.174] | 0.757 / 0.801 / 0.580 (0.680 / 0.719 / 0.592) |
+| E20_b_full_lgbm | 0.772 [0.720–0.820] | 0.777 | +0.112 [+0.049, +0.175] | 0.766 / 0.781 / 0.546 |
+| E20_b_full_aug_lgbm | 0.771 [0.717–0.820] | 0.781 | +0.110 [+0.049, +0.174] | 0.757 / 0.793 / 0.577 |
+| **E20n nested (pool B + 9)** | **0.761** [0.710–0.812] | 0.775 | **+0.101 [+0.042, +0.160]** | 0.753 / 0.777 / 0.559 |
+| E21_b_full_lgbm | 0.743 [0.692–0.793] | 0.753 | +0.082 [+0.015, +0.151] | 0.764 / 0.784 / 0.671 |
+| E21_b_full_aug_lr | 0.741 [0.681–0.795] | 0.765 | +0.080 [+0.018, +0.145] | 0.778 / 0.755 / 0.691 |
+| E21_b_full_aug_lgbm | 0.744 [0.689–0.797] | 0.759 | +0.083 [+0.015, +0.152] | 0.752 / 0.779 / 0.709 |
+| **E21n nested (pool A + 8)** | **0.725** [0.668–0.778] | 0.749 | **+0.064 [+0.003, +0.130]** | 0.733 / 0.775 / 0.674 |
+
+All 17 E20/E21 runs are logged. The other E20 rows are 0.730–0.765 and the other E21 rows are
+0.681–0.740.
+
+Nested choices:
+- E20n: eng_aug_lgbm 10, full_lgbm 7, eng_lgbm 4, eng_aug_lr 2, b_E13 1, full_aug_lgbm 1.
+- E21n: full_aug_lgbm 10, full_aug_lr 6, full_lgbm 4, eng_aug_lgbm 3, eng_lgbm 2.
+
+**Interpretation:** both eyes at one visit predict referral well beyond age.
+- Clean selection beats age with the CI excluding 0 under either fellow definition.
+- With label-free fellows, the gain holds in every stratum, including scans whose fellow was already
+  treated (0.67–0.71 vs age 0.59).
+- E20's extra ~0.035 comes from knowing the fellow's treatment status.
+- The project continues on this path only (bilateral single visit); single-eye and history scripts
+  are archived.
+
 ## Frozen models for external validation
 
 `freeze_models.py` fits every candidate on all 944 scans and writes `rethink/frozen/models.pkl`
