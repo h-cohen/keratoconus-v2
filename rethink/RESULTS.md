@@ -602,3 +602,17 @@ nothing is selected on referral AUC.
 - **Embedding:** full map resized to 128 px, no augmentation, pooled backbone output (384-d), saved per composite
   as `rethink/data/emb_{L,X,T}.npy`. Checkpoints every 10 epochs in `rethink/results/ssl/<enc>/` (resumable);
   training curves in `curve.csv` there, with label-free embedding diagnostics (effective rank) in `embed_stats.csv`.
+
+### E22 encoders: training record (label-free)
+
+All three ran the full 300 epochs at the fixed configuration on separate 2080 Ti cards (L 54 min, X 9 min,
+T 46 min); last-epoch checkpoints embedded every composite. Loss (prediction / SIGReg) epoch 1 → 300:
+L 1.25 (0.16 / 21.9) → 0.12 (0.043 / 1.50); X 1.17 (0.31 / 17.5) → 0.26 (0.13 / 2.62);
+T 0.91 (0.28 / 12.8) → 0.08 (0.017 / 1.29). Embedding effective rank (of 384): L 13.5, X 11.0, T 34.9 — no
+collapse. Curves: `rethink/results/ssl/<enc>/curve.csv` (gitignored with the checkpoints; copied in the bundle).
+
+Supporting tables for E22 blocks: `panel_all.py` (P and M for all 2,260 composites; equal to E17's
+`rawmap_features` on all 944 cohort composites, 19/19 features 100%) and `dino_all.py` (encoder D: frozen
+DINOv2-small mean-pooled patch tokens per map, 4 × 384 = 1,536 dims — above the 384 cap before in-fold PCA;
+left eyes flipped; 2,259/2,260 complete, one composite has no crops). Cohort scans with a same-day fellow
+composite (any composite, cohort or not): 563 / 944; with same-day fellow numerics: 941 / 944.

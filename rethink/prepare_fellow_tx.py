@@ -51,13 +51,18 @@ def main():
 _TX = None
 
 
-def tx_features(pid, eye, date):
-    """Block H for rows (pid, own eye, visit date) -> DataFrame of H_COLS. Uses the OTHER eye's dates, `<` only."""
+def tx_features(pid, eye, date, table=None):
+    """Block H for rows (pid, own eye, visit date) -> DataFrame of H_COLS. Uses the OTHER eye's dates, `<` only.
+    table: optional DataFrame (pid, eye, cxl_date, cxl_undated, kp_date, kp_undated); default eye_tx.parquet."""
     global _TX
-    if _TX is None:
-        _TX = pd.read_parquet(DATA / 'eye_tx.parquet').set_index(['pid', 'eye'])
+    if table is not None:
+        tx = table.set_index(['pid', 'eye'])
+    else:
+        if _TX is None:
+            _TX = pd.read_parquet(DATA / 'eye_tx.parquet').set_index(['pid', 'eye'])
+        tx = _TX
     other = np.where(np.asarray(eye) == 'right', 'left', 'right')
-    t = _TX.reindex(pd.MultiIndex.from_arrays([np.asarray(pid), other]))
+    t = tx.reindex(pd.MultiIndex.from_arrays([np.asarray(pid), other]))
     date = pd.to_datetime(pd.Series(np.asarray(date)))
     cxl, kp = pd.to_datetime(t.cxl_date.values), pd.to_datetime(t.kp_date.values)
     missing = t.cxl_undated.isna().values  # patient-eye not in the sheet
