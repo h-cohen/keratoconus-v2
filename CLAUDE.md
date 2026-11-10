@@ -165,3 +165,8 @@ it does not replace the primary label.
 - Default compute: CPU is fine for tabular work. The image work (E04) benefits from a GPU.
 - Do not edit `paper/` (manuscript drafts). It is gitignored.
 - Use `python -I` or run from the repo root. Do not write outputs into `data/`.
+
+## Sub-agents
+
+All sub-agents (Agent tool, workflows) run on Sonnet 5.5: pass `model: "sonnet"` (`claude-sonnet-5-5`) on every
+spawn. Do not use other models for sub-agents.
