@@ -21,7 +21,7 @@ from PIL import Image
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
-IMG = Path(os.environ.get('KC_SRC', '/home/hadar/Cloud/Work/projects/keratoconus-v2'), 'data/image_scans')
+IMG = Path(os.environ.get('KC_SRC', Path(__file__).resolve().parents[1]), 'data/image_scans')
 MAPS = ['corneal_thickness', 'curvature_front', 'elevation_front', 'elevation_back']
 CENTRE = {'corneal_thickness': (593, 243), 'curvature_front': (967, 243),
           'elevation_front': (593, 641), 'elevation_back': (967, 641)}

@@ -45,23 +45,24 @@ The rules are in `rethink/PROTOCOL.md`; read it before any experiment. The short
   3. the lockbox AUC is reported as the headline, whatever it is.
 - If a result looks too good, hunt for leakage before celebrating.
 
-## Setup (local)
+## Setup (single folder)
 
-This branch was built in a cloud session and delivered as a git bundle. From the main checkout
-(`~/Cloud/Work/projects/keratoconus-v2`):
+Everything lives in one folder, `keratoconus-v2/`, checked out on branch `clean-rethink` (2026-11-10;
+the old `keratoconus-v2-clean` worktree is gone). `data/` and `results/` (sources) and `rethink/data/`,
+`rethink/results/` and `rethink/frozen/` (built outputs) are gitignored and sit in the same folder.
+All scripts resolve paths from the repo root; set `KC_SRC` only if the data are elsewhere.
 
 ```bash
-git fetch results/rethink/clean-rethink.bundle clean-rethink:clean-rethink   # if not already done
-git worktree add ../keratoconus-v2-clean clean-rethink
-cd ../keratoconus-v2-clean
-pip install xgboost scikit-learn pandas pyarrow openpyxl lightgbm matplotlib
-export KC_SRC=~/Cloud/Work/projects/keratoconus-v2     # main checkout: holds data/ and results/
-python rethink/prepare_data.py          # -> rethink/data/{cohort.parquet,cnn_frozen.npy,...}
-python rethink/exp00_baselines.py       # sanity check: must reproduce the E00 table below
+cd keratoconus-v2
+pip install xgboost scikit-learn pandas pyarrow openpyxl lightgbm matplotlib torch transformers
+python -I rethink/exp00_baselines.py   # sanity check: must reproduce the E00 table below
+                                         # (appends 7 rows to experiments.csv; note them as a reproduction)
 ```
 
-`data/` and `results/` are gitignored, so they exist only in the main checkout. The branch has not
-been pushed to GitHub yet (`git push -u origin clean-rethink`).
+`rethink/data/` is already built. To rebuild it from scratch: `prepare_data.py`, `prepare_raw.py`,
+`prepare_history.py`, `prepare_extra.py`, `prepare_raw_all.py`, `decode_maps.py`, `decode_all.py`,
+`ocr_panel.py`, `extract_dino_grid.py`, `extract_colorgrid.py`. The current programme is in
+`gpu_run/DESIGN.md` (untracked); the agent brief is `gpu_run/AGENT_PROMPT.md`.
 
 ## Code map (`rethink/`)
 

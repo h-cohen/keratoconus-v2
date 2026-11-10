@@ -14,7 +14,7 @@ import pandas as pd
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
-SRC = Path(os.environ.get('KC_SRC', '/home/hadar/Cloud/Work/projects/keratoconus-v2'), 'data/221204_v2/Raw_Combined_IdsMesh.xlsx')
+SRC = Path(os.environ.get('KC_SRC', Path(__file__).resolve().parents[1]), 'data/221204_v2/Raw_Combined_IdsMesh.xlsx')
 # scan-level indices not already in the 55 numerics; no names, dates, labels or notes
 EXTRA = ['TKC:', 'D0mm Prog', 'Ecc. Zone:', 'Pupil Pos X:', 'Pupil Pos Y:', 'Axis F (flat):',
          'Axis B (flat):', 'RSagMin:', 'Pachy Min Pos X:', 'Pachy Min Pos Y:']

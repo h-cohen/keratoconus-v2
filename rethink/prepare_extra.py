@@ -26,7 +26,7 @@ from prepare_history import parse_date  # noqa: E402
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
-SRC = Path(os.environ.get('KC_SRC', '/home/hadar/Cloud/Work/projects/keratoconus-v2'), 'data/221204_v2')
+SRC = Path(os.environ.get('KC_SRC', Path(__file__).resolve().parents[1]), 'data/221204_v2')
 
 
 def main():

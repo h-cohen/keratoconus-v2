@@ -212,3 +212,6 @@ __marimo__/
 
 # frozen models trained on patient data
 rethink/frozen/
+
+# Manuscript drafts (not tracked)
+paper/
