@@ -523,3 +523,55 @@ E07_E06b_all vs E07_age_all, all 944 scans.
   (needed for E03). Earlier numbers are unchanged.
 - E00 was rerun during setup, which appended a second copy of each E00 row to `experiments.csv`.
   Count them once each.
+
+## E22 — bilateral single-visit programme on the GPU machine (`gpu_run/DESIGN.md`)
+
+### Set-up and environment (2026-11-10)
+
+- Branch `clean-rethink` from `a5a36c3`. Hardware: 7 × NVIDIA GeForce RTX 2080 Ti (11 GB, sm_75; an eighth card,
+  GPU 3, reports "Unknown Error" and is not used), driver 560.35.03 (CUDA ≤ 12.6), 40 CPU cores, 251 GB RAM.
+- The Python 3.12 environment named in the brief did not exist on the machine (system Python 3.10 without packages;
+  the repo's `.venv` has no interpreter). A new venv `.venv-gpu/` (untracked, in `.git/info/exclude`) was built with
+  uv: Python 3.12.13, torch **2.14.1+cu126** (the newest build for this driver; the brief said 2.15), lightgbm 4.7.0,
+  xgboost 3.4.1, scikit-learn 1.9.1, pandas 3.1.1, numpy 2.5.4, pyarrow 26.0.1, scipy 1.18.1, pillow 13.0.0,
+  transformers 5.22.2, plus pydicom and pymupdf (to read the DCM-wrapped PDFs). All scripts run as
+  `.venv-gpu/bin/python -I rethink/<script>.py` from the repo root.
+- **E00 smoke test (reproduction, not new configurations):** `exp00_baselines.py` appended 7 rows (git `a5a36c3`)
+  whose numbers equal the E00 table exactly (age 0.656 [0.584–0.724], first visit 0.680; clin_lr 0.624; clin_xgb
+  0.609; noage_xgb 0.490; mm_legacy 0.575; mm_noage 0.448; img_only 0.468). `experiments.csv`: 102 rows.
+
+### E22 data (`prepare_fellow_tx.py`, `decode_hr.py`, `decode_dcm.py`, `zernike.py`)
+
+1. **Fellow treatment block H** (`prepare_fellow_tx.py` → `rethink/data/eye_tx.parquet`). CXL / keratoplasty
+   dates per patient-eye from the clinic sheet (the sheet that defines the label). Features use the other eye's
+   dates strictly before the visit (`<`): `fellow_cxl_before_visit`, `years_since_fellow_cxl`,
+   `fellow_kp_before_visit`, `fellow_cxl_unknown` (undated CXL; C1), `fellow_tx_missing` (patient not in sheet).
+   All 944 cohort patients are in the sheet. 1,516 patient-eyes: 643 dated CXL, 5 undated, 79 dated KP, 1 undated.
+   - Cohort: fellow treated before the visit for 244/944 scans; their positive rate is 5.7% (vs 17.7% overall).
+     `fellow_cxl_before_visit` alone: AUC 0.394 (i.e. 0.606 inverted), as expected from E20. 31 scans have a fellow
+     CXL on the visit day; they count as not yet treated. 1 cohort scan has an undated fellow CXL.
+2. **High-resolution decoding** (`decode_hr.py` → `decoded_hr.npy`, 2,260 × 4 × 145 × 145 float16). Same
+   decoder and per-image 31-step palettes as `decode_maps.py`, 2-px block medians (was 5 px / 58 × 58). Palette
+   check passes on 2,260/2,260 composites for all 4 maps; ~72% of each 290 × 290 box is decodable (the circular
+   map minus overlays). Row-aligned with `decoded_all_meta.parquet` (asserted).
+3. **DCM pages** (`decode_dcm.py`, pretraining only, C4). The 1,590 `4 Maps Select.DCM` files are 5-page PDFs of
+   1200 × 910 screenshots; every one has a JPG composite of the same exam. The 188 `c0000*.DCM` files are unnamed
+   PDFs that cannot be keyed to an exam; they are not used. Page geometry comes from the printed axis labels
+   (fixed across files); each map is resampled onto the composite grid.
+
+   | page | maps | palette check fail | twin check pass | decision |
+   |---|---|---|---|---|
+   | 0 4 Maps Selectable | — | — | — | skipped: duplicate of the JPG composite |
+   | 1 4 Maps Refractive | curvature, elev. front, thickness, elev. back | 0% | 100% / 96.4% / 100% / 87.0% | kept |
+   | 2 Cataract Pre-OP | curvature front, thickness (TCRP not used) | 0% | 100% / 99.9% | kept |
+   | 3 Holladay EKR | EKR power | **100%** (relative 15-step scale) | — | **dropped** |
+   | 4 Belin/Ambrósio | elev. front/back, thickness | **100%** (continuous elevation colour bar) | — | **dropped** |
+
+   Twin check: the decoded map must agree with the same exam's composite (central 4 mm median |Δ| ≤ one palette
+   step); maps failing it are left empty. Page 1 elevation uses one colour bar for ±37.5 µm (2.5 µm steps) and
+   ±75 µm (5 µm) scales; both are tried. Result: 3,180 extra page samples (1,590 × 2), each a partial or full
+   4-channel map of an exam already in the corpus (different rendering, finer elevation steps, wider thickness
+   zone on page 2).
+4. **Encoder Z, Zernike** (`zernike.py` → `emb_Z.npy`, 2,260 × 135): OSA Zernike up to order 8 (45 terms) of
+   front elevation, back elevation and thickness on the central 6 mm (28.9 px/mm). All 2,260 fitted; residual RMS
+   1.3 µm (elevations) and 5.4 µm (thickness), i.e. at the colour-quantisation noise level.

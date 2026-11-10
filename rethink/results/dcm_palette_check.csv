@@ -1,0 +1,11 @@
+page,map,files,n_steps_median,palette_fail_rate,page_type_dropped,twin_pass_rate
+1,curv,1590,31,0.0,False,1.0
+1,ef,1590,31,0.0,False,0.9642
+1,thick,1590,31,0.0,False,1.0
+1,eb,1590,31,0.0,False,0.8704
+2,curv,1590,31,0.0,False,1.0
+2,thick,1590,31,0.0,False,0.9987
+4,ef,1590,58,1.0,True,
+4,eb,1590,58,1.0,True,
+4,thick,1590,31,0.0,True,
+3,ekr,1590,15,1.0,True,
