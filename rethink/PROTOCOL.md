@@ -92,3 +92,13 @@ At most **3** pre-declared candidates are scored on the lockbox.
   Each is fitted once on the full dev set (713 scans) with seed 2026 and scored once on the lockbox
   (231 scans). The lockbox is spent after this step; any later experiment is judged on dev only.
 
+- 2026-11-10 **E23 pre-declared (after E22 results were seen; reported as such).** User goal: first-visit AUC
+  ≥ 0.80. Declared once, before any E23 run; no E23 variant is added after seeing E23 results.
+  1. Weighting: first-visit cohort scans weight 2 in every learner's fit, all other rows weight 1.
+  2. Stacking: in each outer training fold, non-negative logistic stacker on the 4-fold inner OOF predictions of
+     the candidate pool, replacing single-winner selection.
+  3. Fine-tuned encoder L: in each (outer and inner) training fold, L's last-epoch weights + linear head trained
+     on referral, 20 epochs, AdamW lr 1e-4, wd 0.05, pretraining augmentations, last epoch kept; no early
+     stopping, no AUC-based choice. Own and mirrored-fellow composites; its probability enters the stack.
+  Runs: E23n_H (pool = 21 E22 candidates + fine-tuned L, with block H) and E23n_noH (same without H). Primary
+  metric for this addendum: first-visit AUC; also pooled AUC, paired dAUC vs E22_ref_single_num and E22n_nested.
