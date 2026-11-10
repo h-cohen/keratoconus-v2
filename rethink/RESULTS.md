@@ -575,3 +575,30 @@ E07_E06b_all vs E07_age_all, all 944 scans.
 4. **Encoder Z, Zernike** (`zernike.py` → `emb_Z.npy`, 2,260 × 135): OSA Zernike up to order 8 (45 terms) of
    front elevation, back elevation and thickness on the central 6 mm (28.9 px/mm). All 2,260 fitted; residual RMS
    1.3 µm (elevations) and 5.4 µm (thickness), i.e. at the colour-quantisation noise level.
+
+### E22 encoders: compute choices, fixed before training (`pretrain_jepa.py`, `CFG`)
+
+Written and committed before any full pretraining run. Labels are never read; the last-epoch checkpoint is used;
+nothing is selected on referral AUC.
+- **Budget check:** the smoke runs measured ≈ 0.25 s per L step (batch 128, 2 global 128 px + 6 local 64 px views)
+  on one 2080 Ti in fp16. Full runs: L 300 epochs × 42 steps ≈ 1 h; X 300 × 12 steps and T 300 × ~58 steps are
+  smaller. All three fit at the design's settings, each on its own GPU (0, 1, 2), so **X and T do not share a
+  backbone** and no epochs were cut.
+- **Backbone:** ResNet-18 layout (2-2-2-2 basic blocks), widths 48/96/192/384, 3 × 3 stride-2 stem, no max-pool,
+  global average pool → **384-d embedding** (design cap). ViT-S/8 was not chosen: ~5.4k training maps are too few
+  for a ViT from scratch. Projector 384–1024–1024–128 (BN, ReLU); X/T predictor 128(+1 for T's gap)–512–512–128.
+- **Input:** 4 decoded maps (145 × 145, 2-px cells, left eyes mirrored) normalised with `exp19_ssl.NORM`, plus 4
+  validity masks (8 channels). Corpus 5,440 samples = 2,260 composites + 3,180 DCM page renderings.
+- **Views / augmentation:** global crops 128 px (area 0.4–1.0), local crops 64 px (0.1–0.35), aspect 3/4–4/3,
+  rotation ±10°, Gaussian noise σ = 0.05 (normalised units) on decoded pixels, channel dropout p = 0.15 (≥ 1 map
+  kept), two 20% patch drop-outs at p = 0.5. No flips, no colour jitter.
+- **Optimisation (all encoders):** AdamW, weight decay 0.05, 10 warm-up epochs then cosine to 0, **300 epochs**,
+  λ(SIGReg) = 0.05, 256 slices, 17 knots on [−5, 5], fp16 autocast, seed 2026.
+  - L: batch 128, lr 1e-3, 2 global + 6 local views (LeJEPA defaults).
+  - X: batch 64, lr 5e-4, 2 global views per eye; units = the 786 same-day bilateral composite visits.
+  - T: batch 64, lr 5e-4, 2 global views per visit; units = every ordered same-eye visit pair with a strictly later
+    date; the gap in years / 3 is a predictor input.
+  - X and T show each exam as its composite (p = 0.5) or one of its DCM page renderings.
+- **Embedding:** full map resized to 128 px, no augmentation, pooled backbone output (384-d), saved per composite
+  as `rethink/data/emb_{L,X,T}.npy`. Checkpoints every 10 epochs in `rethink/results/ssl/<enc>/` (resumable);
+  training curves in `curve.csv` there, with label-free embedding diagnostics (effective rank) in `embed_stats.csv`.
