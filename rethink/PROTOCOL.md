@@ -132,3 +132,25 @@ At most **3** pre-declared candidates are scored on the lockbox.
 - All are run once and reported whatever the result.
 
 The number of configurations rises accordingly. The best model so far was selected among many, so the paper must report the count.
+
+### 2026-11-11 — E26 and E27 pre-declared (user: an ML/deep-learning image arm; use all available information)
+
+**E26, images alone.**
+- Features: only one image representation, for the own eye, the fellow eye and own − fellow, plus has_fellow_image. No numerics, no age, no block H.
+- Model: LR with inner CV over C.
+- Rows: cohort scans only.
+- Run once each for Z, D, L, X, T, R and probe, and for G0 and G once trained.
+- Purpose: do the images carry referral signal of their own? Age alone ≈ 0.66 is the bar.
+
+**E27, position-aware SSL** (`pretrain_geo.py`; fixed configuration in its docstring, written before training).
+- **G0:** LeJEPA as L, with three changes:
+  - coordinate channels warped with the maps;
+  - gentle global views (scale 0.85–1, rotation ±5°, shift ±0.3 mm, no flips);
+  - 11 input channels.
+- **G:** G0 plus an auxiliary linear head that predicts the 96 label-free block R measurements (MU = 0.1).
+- Training: 300 epochs; the last epoch is kept; labels are never read.
+- Evaluation:
+  - E26 image-only, for G0 and G;
+  - standalone bi_G_lgbm and bi_G0_lgbm (block H, extra exams, first-visit weight 2);
+  - stacks E27n_H and E27n_noH: the E25 pool plus bi_G0_{lr,lgbm} and bi_G_{lr,lgbm}, with the same stacker, folds and seeds.
+- Every run is executed once and reported whatever the result.
