@@ -752,7 +752,7 @@ Paired ΔAUC, all scans / first visit:
 
 Training every candidate on the extra exams changes nothing: E24 and E23 are equal within ±0.002.
 
-**Strata** (`results/stages_e24.csv`):
+**Strata** (`results/stages_e24.csv`; KMax stages recomputed 2026-11-11 with the clinical convention 0 < 46.5 ≤ 1 < 48 ≤ 2 < 53 ≤ 3 < 55 ≤ 4, boundary values in the upper stage; E24n_H by stage: 0.821, 0.836, 0.816, 0.588, 0.799):
 - KMax stages:
   - E24n_H ranges from 0.80 to 0.85 at KMax ≤ 53 D and is 0.80 above 55 D.
   - At 53–55 D (n = 102, 20 positives) every model is near 0.60, the reference 0.63.

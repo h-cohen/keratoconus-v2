@@ -134,7 +134,7 @@ def main():
     models = {'E22n': head.mean(0), 'ref_single_num': ref, 'age': age}
     log('\n## 2. Severity: KMax of the scanned eye (original bins + > 55 D)')
     km = coh['KMax Sagittal Front (D)'].values
-    stage = pd.cut(km, [0, 46.5, 48, 53, 55, np.inf], labels=['S0 <=46.5', 'S1 46.5-48', 'S2 48-53', 'S3 53-55', 'S4 >55'],
+    stage = pd.cut(km, [0, 46.5, 48, 53, 55, np.inf], labels=['0 (<46.5)', '1 (46.5-48)', '2 (48-53)', '3 (53-55)', '4 (>55)'], right=False,
                    include_lowest=True)
     rows = []
     for s in stage.categories:
