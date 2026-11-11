@@ -779,3 +779,18 @@ ftL gets weight 0 in both stacks and is not used. Members and weights are in `re
 The stacks need composites and the cropped maps (encoder D); the headline also needs `--tx`. fallback_b, ref and age are unchanged. The E22 freeze is kept as `frozen/bilateral_e22.pkl`.
 
 `score_external.py` now scores stacks and ftL members. `test_score_external.py` now also supplies the cropped maps under neutral names. Run from a data-free copy of the repo, the scorer reproduces the internal apparent AUCs exactly (headline 0.890, fallback_a 0.885, on 60 training patients — a code check, not a performance estimate).
+
+### Amsler-Krumeich staging (2026-11-11, replaces the KMax stages for reporting)
+
+`ak_stage.py`: the stage is the highest one met by mean front K (`Km F`: < 48 I, 48–53 II, 53–55 III, ≥ 55 IV) or by thinnest pachymetry (< 400 III, < 300 IV). Refraction and scarring are not in the data.
+
+The cohort filter (Km F ≤ 55) leaves only 5 stage IV scans, all negative. Results are in `results/stages_ak.csv`.
+
+| stage | n / pos (all scans) | ref | E24n_H | E24n_noH | first-visit n / pos | E24n_H first visit |
+|---|---|---|---|---|---|---|
+| I | 706 / 126 | 0.626 | 0.778 | 0.726 | 389 / 97 | 0.774 |
+| II | 176 / 29 | 0.663 | 0.840 | 0.824 | 97 / 18 | 0.854 |
+| III | 57 / 12 | 0.893 | 0.880 | 0.876 | 34 / 10 | 0.892 |
+| IV | 5 / 0 | — | — | — | 3 / 0 | — |
+
+Stage I holds 75% of scans and is where the gain over the reference is largest (+0.15). In stage III the numerics alone already separate well, and the models add nothing.
