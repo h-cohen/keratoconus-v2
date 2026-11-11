@@ -75,11 +75,12 @@ if __name__ == '__main__':
     cnn = np.load(DATA / 'cnn_frozen.npy')
     D = e22.build(coh)
     use_h = stage == 'H'
-    pre = ('w_' if use_h else 'wnoH_') if exp == 'E23' else ('a_' if use_h else 'anoH_')
-    c = e22.candidates(D, prefix=pre, use_h=use_h, w_first=W_FIRST, aug_all=exp == 'E24')
+    pre = {'E23': ('w_', 'wnoH_'), 'E24': ('a_', 'anoH_'), 'E25': ('a_', 'anoH_')}[exp][0 if use_h else 1]
+    c = e22.candidates(D, prefix=pre, use_h=use_h, w_first=W_FIRST, aug_all=exp in ('E24', 'E25'),
+                         extra_enc=('R', 'probe', 'multi') if exp == 'E25' else ())
     c['ftL'] = ftL
     e16.CANDS.update(c)
     evaluate(f'{exp}n_{stage}', stack(list(c), stage),
-             f'{exp} (pre-declared'+(', all candidates + extra exams' if exp=='E24' else '')+'): in-fold non-negative logistic stack of 21 first-visit-weighted E22 candidates '
+             f'{exp} (pre-declared'+{'E23': '', 'E24': ', all candidates + extra exams', 'E25': ', E24 pool + image candidates R / probe / multi'}[exp]+'): in-fold non-negative logistic stack of 21 first-visit-weighted E22 candidates '
              f'{"with" if use_h else "without"} block H + nested fine-tuned L', df=coh, cnn=cnn)
     pd.DataFrame(WEIGHTS).to_csv(RES / f'stack{exp[1:]}_{stage}_weights.csv', index=False)

@@ -98,19 +98,78 @@ def fit_enc(D, e, rows, seed, k=10):
     fit_rows = np.unique(own[rows][own[rows] >= 0])
     fit_rows = fit_rows[np.isfinite(E[fit_rows]).all(1)]
     sc = StandardScaler().fit(E[fit_rows])
+    if k is None:
+        return sc, None
     return sc, PCA(n_components=k, random_state=seed).fit(sc.transform(E[fit_rows]))
+
+
+MULTI = ['Z', 'D', 'L', 'X', 'T']   # E25 'multi': PCA(10) of every encoder side by side
+PROBE = ['Z', 'D', 'L', 'X', 'T', 'R']  # E25 'probe': one supervised score per embedding
+PROBE_C = 0.01
+
+
+def fit_enc_any(D, e, rows, seed):
+    """E25 dispatch. 'R' = map measurements, standardised, no PCA; 'multi'; 'probe'; otherwise fit_enc."""
+    if e == 'multi':
+        return ('multi', [(x, fit_enc(D, x, rows, seed)) for x in MULTI])
+    if e == 'probe':
+        return ('probe', [(x, fit_probe(D, x, rows, seed)) for x in PROBE])
+    if e == 'R':
+        return fit_enc(D, e, rows, seed, k=None)
+    return fit_enc(D, e, rows, seed)
+
+
+def enc_apply_any(D, e, idx, encfit):
+    if encfit[0] in ('multi', 'probe'):
+        f = enc_apply if encfit[0] == 'multi' else probe_apply
+        return pd.concat([f(D, x, idx, *fx) for x, fx in encfit[1]], axis=1)
+    return enc_apply(D, e, idx, *encfit)
+
+
+def fit_probe(D, e, rows, seed):
+    """Ridge-logistic probe (StandardScaler, L2 C=PROBE_C fixed in advance) of the label on the training rows' own
+    composite embedding. Training composites get 5-fold patient-grouped cross-fitted scores (so the second-stage
+    model never sees in-sample scores); every other composite gets the probe fitted on all training rows."""
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.model_selection import GroupKFold
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+    E = D.get('emb', {}).get(e) if 'emb' in D else emb(e)
+    own = D['own'][rows]
+    ok = own >= 0
+    ok[ok] = np.isfinite(E[own[ok]]).all(1)
+    c, y, g = own[ok], D['V'].y.values[rows][ok], D['V'].pid.values[rows][ok]
+    mk = lambda: make_pipeline(StandardScaler(), LogisticRegression(C=PROBE_C, max_iter=5000))  # noqa: E731
+    oof = np.zeros(len(c))
+    for a, b in GroupKFold(5).split(c, y, g):
+        oof[b] = mk().fit(E[c[a]], y[a]).decision_function(E[c[b]])
+    return mk().fit(E[c], y), dict(zip(c.tolist(), oof))
+
+
+def probe_apply(D, e, idx, model, oof):
+    E = D.get('emb', {}).get(e) if 'emb' in D else emb(e)
+
+    def sc(cc):
+        out = np.full(len(cc), np.nan)
+        for i, r in enumerate(cc):
+            if r >= 0 and np.isfinite(E[r]).all():
+                out[i] = oof[r] if r in oof else model.decision_function(E[r][None])[0]
+        return out
+    o, f = sc(D['own'][idx]), sc(D['felc'][idx])
+    return pd.DataFrame({f'p{e}_own': o, f'p{e}_fel': f, f'p{e}_asym': o - f})
 
 
 def enc_apply(D, e, idx, sc, pca):
     """own, (mirrored) fellow and own - fellow PCA scores; NaN where the composite is missing."""
     E = D.get('emb', {}).get(e) if 'emb' in D else emb(e)
-    k = pca.n_components_
+    k = pca.n_components_ if pca is not None else E.shape[1]
 
     def tr(c):
         out = np.full((len(c), k), np.nan)
         ok = (c >= 0)
         ok[ok] = np.isfinite(E[c[ok]]).all(1)
-        out[ok] = pca.transform(sc.transform(E[c[ok]]))
+        z = sc.transform(E[c[ok]])
+        out[ok] = pca.transform(z) if pca is not None else z
         return out
 
     o, f = tr(D['own'][idx]), tr(D['felc'][idx])
@@ -127,7 +186,7 @@ def assemble(D, idx, blocks, enc, use_h, encfit=None):
     if 'PM' in blocks or enc:
         parts.append(D['flags'].iloc[idx].reset_index(drop=True))
     if enc:
-        parts.append(enc_apply(D, enc, idx, *encfit))
+        parts.append(enc_apply_any(D, enc, idx, encfit))
     return pd.concat(parts, axis=1)
 
 
@@ -143,7 +202,7 @@ def train_rows(D, dtr, aug):
 def fit_model(D, rows, blocks, kind, enc, use_h, seed, w=None):
     """Everything fitted on the training rows only; returns the frozen pipeline (used for CV and for freezing)."""
     V = D['V']
-    encfit = fit_enc(D, enc, rows, seed) if enc else None
+    encfit = fit_enc_any(D, enc, rows, seed) if enc else None
     Xtr = assemble(D, rows, blocks, enc, use_h, encfit)
     lo, hi = Xtr.quantile(0.005), Xtr.quantile(0.995)
     Xtr = Xtr.clip(lo, hi, axis=1)
@@ -177,14 +236,14 @@ def make(D, blocks, aug, kind, enc=None, use_h=True, w_first=None):
     return f
 
 
-def candidates(D, prefix='', use_h=True, w_first=None, aug_all=False):
+def candidates(D, prefix='', use_h=True, w_first=None, aug_all=False, extra_enc=()):
     c = {}
     for aug in [False, True]:
         for k in ['lr', 'lgbm']:
             c[f'{prefix}bn{"_aug" if aug else ""}_{k}'] = make(D, 'N', aug or aug_all, k, use_h=use_h, w_first=w_first)
     for k in ['lr', 'lgbm']:
         c[f'{prefix}bnpm_{k}'] = make(D, 'PM', aug_all, k, use_h=use_h, w_first=w_first)
-    for e in ENC:
+    for e in list(ENC) + list(extra_enc):
         for k in ['lr', 'lgbm']:
             c[f'{prefix}bi_{e}_{k}'] = make(D, 'I', aug_all, k, enc=e, use_h=use_h, w_first=w_first)
     for e in ENC:

@@ -114,3 +114,21 @@ At most **3** pre-declared candidates are scored on the lockbox.
 **Runs.** E24n_H and E24n_noH, each run once. Whatever the result, it is reported. No further variants.
 
 **History route.** A visit + history E25 was considered and not run: E03 and E11 already tested it and found nothing.
+
+### 2026-11-11 — E25 pre-declared: more from the images (after E24 results were seen)
+
+**Reason.** The user asked to try harder with the images.
+
+**Pool.** The E24 pool plus 6 image candidates. All of them use the extra exams and first-visit weight 2, and each is fitted with lr and lgbm:
+- **bi_R:** block R (`radiomics.py`), 96 label-free measurements of the decoded maps. These are ring × quadrant means, extremum value and location, I−S and N−T asymmetry, SD within 3 mm, and thickness progression around the thinnest point. Own, fellow and own − fellow; standardised, no PCA.
+- **bi_probe:** for each of Z, D, L, X, T and R, a ridge-logistic probe (C = 0.01, fixed in advance) of the label on the own-composite embedding. It is fitted in fold. Training composites get 5-fold patient-grouped cross-fitted scores. The features are the own score, the fellow score and their difference.
+- **bi_multi:** PCA(10) of Z, D, L, X and T side by side.
+
+**Dropped before running.** Flip/rotation test-time averaging of the embeddings. Flips destroy the inferior–superior and nasal–temporal asymmetry, which is diagnostic in keratoconus.
+
+**Runs.**
+- Stack runs: E25n_H and E25n_noH, with the same stacker, folds and seeds as E23/E24.
+- Each new candidate is also evaluated alone with block H (E25_bi_*), for the record.
+- All are run once and reported whatever the result.
+
+The number of configurations rises accordingly. The best model so far was selected among many, so the paper must report the count.
