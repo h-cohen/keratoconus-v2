@@ -736,3 +736,31 @@ Interpretation:
 - First-visit AUC stays just below 0.80 (0.793 with H, 0.769 without).
 - Supervised fine-tuning of L adds nothing beyond the frozen embedding.
 - 115 distinct configurations have been evaluated through E23.
+
+## E24 — extra exams in every candidate (pre-declared 2026-11-11)
+
+| run | AUC [95% CI] | rep mean ± SD | first-visit AUC [95% CI] |
+|---|---|---|---|
+| E24n_H | 0.794 [0.742–0.841] | 0.789 ± 0.009 | 0.796 [0.752–0.838] |
+| E24n_noH | 0.751 [0.696–0.800] | 0.746 ± 0.008 | 0.771 [0.723–0.814] |
+
+Paired ΔAUC, all scans / first visit:
+- E24n_H − E22_ref_single_num: +0.144 [+0.082, +0.209] / +0.112 [+0.065, +0.160].
+- E24n_H − E23n_H: −0.001 [−0.015, +0.013] / +0.002 [−0.009, +0.015].
+- E24n_noH − E22_ref_single_num: +0.100 [+0.039, +0.161] / +0.086 [+0.039, +0.136].
+- E24n_noH − E23n_noH: −0.002 [−0.015, +0.012] / +0.002 [−0.009, +0.013].
+
+Training every candidate on the extra exams changes nothing: E24 and E23 are equal within ±0.002.
+
+**Strata** (`results/stages_e24.csv`):
+- KMax stages:
+  - E24n_H ranges from 0.80 to 0.85 at KMax ≤ 53 D and is 0.80 above 55 D.
+  - At 53–55 D (n = 102, 20 positives) every model is near 0.60, the reference 0.63.
+- Age strata:
+  - E24n_H is 0.745 below 25, 0.707 at 25–29 and 0.785 at 30 or older.
+  - The reference is near chance in every age stratum.
+
+**Model kept** (user rule: keep the highest-AUC model):
+- **E24n_H**, on the primary endpoint (first-visit AUC 0.796).
+- E23n_H has the higher pooled AUC (0.795 vs 0.794).
+- The two are not distinguishable. Picking the best among ~117 evaluated configurations adds a small optimistic bias. Lockbox / external data are the unbiased check.
