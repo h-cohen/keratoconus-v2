@@ -69,16 +69,17 @@ def stack(pool, tag):
 
 if __name__ == '__main__':
     stage = sys.argv[1]  # H | noH
+    exp = sys.argv[2] if len(sys.argv) > 2 else 'E23'  # E24 = every candidate trained with the extra exams
     coh = pd.read_parquet(DATA / 'cohort.parquet')
     coh['crow'] = np.arange(len(coh))
     cnn = np.load(DATA / 'cnn_frozen.npy')
     D = e22.build(coh)
     use_h = stage == 'H'
-    pre = 'w_' if use_h else 'wnoH_'
-    c = e22.candidates(D, prefix=pre, use_h=use_h, w_first=W_FIRST)
+    pre = ('w_' if use_h else 'wnoH_') if exp == 'E23' else ('a_' if use_h else 'anoH_')
+    c = e22.candidates(D, prefix=pre, use_h=use_h, w_first=W_FIRST, aug_all=exp == 'E24')
     c['ftL'] = ftL
     e16.CANDS.update(c)
-    evaluate(f'E23n_{stage}', stack(list(c), stage),
-             f'E23 (pre-declared): in-fold non-negative logistic stack of 21 first-visit-weighted E22 candidates '
+    evaluate(f'{exp}n_{stage}', stack(list(c), stage),
+             f'{exp} (pre-declared'+(', all candidates + extra exams' if exp=='E24' else '')+'): in-fold non-negative logistic stack of 21 first-visit-weighted E22 candidates '
              f'{"with" if use_h else "without"} block H + nested fine-tuned L', df=coh, cnn=cnn)
-    pd.DataFrame(WEIGHTS).to_csv(RES / f'stack23_{stage}_weights.csv', index=False)
+    pd.DataFrame(WEIGHTS).to_csv(RES / f'stack{exp[1:]}_{stage}_weights.csv', index=False)

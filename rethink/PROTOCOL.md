@@ -102,3 +102,15 @@ At most **3** pre-declared candidates are scored on the lockbox.
      stopping, no AUC-based choice. Own and mirrored-fellow composites; its probability enters the stack.
   Runs: E23n_H (pool = 21 E22 candidates + fine-tuned L, with block H) and E23n_noH (same without H). Primary
   metric for this addendum: first-visit AUC; also pooled AUC, paired dAUC vs E22_ref_single_num and E22n_nested.
+
+### 2026-11-11 — E24 pre-declared (after E23 results were seen)
+
+**Reason.** The user wants the most training data in every model. In E22/E23, only the bn_aug candidates use the extra labelled exams.
+
+**Change.** E24 = E23 exactly, except every one of the 21 candidates adds the extra exams (`extra_exams.parquet`) to its training rows. As before, they are used in training only, and a cohort patient's extras only when that patient is in the training fold. The extra exams have no composite image, so their image blocks are missing and flagged.
+
+**Unchanged.** ftL stays as in E23, because it needs images. Same seeds, folds, stacker and first-visit weight 2.
+
+**Runs.** E24n_H and E24n_noH, each run once. Whatever the result, it is reported. No further variants.
+
+**History route.** A visit + history E25 was considered and not run: E03 and E11 already tested it and found nothing.

@@ -177,16 +177,16 @@ def make(D, blocks, aug, kind, enc=None, use_h=True, w_first=None):
     return f
 
 
-def candidates(D, prefix='', use_h=True, w_first=None):
+def candidates(D, prefix='', use_h=True, w_first=None, aug_all=False):
     c = {}
     for aug in [False, True]:
         for k in ['lr', 'lgbm']:
-            c[f'{prefix}bn{"_aug" if aug else ""}_{k}'] = make(D, 'N', aug, k, use_h=use_h, w_first=w_first)
+            c[f'{prefix}bn{"_aug" if aug else ""}_{k}'] = make(D, 'N', aug or aug_all, k, use_h=use_h, w_first=w_first)
     for k in ['lr', 'lgbm']:
-        c[f'{prefix}bnpm_{k}'] = make(D, 'PM', False, k, use_h=use_h, w_first=w_first)
+        c[f'{prefix}bnpm_{k}'] = make(D, 'PM', aug_all, k, use_h=use_h, w_first=w_first)
     for e in ENC:
         for k in ['lr', 'lgbm']:
-            c[f'{prefix}bi_{e}_{k}'] = make(D, 'I', False, k, enc=e, use_h=use_h, w_first=w_first)
+            c[f'{prefix}bi_{e}_{k}'] = make(D, 'I', aug_all, k, enc=e, use_h=use_h, w_first=w_first)
     for e in ENC:
         c[f'{prefix}ens_{e}'] = (lambda e: lambda dtr, dte, seed: (e16.predict(f'{prefix}bn_aug_lgbm', dtr, dte, seed)
                                                                     + e16.predict(f'{prefix}bi_{e}_lr', dtr, dte, seed)) / 2)(e)
