@@ -15,8 +15,8 @@ if __name__ == '__main__':
     coh['crow'] = np.arange(len(coh))
     cnn = np.load(DATA / 'cnn_frozen.npy')
     D = e22.build(coh)
-    c = e22.candidates(D, prefix='', use_h=True, w_first=2.0, aug_all=True, extra_enc=('R', 'probe', 'multi'))
+    c = e22.candidates(D, prefix='', use_h=True, w_first=2.0, aug_all=True, extra_enc=('R', 'probe', 'multi', 'G0', 'G'))
     for n in sys.argv[1:]:
         f = c[f'bi_{n}']
-        evaluate(f'E25_bi_{n}', lambda dtr, ctr, dte, cte, seed, f=f: f(dtr, dte, seed),
+        evaluate(f'{"E27" if n.startswith("G") else "E25"}_bi_{n}', lambda dtr, ctr, dte, cte, seed, f=f: f(dtr, dte, seed),
                  f'E25 standalone: bi_{n}, block H, extra exams, first-visit weight 2', df=coh, cnn=cnn)

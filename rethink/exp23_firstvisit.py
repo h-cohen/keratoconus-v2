@@ -75,12 +75,12 @@ if __name__ == '__main__':
     cnn = np.load(DATA / 'cnn_frozen.npy')
     D = e22.build(coh)
     use_h = stage == 'H'
-    pre = {'E23': ('w_', 'wnoH_'), 'E24': ('a_', 'anoH_'), 'E25': ('a_', 'anoH_')}[exp][0 if use_h else 1]
-    c = e22.candidates(D, prefix=pre, use_h=use_h, w_first=W_FIRST, aug_all=exp in ('E24', 'E25'),
-                         extra_enc=('R', 'probe', 'multi') if exp == 'E25' else ())
+    pre = {'E23': ('w_', 'wnoH_'), 'E24': ('a_', 'anoH_'), 'E25': ('a_', 'anoH_'), 'E27': ('a_', 'anoH_')}[exp][0 if use_h else 1]
+    c = e22.candidates(D, prefix=pre, use_h=use_h, w_first=W_FIRST, aug_all=exp in ('E24', 'E25', 'E27'),
+                         extra_enc={'E25': ('R', 'probe', 'multi'), 'E27': ('R', 'probe', 'multi', 'G0', 'G')}.get(exp, ()))
     c['ftL'] = ftL
     e16.CANDS.update(c)
     evaluate(f'{exp}n_{stage}', stack(list(c), stage),
-             f'{exp} (pre-declared'+{'E23': '', 'E24': ', all candidates + extra exams', 'E25': ', E24 pool + image candidates R / probe / multi'}[exp]+'): in-fold non-negative logistic stack of 21 first-visit-weighted E22 candidates '
+             f'{exp} (pre-declared'+{'E23': '', 'E24': ', all candidates + extra exams', 'E25': ', E24 pool + image candidates R / probe / multi', 'E27': ', E25 pool + position-aware SSL encoders G0 / G'}[exp]+'): in-fold non-negative logistic stack of 21 first-visit-weighted E22 candidates '
              f'{"with" if use_h else "without"} block H + nested fine-tuned L', df=coh, cnn=cnn)
     pd.DataFrame(WEIGHTS).to_csv(RES / f'stack{exp[1:]}_{stage}_weights.csv', index=False)
