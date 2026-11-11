@@ -708,3 +708,31 @@ code-only copy (no `data/`, no `rethink/data/`) on 60 cohort patients (159 score
 (b) 0.851, ref 0.917 — apparent, on training patients, inflated by design), and it correctly declines the headline
 without `--tx` and (a) without composites. The frozen LGBM outputs are ranking scores (mean ≈ 0.42); recalibrate
 (Platt) on the external set before reading them as risks.
+
+## E23 — first-visit addendum (pre-declared in PROTOCOL.md 2026-11-10, run 2026-11-11)
+
+Pool = the 21 E22 candidates refitted with first-visit scans weighted 2, plus `ftL` (encoder L fine-tuned nested, 125 splits, `ft_L.py`).
+In-fold non-negative logistic stack on the inner 4-fold OOF predictions. One run with block H, one without. Nothing was tuned after the results were seen.
+
+| run | AUC [95% CI] | rep mean ± SD | first-visit AUC |
+|---|---|---|---|
+| E23n_H | 0.795 [0.745–0.840] | 0.788 ± 0.012 | 0.793 |
+| E23n_noH | 0.752 [0.701–0.800] | 0.746 ± 0.011 | 0.769 |
+
+Paired cluster bootstrap, ΔAUC [95% CI]:
+- E23n_H − E22_ref_single_num: all +0.145 [+0.085, +0.207]; first visit +0.110 [+0.064, +0.157].
+- E23n_H − E22n_nested: all +0.014 [+0.004, +0.027]; first visit +0.009 [−0.003, +0.021].
+- E23n_noH − E22_ref_single_num: all +0.102 [+0.045, +0.156]; first visit +0.085 [+0.038, +0.132].
+- E23n_noH − E22n_noH: all +0.021 [+0.006, +0.038]; first visit +0.011 [−0.002, +0.025].
+
+Mean stacker weights:
+- With H, the top weights are bn_aug_lr 0.22, bi_L_lgbm 0.21, bnpm_lgbm 0.19 and bi_D_lr 0.17.
+- Without H, the top weights are bn_aug_lr 0.18, bn_aug_lgbm 0.17, bi_D_lr 0.17 and bi_L_lgbm 0.15.
+- The fine-tuned L gets almost no weight (mean 0.04 with H, 0.05 without).
+
+Interpretation:
+- Stacking and weighting give a small, real pooled gain over E22 (about +0.01 to +0.02).
+- The first-visit gain is not significant.
+- First-visit AUC stays just below 0.80 (0.793 with H, 0.769 without).
+- Supervised fine-tuning of L adds nothing beyond the frozen embedding.
+- 115 distinct configurations have been evaluated through E23.

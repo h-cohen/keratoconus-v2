@@ -84,7 +84,9 @@ def build(coh, neg_seed=None):
     pf = pa.reindex(np.where(has_fi, felc, -1)).reset_index(drop=True)
     PM = pd.concat([po.add_prefix('own_'), pf.add_prefix('fel_'), (po - pf).add_prefix('asym_')], axis=1)
     flags = pd.DataFrame({'has_fellow_image': has_fi.astype(float), 'own_image': (own >= 0).astype(float)})
-    return dict(V=V, N=N, H=H, PM=PM, flags=flags, own=own, felc=felc)
+    first = np.zeros(len(V), bool)
+    first[:len(coh)] = coh.first_visit.values
+    return dict(V=V, N=N, H=H, PM=PM, flags=flags, own=own, felc=felc, first=first)
 
 
 def fit_enc(D, e, rows, seed, k=10):
@@ -138,7 +140,7 @@ def train_rows(D, dtr, aug):
     return np.array(rows)
 
 
-def fit_model(D, rows, blocks, kind, enc, use_h, seed):
+def fit_model(D, rows, blocks, kind, enc, use_h, seed, w=None):
     """Everything fitted on the training rows only; returns the frozen pipeline (used for CV and for freezing)."""
     V = D['V']
     encfit = fit_enc(D, enc, rows, seed) if enc else None
@@ -151,11 +153,11 @@ def fit_model(D, rows, blocks, kind, enc, use_h, seed):
     y, g = V.y.values[rows], V.pid.values[rows]
     if kind == 'lr':
         hp = _inner_cv(Xtr, y, g, e16.LR, e16.CGRID, seed)
-        m = e16.LR(**hp).fit(Xtr, y)
+        m = e16.LR(**hp).fit(Xtr, y, **({} if w is None else {'logisticregression__sample_weight': w}))
     else:
         mk = e20._lgbm(seed, y, cols)
         hp = _inner_cv(Xtr, y, g, mk, [dict(n_estimators=n, num_leaves=l) for n in [100, 300] for l in [2, 4]], seed)
-        m = mk(**hp).fit(Xtr, y)
+        m = mk(**hp).fit(Xtr, y, sample_weight=w)
     return dict(blocks=blocks, kind=kind, enc=enc, use_h=use_h, encfit=encfit, lo=lo, hi=hi, med=med, cols=cols,
                 model=m, hp=hp)
 
@@ -166,23 +168,25 @@ def predict_frozen(fz, D, idx):
     return fz['model'].predict_proba(X)[:, 1]
 
 
-def make(D, blocks, aug, kind, enc=None, use_h=True):
+def make(D, blocks, aug, kind, enc=None, use_h=True, w_first=None):
     def f(dtr, dte, seed):
-        fz = fit_model(D, train_rows(D, dtr, aug), blocks, kind, enc, use_h, seed)
+        rows = train_rows(D, dtr, aug)
+        w = None if w_first is None else np.where(D['first'][rows], w_first, 1.0)
+        fz = fit_model(D, rows, blocks, kind, enc, use_h, seed, w)
         return predict_frozen(fz, D, dte.crow.values)
     return f
 
 
-def candidates(D, prefix='', use_h=True):
+def candidates(D, prefix='', use_h=True, w_first=None):
     c = {}
     for aug in [False, True]:
         for k in ['lr', 'lgbm']:
-            c[f'{prefix}bn{"_aug" if aug else ""}_{k}'] = make(D, 'N', aug, k, use_h=use_h)
+            c[f'{prefix}bn{"_aug" if aug else ""}_{k}'] = make(D, 'N', aug, k, use_h=use_h, w_first=w_first)
     for k in ['lr', 'lgbm']:
-        c[f'{prefix}bnpm_{k}'] = make(D, 'PM', False, k, use_h=use_h)
+        c[f'{prefix}bnpm_{k}'] = make(D, 'PM', False, k, use_h=use_h, w_first=w_first)
     for e in ENC:
         for k in ['lr', 'lgbm']:
-            c[f'{prefix}bi_{e}_{k}'] = make(D, 'I', False, k, enc=e, use_h=use_h)
+            c[f'{prefix}bi_{e}_{k}'] = make(D, 'I', False, k, enc=e, use_h=use_h, w_first=w_first)
     for e in ENC:
         c[f'{prefix}ens_{e}'] = (lambda e: lambda dtr, dte, seed: (e16.predict(f'{prefix}bn_aug_lgbm', dtr, dte, seed)
                                                                     + e16.predict(f'{prefix}bi_{e}_lr', dtr, dte, seed)) / 2)(e)
