@@ -115,6 +115,12 @@ def worker(args):
                 loss.backward()
                 opt.step()
         enc.eval(), head.eval()
+        if len(te) == 0:  # final fit on all scans (freeze_stack.py): keep the weights, nothing to predict
+            torch.save(dict(enc=enc.state_dict(), head=head.state_dict(), age_mu=float(mu), age_sd=float(sd),
+                            cfg=c, norm=NORM), out.with_suffix('.pt'))
+            np.save(out, np.zeros(0))
+            print(gpu, 'final fit saved', flush=True)
+            continue
         with torch.no_grad(), torch.autocast('cuda', dtype=torch.float16):
             p = torch.cat([torch.sigmoid(logits(te[i:i + 128], False).float()) for i in range(0, len(te), 128)])
         np.save(out, p.cpu().numpy())

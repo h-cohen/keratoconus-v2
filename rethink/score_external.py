@@ -5,9 +5,9 @@ Usage:
          [--tx TREATMENT.csv] [--composites DIR] [--images DIR]
 
 Models scored (whichever the inputs support):
-  E22 bilateral single visit (rethink/freeze_bilateral.py -> frozen/bilateral.pkl):
-    headline    the E22n selection refitted on all 944 scans   needs: fellow numerics [+ --tx] [+ composites]
-    fallback_a  the same selection without block H             needs: fellow numerics [+ composites]
+  Bilateral single visit (rethink/freeze_stack.py -> frozen/bilateral.pkl; E22 freeze kept as bilateral_e22.pkl):
+    headline    E24n_H stack refitted on all 944 scans         needs: fellow numerics, --tx, composites [+ crops]
+    fallback_a  E24n_noH stack (no block H)                    needs: fellow numerics, composites [+ crops]
     fallback_b  bilateral numerics only (block N)              needs: fellow numerics
     ref         single-eye numeric model (primary comparator)  needs: the scanned eye's numerics
     age         age only (sub-analysis)
@@ -46,6 +46,11 @@ from harness import ROOT, cluster_boot_auc  # noqa: E402
 # --------------------------------------------------------------------------------------------- E22 bilateral
 def needs(fz):
     """(needs H, needs composites, needs crops) of a frozen candidate."""
+    if fz.get('ftl'):
+        return False, True, False
+    if 'stack' in fz or 'ens' in fz:
+        r = [needs(f) for f in fz.get('stack', fz.get('ens'))]
+        return tuple(any(x[i] for x in r) for i in range(3))
     if 'ens' in fz:
         r = [needs(f) for f in fz['ens']]
         return tuple(any(x[i] for x in r) for i in range(3))
@@ -176,7 +181,7 @@ def build_external(df, model, tx, comp_dir, crop_dir):
     for i in np.flatnonzero(own >= 0):
         clut.setdefault((V.pid.iat[i], V.eye.iat[i], V.date.iat[i]), own[i])
     felc = np.array([clut.get((p, o, d), -1) for p, o, d in zip(V.pid, other, V.date)])
-    D.update(own=own, felc=felc, emb=embed(model, hrs, stems, eyes) if hrs else {})
+    D.update(own=own, felc=felc, hr=np.stack(hrs) if hrs else np.zeros((0, 4, 145, 145)), emb=embed(model, hrs, stems, eyes) if hrs else {})
     D['flags'] = pd.DataFrame({'has_fellow_image': (felc >= 0).astype(float), 'own_image': (own >= 0).astype(float)})
     if hrs and 'ocr_templates' in model:
         pa = panel(model, paths, [lo for lo in los], eyes)
@@ -186,8 +191,47 @@ def build_external(df, model, tx, comp_dir, crop_dir):
     return D
 
 
+def ftl_predict(D, idx):
+    """E24 member ftL: encoder L fine-tuned on all 944 scans (frozen/ftL.pt), same inputs and eval transform as
+    ft_L.py: own and same-day fellow composite (zeros + flag when none), age standardised with the training stats."""
+    import torch
+    import torch.nn as nn
+    import torch.nn.functional as F
+    from pretrain_jepa import Encoder
+    ck = torch.load(ROOT / 'frozen' / 'ftL.pt', map_location='cpu', weights_only=False)
+    enc = Encoder()
+    enc.load_state_dict(ck['enc'])
+    head = nn.Sequential(nn.Dropout(0.3), nn.Linear(384 * 3 + 2, 1))
+    head.load_state_dict(ck['head'])
+    enc.eval(), head.eval()
+    hr = D['hr'].astype(np.float32)
+    for j, (m, s) in enumerate(ck['norm']):
+        hr[:, j] = (hr[:, j] - m) / s
+    X = torch.from_numpy(np.concatenate([np.nan_to_num(hr), np.isfinite(hr)], 1).astype(np.float16)).float()
+
+    def ev(rows):
+        x = torch.stack([X[int(r)] if r >= 0 else torch.zeros_like(X[0]) for r in rows])
+        x = F.interpolate(x, size=ck['cfg']['global_size'], mode='bilinear', align_corners=False)
+        return torch.cat([x[:, :4] * (x[:, 4:] > 0.5), (x[:, 4:] > 0.5).float()], 1)
+    age = torch.tensor((D['V'].age.values[idx] - ck['age_mu']) / ck['age_sd'], dtype=torch.float32)
+    hf = torch.tensor(D['felc'][idx] >= 0, dtype=torch.float32)
+    out = []
+    with torch.no_grad():
+        for i in range(0, len(idx), 64):
+            sl = slice(i, i + 64)
+            zo, zf = enc(ev(D['own'][idx][sl])), enc(ev(D['felc'][idx][sl])) * hf[sl, None]
+            out.append(torch.sigmoid(head(torch.cat([zo, zf, zo - zf, hf[sl, None], age[sl, None]], 1))).squeeze(1))
+    return torch.cat(out).numpy().astype(float)
+
+
 def predict(fz, D, idx):
     import exp22_bilateral as e22
+    if fz.get('ftl'):
+        return ftl_predict(D, idx)
+    if 'stack' in fz:
+        P = np.clip(np.column_stack([predict(m, D, idx) for m in fz['stack']]), 1e-5, 1 - 1e-5)
+        Z = (np.log(P / (1 - P)) - fz['mu']) / fz['sd']
+        return 1 / (1 + np.exp(-(Z @ fz['t'] + fz['b'])))
     if 'ens' in fz:
         return np.mean([predict(f, D, idx) for f in fz['ens']], 0)
     return e22.predict_frozen(fz, D, idx)

@@ -35,6 +35,7 @@ def main():
     coh['crow'] = np.arange(len(coh))
     pids = np.random.default_rng(7).choice(coh.pid.unique(), n_pat, replace=False)
     D = e22.build(coh)
+    D['hr'] = np.load(DATA / 'decoded_hr.npy')  # for the ftL stack member
     V = D['V']
     num = e22.e16.NUM
     sc = coh[coh.pid.isin(pids)]
@@ -43,6 +44,10 @@ def main():
     comp = (out / 'composites')
     comp.mkdir(exist_ok=True)
     names = {}
+    crops = out / 'crops'
+    crops.mkdir(exist_ok=True)
+    from dino_all import CROP, MAPS
+    on_disk = {p.name.lower(): p for p in CROP.iterdir()}
 
     def cname(r):
         if r < 0:
@@ -50,18 +55,23 @@ def main():
         if r not in names:
             names[r] = f'c{len(names):05d}.jpg'
             shutil.copy(fs[r], comp / names[r])
+            stem = fs[r].name.rsplit('.', 1)[0]
+            for m in MAPS:  # cropped maps for encoder D, neutral names
+                src = on_disk.get(f'{stem}_{m}.jpg'.lower())
+                if src is not None:
+                    shutil.copy(src, crops / f'{names[r][:-4]}_{m}.jpg')
         return names[r]
 
     rows = []
     for crow in sc.crow.values:
         rows.append(dict(pid=V.pid.iat[crow], eye=V.eye.iat[crow], scan_date=V.date.iat[crow], y=V.y.iat[crow],
-                         composite=cname(D['own'][crow]), **{c: V[c].iat[crow] for c in num}))
+                         composite=cname(D['own'][crow]), image_stem=names[D['own'][crow]][:-4] if D['own'][crow] >= 0 else '', **{c: V[c].iat[crow] for c in num}))
     # fellow-only rows: the fellow chosen in training, unless it is itself a scored cohort scan
     fel_rows = set(int(f) for f in V.fel.values[sc.crow.values] if f >= 0) - set(sc.crow.values)
     for r in sorted(fel_rows):
         fc = D['felc'][[c for c in sc.crow.values if V.fel.iat[c] == r][0]]
         rows.append(dict(pid=V.pid.iat[r], eye=V.eye.iat[r], scan_date=V.date.iat[r], y=np.nan,
-                         composite=cname(fc), **{c: V[c].iat[r] for c in num}))
+                         composite=cname(fc), image_stem=names[fc][:-4] if fc >= 0 else '', **{c: V[c].iat[r] for c in num}))
     ext = pd.DataFrame(rows)
     ext.to_csv(out / 'external.csv', index=False)
     tx = pd.read_parquet(DATA / 'eye_tx.parquet')
@@ -90,8 +100,8 @@ def main():
             shutil.copy(p, repo / 'rethink' / 'frozen' / p.name)
     assert not (repo / 'data').exists() and not (repo / 'rethink' / 'data').exists()
     py = sys.executable
-    for label, extra in [('all inputs', ['--tx', str(out / 'tx.csv'), '--composites', str(comp)]),
-                         ('no --tx', ['--composites', str(comp)]), ('numerics only', [])]:
+    for label, extra in [('all inputs', ['--tx', str(out / 'tx.csv'), '--composites', str(comp), '--images', str(crops)]),
+                         ('no --tx', ['--composites', str(comp), '--images', str(crops)]), ('numerics only', [])]:
         print(f'\n=== scorer from the data-free copy: {label} ===', flush=True)
         r = subprocess.run([py, '-I', 'rethink/score_external.py', str(out / 'external.csv')] + extra, cwd=repo,
                            capture_output=True, text=True)

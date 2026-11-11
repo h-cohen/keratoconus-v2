@@ -764,3 +764,18 @@ Training every candidate on the extra exams changes nothing: E24 and E23 are equ
 - **E24n_H**, on the primary endpoint (first-visit AUC 0.796).
 - E23n_H has the higher pooled AUC (0.795 vs 0.794).
 - The two are not distinguishable. Picking the best among ~117 evaluated configurations adds a small optimistic bias. Lockbox / external data are the unbiased check.
+
+### E24 freeze (2026-11-11)
+
+`freeze_stack.py` refits E24n_H (headline) and E24n_noH (fallback_a) on all 944 scans. It is one outer fold of the E23/E24 procedure:
+- 4-fold inner OOF (seed 2026);
+- the stacker;
+- each member with non-zero weight refitted with the extra exams and first-visit weight 2.
+
+ftL gets weight 0 in both stacks and is not used. Members and weights are in `results/freeze24_choices.csv`.
+- headline: 13 members, largest bi_D_lr 0.34 and bi_L_lgbm 0.32.
+- fallback_a: 12 members, largest bi_L_lgbm 0.39 and bi_D_lr 0.29.
+
+The stacks need composites and the cropped maps (encoder D); the headline also needs `--tx`. fallback_b, ref and age are unchanged. The E22 freeze is kept as `frozen/bilateral_e22.pkl`.
+
+`score_external.py` now scores stacks and ftL members. `test_score_external.py` now also supplies the cropped maps under neutral names. Run from a data-free copy of the repo, the scorer reproduces the internal apparent AUCs exactly (headline 0.890, fallback_a 0.885, on 60 training patients — a code check, not a performance estimate).
