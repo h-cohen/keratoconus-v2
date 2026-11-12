@@ -824,3 +824,58 @@ How to read this:
 | 4 (≥ 55) | 290 / 52 | 0.704 / 0.735 | 0.799 [0.72–0.87] / 0.809 | 0.768 / 0.786 |
 
 The cohort inclusion filter (Km F ≤ 55) is unchanged.
+
+## E25 — image-derived blocks R, probe, multi (pre-declared 2026-11-11)
+
+Block R (`radiomics.py`, `data/emb_R.npy`): 96 hand-crafted, label-free measurements of the decoded physical maps
+(ring x quadrant means, extremum location, asymmetry, thickness progression around the thinnest point). `probe`: a
+cross-fitted ridge-logistic score per image embedding (Z, D, L, X, T, R; C = 0.01). `multi`: PCA blocks of all
+encoders together. All in-fold.
+
+Standalone (`exp25_single.py`; extra exams, first-visit weight 2). Both arms per the two-arm rule (CLAUDE.md, 2026-11-12):
+
+| candidate | H: AUC [95% CI] | H: first visit | noH: AUC [95% CI] | noH: first visit |
+|---|---|---|---|---|
+| bi_R_lgbm | 0.805 [0.757–0.849] | 0.803 | 0.757 [0.702–0.807] | **0.780** |
+| bi_probe_lgbm | 0.804 [0.755–0.851] | 0.797 | **0.761** [0.709–0.809] | 0.774 |
+| bi_multi_lgbm | 0.805 [0.756–0.850] | 0.798 | 0.754 [0.700–0.806] | 0.770 |
+| bi_R_lr | 0.757 | 0.774 | — | — |
+| bi_probe_lr | 0.788 | 0.791 | — | — |
+| bi_multi_lr | 0.745 | 0.756 | — | — |
+| reference stack E24n | 0.794 (H) | 0.796 | 0.751 (noH) | 0.771 |
+
+Stack E25n_H (E24 pool + R, probe, multi): **AUC 0.796 [0.745–0.844], first visit 0.798** (rep 0.791 ± 0.007).
+Practically equal to E24n_H (0.794 / 0.796). The stacker gives large weights to bi_R_lgbm and bi_probe_lr
+(`results/stack25_H_weights.csv`). E25n_noH is still running (2026-11-12).
+
+Reading: the image-derived blocks match or slightly beat the stack on their own (+0.005 to +0.01, CIs overlap), but
+add almost nothing on top of it. Block H is worth about +0.02 to +0.03 first-visit AUC to every model.
+
+## E26 — images alone (no numerics, no age, no H; pre-declared 2026-11-11, `exp26_imgonly.py`)
+
+Logistic regression on the image block only, AUC: D 0.617 [0.557–0.676], R 0.581, probe 0.572, G 0.546, L 0.540,
+Z 0.538, G0 0.526, T 0.510, X 0.465. Above chance only for DINOv2 (D), and weakly for R. Paired images-over-numerics
+deltas (bi_E vs bn, same learner): +0.01 to +0.02 in 8 of 10 comparisons. Only bi_T_lgbm reaches significance
+(+0.019 [+0.001, +0.037]). Images carry some signal of their own, but most of it overlaps with the numerics.
+
+## E27 — position-aware SSL encoders G0 / G (pre-declared 2026-11-12, `pretrain_geo.py`)
+
+G0: LeJEPA with coordinate channels and no random resized crop. G: G0 plus an auxiliary head that predicts R
+(label-free). Effective rank: G 45.5 vs G0 16.2.
+
+| candidate | H: AUC | H: first visit | noH: AUC [95% CI] | noH: first visit |
+|---|---|---|---|---|
+| bi_G0_lgbm | 0.797 [0.746–0.844] | 0.793 | 0.755 [0.701–0.803] | 0.774 |
+| bi_G_lgbm | 0.797 [0.748–0.843] | 0.793 | 0.754 [0.701–0.803] | 0.771 |
+
+Reading: the position-aware SSL encoders are equal to the hand-crafted R block in both arms, not better. The R-prediction
+head did not add class signal beyond G0. E27 stacks (H, noH) are paused (SIGSTOP) until E25n_noH finishes; a watcher
+resumes them.
+
+## Status (2026-11-12)
+
+- Two-arm rule: noH is the primary result, H is auxiliary. Every analysis must report both (CLAUDE.md).
+- Frozen headline: E24n_H, with fallback_a E24n_noH (`frozen/bilateral.pkl`). Not re-frozen: E25n_H is not better.
+- Running: E25n_noH stack (`exp23_firstvisit.py noH E25`). Paused: E27 H and noH stacks.
+- Still to do: paired deltas of the noH standalone runs against E24n_noH. Add E25/E27 noH columns to the stage tables
+  (`staging.py`, A and B). Report E25n_noH and E27n stacks when they finish.
