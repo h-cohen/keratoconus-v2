@@ -846,7 +846,8 @@ Standalone (`exp25_single.py`; extra exams, first-visit weight 2). Both arms per
 
 Stack E25n_H (E24 pool + R, probe, multi): **AUC 0.796 [0.745–0.844], first visit 0.798** (rep 0.791 ± 0.007).
 Practically equal to E24n_H (0.794 / 0.796). The stacker gives large weights to bi_R_lgbm and bi_probe_lr
-(`results/stack25_H_weights.csv`). E25n_noH is still running (2026-11-12).
+(`results/stack25_H_weights.csv`). Stack E25n_noH: **AUC 0.751 [0.695–0.800], first visit 0.772** (rep 0.746 ± 0.008),
+equal to E24n_noH (0.751 / 0.771). No re-freeze.
 
 Reading: the image-derived blocks match or slightly beat the stack on their own (+0.005 to +0.01, CIs overlap), but
 add almost nothing on top of it. Block H is worth about +0.02 to +0.03 first-visit AUC to every model.
@@ -869,13 +870,12 @@ G0: LeJEPA with coordinate channels and no random resized crop. G: G0 plus an au
 | bi_G_lgbm | 0.797 [0.748–0.843] | 0.793 | 0.754 [0.701–0.803] | 0.771 |
 
 Reading: the position-aware SSL encoders are equal to the hand-crafted R block in both arms, not better. The R-prediction
-head did not add class signal beyond G0. E27 stacks (H, noH) are paused (SIGSTOP) until E25n_noH finishes; a watcher
-resumes them.
+head did not add class signal beyond G0. E27 stacks (H, noH) resumed after E25 finished.
 
 ## Status (2026-11-12)
 
 - Two-arm rule: noH is the primary result, H is auxiliary. Every analysis must report both (CLAUDE.md).
 - Frozen headline: E24n_H, with fallback_a E24n_noH (`frozen/bilateral.pkl`). Not re-frozen: E25n_H is not better.
-- Running: E25n_noH stack (`exp23_firstvisit.py noH E25`). Paused: E27 H and noH stacks.
+- E25 done in both arms. Running: E27 H and noH stacks (resumed 2026-11-12).
 - Still to do: paired deltas of the noH standalone runs against E24n_noH. Add E25/E27 noH columns to the stage tables
-  (`staging.py`, A and B). Report E25n_noH and E27n stacks when they finish.
+  (`staging.py`, A and B). Report the E27n stacks when they finish.
