@@ -794,3 +794,22 @@ The cohort filter (Km F ≤ 55) leaves only 5 stage IV scans, all negative. Resu
 | IV | 5 / 0 | — | — | — | 3 / 0 | — |
 
 Stage I holds 75% of scans and is where the gain over the reference is largest (+0.15). In stage III the numerics alone already separate well, and the models add nothing.
+
+### Final staging, approaches A and B (user, 2026-11-12; `staging.py`, `results/stages_final.csv`)
+
+- **A:** `Km F (D):` stage 1 < 48, 2 48–53, 3 53–55, 4 ≥ 55.
+- **B:** `Rm B (mm):` stage 1 ≥ 5.70, 2 5.15–5.70, 3 4.95–5.15, 4 < 4.95.
+
+Each cell gives the AUC over all scans, then the first-visit AUC.
+
+| stage | A: n / pos | A: ref | A: E24n_H | A: E24n_noH | B: n / pos | B: ref | B: E24n_H | B: E24n_noH |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 712 / 129 | 0.629 / 0.657 | 0.780 / 0.776 | 0.728 / 0.748 | 649 / 118 | 0.638 / 0.657 | 0.799 / 0.783 | 0.740 / 0.755 |
+| 2 | 188 / 30 | 0.669 / 0.728 | 0.848 / 0.858 | 0.834 / 0.842 | 188 / 36 | 0.602 / 0.683 | 0.730 / 0.802 | 0.744 / 0.787 |
+| 3 | 39 / 8 | 0.891 / 0.886 | 0.859 / 0.895 | 0.839 / 0.838 | 63 / 5 | 0.821 / 0.820 | 0.948 / 0.913 | 0.876 / 0.840 |
+| 4 | 5 / 0 | — | — | — | 44 / 8 | 0.816 / 0.870 | 0.806 / 0.840 | 0.819 / 0.870 |
+
+How to read this:
+- Under A, stage 4 is empty, because the cohort filter is Km F ≤ 55.
+- Stages A3, B3 and B4 have only 5–8 positives each. Their CIs span about 0.3 (E24n_H CIs are in the CSV).
+- The gain over the reference is concentrated in stages 1–2. These hold 95% of the scans under A and 89% under B.
