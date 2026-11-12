@@ -813,3 +813,14 @@ How to read this:
 - Under A, stage 4 is empty, because the cohort filter is Km F ≤ 55.
 - Stages A3, B3 and B4 have only 5–8 positives each. Their CIs span about 0.3 (E24n_H CIs are in the CSV).
 - The gain over the reference is concentrated in stages 1–2. These hold 95% of the scans under A and 89% under B.
+
+**Update 2026-11-12:** approach A now stages on `KMax Sagittal Front (D)` (user decision: KMax sagittal, not Km F). Each cell gives the AUC over all scans, then the first-visit AUC.
+
+| stage | n / pos | ref | E24n_H [CI] | E24n_noH |
+|---|---|---|---|---|
+| 1 (< 48) | 317 / 56 | 0.630 / 0.661 | 0.837 [0.76–0.90] / 0.804 | 0.766 / 0.774 |
+| 2 (48–53) | 236 / 38 | 0.608 / 0.633 | 0.816 [0.70–0.91] / 0.811 | 0.758 / 0.771 |
+| 3 (53–55) | 101 / 21 | 0.638 / 0.684 | 0.588 [0.44–0.75] / 0.704 | 0.638 / 0.723 |
+| 4 (≥ 55) | 290 / 52 | 0.704 / 0.735 | 0.799 [0.72–0.87] / 0.809 | 0.768 / 0.786 |
+
+The cohort inclusion filter (Km F ≤ 55) is unchanged.
