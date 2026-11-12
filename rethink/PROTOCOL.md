@@ -166,3 +166,8 @@ learner variants on the same input (`exp28_tricks.py`: xgb, lgbm_deep, lgbm_bag,
 mean of xgb / lgbm_bag / lr_en). All tuning by inner patient-grouped CV in the training fold; harness seeds fixed.
 noH first (primary), H after. Selection rule: the highest noH first-visit AUC among E25_noH_bi_R_lgbm and the E28 variants
 becomes the final model; report the number of variants tried (7 + 1) and the paired delta against E25_noH_bi_R_lgbm.
+
+### 2026-11-13 — E28 addendum
+Three input-side noH variants added to `exp28_tricks.py` (lgbm_nan: native NaN instead of median imputation;
+lgbm_nofel: R without the fellow copy; pca_lr: PCA(k) + L2 logistic, k and C tuned in fold). The E28 count becomes
+7 + 3 + 1 = 11 noH configurations. H arm: the 7 learner variants, run for the two-arm rule (CLAUDE.md).

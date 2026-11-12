@@ -9,6 +9,10 @@ Variants (KIND):
   lr_en     elastic-net logistic, C {0.01,0.03,0.1,0.3} x l1_ratio {0.2,0.5,0.8}
   svm       RBF SVM (Platt), C {0.1,0.3,1} x gamma {scale/4, scale}
   blend     fixed equal-weight mean of ranks of xgb, lgbm_bag, lr_en (no fitted weights)
+Added 2026-11-13 (input-side variants, E25 LightGBM recipe unless stated):
+  lgbm_nan   missing values left as NaN (LightGBM routes them natively) instead of median imputation
+  lgbm_nofel R block without the fellow copy (own + own-fellow only)
+  pca_lr     StandardScaler -> PCA(k) -> L2 logistic, k {20,40,80} x C {0.01,0.1,1}
 Arms: noH (primary) and H (auxiliary). Run names E28_{noH,H}_{KIND}.
 Usage: python -I rethink/exp28_tricks.py {noH|H} KIND [KIND ...]
 """
@@ -68,28 +72,41 @@ def learner(kind, seed, y, cols):
         mk = lambda C, gm: make_pipeline(StandardScaler(), SVC(  # noqa: E731
             C=C, gamma=gm / len(cols), probability=True, class_weight='balanced', random_state=seed))
         return mk, [dict(C=c, gm=g) for c in [0.1, 0.3, 1] for g in [0.25, 1.0]], 'svc__sample_weight'
+    if kind == 'pca_lr':
+        from sklearn.decomposition import PCA
+        mk = lambda k, C: make_pipeline(StandardScaler(), PCA(n_components=k, random_state=seed),  # noqa: E731
+                                        LogisticRegression(C=C, max_iter=5000, class_weight='balanced'))
+        return mk, [dict(k=k, C=c) for k in [20, 40, 80] for c in [0.01, 0.1, 1]], 'logisticregression__sample_weight'
     raise ValueError(kind)
 
 
-def design(D, rows, use_h, seed):
+def design(D, rows, use_h, seed, impute=True, fellow=True):
     encfit = e22.fit_enc_any(D, 'R', rows, seed)
     X = e22.assemble(D, rows, 'N', 'R', use_h, encfit)
+    if not fellow:
+        X = X.loc[:, ~X.columns.str.startswith('R_fel')]
     lo, hi = X.quantile(0.005), X.quantile(0.995)
     med = X.clip(lo, hi, axis=1).median()
-    prep = lambda idx: e22.assemble(D, idx, 'N', 'R', use_h, encfit)[X.columns].clip(  # noqa: E731
-        lo, hi, axis=1).fillna(med).fillna(0).values
+
+    def prep(idx):
+        Z = e22.assemble(D, idx, 'N', 'R', use_h, encfit)[X.columns].clip(lo, hi, axis=1)
+        return (Z.fillna(med).fillna(0) if impute else Z).values
     return prep, list(X.columns)
 
 
 def fit_predict(D, kind, use_h, dtr, dte, seed):
     rows = e22.train_rows(D, dtr, True)
     w = np.where(D['first'][rows], W_FIRST, 1.0)
-    prep, cols = design(D, rows, use_h, seed)
+    prep, cols = design(D, rows, use_h, seed, impute=kind != 'lgbm_nan', fellow=kind != 'lgbm_nofel')
     Xtr, Xte = prep(rows), prep(dte.crow.values)
     y, g = D['V'].y.values[rows], D['V'].pid.values[rows]
     if kind == 'blend':
         return np.mean([rankdata(fit_predict(D, k, use_h, dtr, dte, seed)) / len(dte)
                         for k in ('xgb', 'lgbm_bag', 'lr_en')], axis=0)
+    if kind in ('lgbm_nan', 'lgbm_nofel'):
+        mk = e20._lgbm(seed, y, cols)
+        hp = _inner_cv(Xtr, y, g, mk, [dict(n_estimators=n, num_leaves=l) for n in [100, 300] for l in [2, 4]], seed)
+        return mk(**hp).fit(Xtr, y, sample_weight=w).predict_proba(Xte)[:, 1]
     if kind == 'lgbm_bag':
         mk = e20._lgbm(seed, y, cols)
         hp = _inner_cv(Xtr, y, g, mk, [dict(n_estimators=n, num_leaves=l) for n in [100, 300] for l in [2, 4]], seed)
