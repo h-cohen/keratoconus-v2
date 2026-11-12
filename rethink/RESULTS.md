@@ -870,12 +870,12 @@ G0: LeJEPA with coordinate channels and no random resized crop. G: G0 plus an au
 | bi_G_lgbm | 0.797 [0.748–0.843] | 0.793 | 0.754 [0.701–0.803] | 0.771 |
 
 Reading: the position-aware SSL encoders are equal to the hand-crafted R block in both arms, not better. The R-prediction
-head did not add class signal beyond G0. E27 stacks (H, noH) resumed after E25 finished.
+head did not add class signal beyond G0. E27 stacks (H, noH) were stopped unfinished on user request (2026-11-12): no stack result.
 
 ## Status (2026-11-12)
 
 - Two-arm rule: noH is the primary result, H is auxiliary. Every analysis must report both (CLAUDE.md).
 - Frozen headline: E24n_H, with fallback_a E24n_noH (`frozen/bilateral.pkl`). Not re-frozen: E25n_H is not better.
-- E25 done in both arms. Running: E27 H and noH stacks (resumed 2026-11-12).
+- E25 done in both arms. E27 stacks stopped by the user; nothing running.
 - Still to do: paired deltas of the noH standalone runs against E24n_noH. Add E25/E27 noH columns to the stage tables
-  (`staging.py`, A and B). Report the E27n stacks when they finish.
+  (`staging.py`, A and B).
