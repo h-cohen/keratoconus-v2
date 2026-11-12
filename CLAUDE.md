@@ -158,6 +158,14 @@ Secondary endpoint worth adding later: objective progression (e.g. a KMax increa
 12 months) for eyes with follow-up. Reviewers want a non-referral endpoint. Report it as secondary;
 it does not replace the primary label.
 
+## Staging for stage analyses (final, user decision 2026-11-12)
+
+Use `rethink/staging.py` for every stage-stratified result and report both approaches side by side:
+- **A:** `Km F (D):` (front mean K, not KMax): 1 < 48, 2 48–53, 3 53–55, 4 ≥ 55 D. Stage 4 holds only 5 scans, because the inclusion filter is Km F ≤ 55. Report that; don't work around it.
+- **B:** `Rm B (mm):`: 1 ≥ 5.70, 2 5.15–5.70, 3 4.95–5.15, 4 < 4.95 mm.
+
+Do not substitute KMax sagittal or Amsler–Krumeich (`ak_stage.py`); those were earlier variants. The cohort filter is unchanged.
+
 ## Working conventions
 
 - Commit after each experiment: script, the `experiments.csv` rows, and a short entry in

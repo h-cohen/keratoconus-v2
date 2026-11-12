@@ -814,7 +814,7 @@ How to read this:
 - Stages A3, B3 and B4 have only 5–8 positives each. Their CIs span about 0.3 (E24n_H CIs are in the CSV).
 - The gain over the reference is concentrated in stages 1–2. These hold 95% of the scans under A and 89% under B.
 
-**Update 2026-11-12:** approach A now stages on `KMax Sagittal Front (D)` (user decision: KMax sagittal, not Km F). Each cell gives the AUC over all scans, then the first-visit AUC.
+**Superseded (same day):** the user reverted approach A to `Km F (D):` (final; see CLAUDE.md "Staging"). The KMax table below is kept for the record only. Each cell gives the AUC over all scans, then the first-visit AUC.
 
 | stage | n / pos | ref | E24n_H [CI] | E24n_noH |
 |---|---|---|---|---|
