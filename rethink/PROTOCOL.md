@@ -159,3 +159,10 @@ The number of configurations rises accordingly. The best model so far was select
 The user decided not to score the lockbox. All results are reported on all 944 scans with the repeated patient-grouped
 CV (`harness.evaluate`). Consequence for reporting: the best of many configurations is selected on the same data it is
 reported on, so the top AUCs carry selection optimism. Report the number of configurations tried next to them.
+
+### 2026-11-12 — E28 pre-declaration: learner variants of the final non-stack model
+Final model family (user decision): bi_R = numerics + fellow + age + R map measurements, no stacker. E28 tries 7
+learner variants on the same input (`exp28_tricks.py`: xgb, lgbm_deep, lgbm_bag, et, lr_en, svm, blend = fixed equal-rank
+mean of xgb / lgbm_bag / lr_en). All tuning by inner patient-grouped CV in the training fold; harness seeds fixed.
+noH first (primary), H after. Selection rule: the highest noH first-visit AUC among E25_noH_bi_R_lgbm and the E28 variants
+becomes the final model; report the number of variants tried (7 + 1) and the paired delta against E25_noH_bi_R_lgbm.
