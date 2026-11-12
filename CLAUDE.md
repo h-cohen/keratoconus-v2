@@ -166,6 +166,13 @@ Use `rethink/staging.py` for every stage-stratified result and report both appro
 
 Do not substitute KMax sagittal or Amsler–Krumeich (`ak_stage.py`); those were earlier variants. The cohort filter is unchanged.
 
+## Two arms: noH (primary) and H (auxiliary) (user decision 2026-11-12)
+
+- **noH is the primary result.** Single visit: the scan, the fellow eye's scan from the same visit, and age. No treatment history.
+- **H is auxiliary.** It adds block H: was the fellow eye cross-linked strictly before the visit date (from the clinical sheet). Label it "visit + fellow-eye treatment history".
+- Every analysis run for noH must also be run for H, and both are reported side by side. This covers headline AUC, first-visit AUC, stage tables (A and B), age strata, calibration and lockbox.
+- The noH model is the headline. H never replaces it.
+
 ## Working conventions
 
 - Commit after each experiment: script, the `experiments.csv` rows, and a short entry in
