@@ -21,7 +21,7 @@ The full write-up is in `publication/age_subanalysis_draft.md` in the main check
 
 The rules are in `rethink/PROTOCOL.md`; read it before any experiment. The short version:
 
-- **Lockbox**: `rethink/lockbox_pids.csv` holds 25% of patients
+- **Lockbox — DROPPED by user decision 2026-11-12; do not score it. Report all results on the full data (see PROTOCOL.md).** Former rule: `rethink/lockbox_pids.csv` holds 25% of patients
   (sha256 `f875b78075576864c9b8acf25cbdd87d2700647dbfbd93105af37043dca04956`).
   - **Never** evaluate, tune or look at lockbox performance during development.
   - It is scored **once**, at the end, for ≤ 3 candidates declared in advance.

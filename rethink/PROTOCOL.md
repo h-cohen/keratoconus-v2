@@ -154,3 +154,8 @@ The number of configurations rises accordingly. The best model so far was select
   - standalone bi_G_lgbm and bi_G0_lgbm (block H, extra exams, first-visit weight 2);
   - stacks E27n_H and E27n_noH: the E25 pool plus bi_G0_{lr,lgbm} and bi_G_{lr,lgbm}, with the same stacker, folds and seeds.
 - Every run is executed once and reported whatever the result.
+
+### 2026-11-12 — lockbox dropped (user decision)
+The user decided not to score the lockbox. All results are reported on all 944 scans with the repeated patient-grouped
+CV (`harness.evaluate`). Consequence for reporting: the best of many configurations is selected on the same data it is
+reported on, so the top AUCs carry selection optimism. Report the number of configurations tried next to them.
