@@ -7,21 +7,17 @@ Usage: python -I publication_v2/build_report.py
 """
 import base64
 import datetime as dt
-import io
 import sys
 from pathlib import Path
 
-import matplotlib
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_auc_score, roc_curve
-
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt  # noqa: E402
+from sklearn.metrics import roc_auc_score
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = Path(__file__).parent
-sys.path.insert(0, str(ROOT / 'kcref'))
+sys.path[:0] = [str(ROOT / 'kcref'), str(OUT)]
+import plots as PL  # noqa: E402
 from common import DATA, RES  # noqa: E402
 from evaluate import cluster_boot_auc, paired_delta  # noqa: E402
 from radiomics import names as r_names  # noqa: E402
@@ -61,13 +57,9 @@ def age_only(coh):
     return o.mean(0)
 
 
-def fig_b64(fig, name):
-    (OUT / 'figures').mkdir(exist_ok=True)
-    fig.savefig(OUT / 'figures' / f'{name}.png', dpi=160, bbox_inches='tight')
-    buf = io.BytesIO()
-    fig.savefig(buf, format='png', dpi=110, bbox_inches='tight')
-    plt.close(fig)
-    return f'<img alt="{name}" src="data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}">'
+def img(path):
+    """Embed a saved PNG (figures/) in the self-contained report."""
+    return f'<img alt="{path.stem}" src="data:image/png;base64,{base64.b64encode(path.read_bytes()).decode()}">'
 
 
 def table(df, cls=''):
@@ -141,35 +133,26 @@ def main():
     st = pd.DataFrame(rows)
     st.to_csv(OUT / 'tables' / 'strata.csv', index=False)
 
-    # ---- figures
-    fig, ax = plt.subplots(1, 2, figsize=(10, 4.6))
-    for i, (scope, m) in enumerate([('All scans (n = 944)', np.ones(len(y), bool)),
-                                    (f'First visit (n = {fv.sum()} eyes)', fv)]):
-        for a, c in [('noH', '#1f5fa8'), ('H', '#c0392b')]:
-            f, t, _ = roc_curve(y[m], P[a][m])
-            ax[i].plot(f, t, color=c, lw=2, label=f'{a}: AUC {roc_auc_score(y[m], P[a][m]):.3f}')
-        f, t, _ = roc_curve(y[m], pa[m])
-        ax[i].plot(f, t, color='#888', lw=1.5, ls='--', label=f'age only: AUC {roc_auc_score(y[m], pa[m]):.3f}')
-        ax[i].plot([0, 1], [0, 1], color='#ccc', lw=1)
-        ax[i].set(title=scope, xlabel='1 − specificity', ylabel='sensitivity', aspect='equal')
-        ax[i].legend(loc='lower right', frameon=False)
-    roc_img = fig_b64(fig, 'roc_final')
-
-    fig, ax = plt.subplots(1, 3, figsize=(13, 3.8), sharey=True)
-    for i, (sname, (s, lab)) in enumerate(strata.items()):
-        ks = [k for k in lab if ((s == k) & fv).sum() and 0 < y[(s == k) & fv].sum() < ((s == k) & fv).sum()]
-        for j, (a, c) in enumerate([('noH', '#1f5fa8'), ('H', '#c0392b')]):
-            v = [ci(y[(s == k) & fv], P[a][(s == k) & fv], g[(s == k) & fv]) for k in ks]
-            x = np.arange(len(ks)) + (j - 0.5) * 0.35
-            ax[i].bar(x, [w[0] for w in v], 0.35, color=c, label=a)
-            ax[i].errorbar(x, [w[0] for w in v], yerr=[[w[0] - w[1] for w in v], [w[2] - w[0] for w in v]],
-                           fmt='none', ecolor='#333', lw=1, capsize=2)
-        ax[i].set_xticks(np.arange(len(ks)), [f'{k}\n{lab[k]}\nn={((s == k) & fv).sum()}' for k in ks], fontsize=8)
-        ax[i].axhline(0.5, color='#bbb', lw=1)
-        ax[i].set(title=f'First visit by {sname}', ylim=(0.4, 1.0))
-    ax[0].set_ylabel('AUC (95% CI)')
-    ax[0].legend(frameon=False)
-    strata_img = fig_b64(fig, 'strata_first_visit')
+    # ---- figures (E29 style)
+    l1 = {a: oof(f'E29_ladder_L1_{a}') if (RES / 'oof' / f'E29_ladder_L1_{a}.npy').exists() else None for a in ARMS}
+    curves = {'Final, noH': (P['noH'], PL.S.C['noH'], '-'), 'Final, H': (P['H'], PL.S.C['H'], '-')}
+    if l1['noH'] is not None:
+        curves['Single-eye numerics (L1)'] = (l1['noH'], PL.S.C['L1'], (0, (4, 2)))
+    curves['Age only'] = (pa, PL.S.C['age'], (0, (1, 1.5)))
+    roc_img = img(PL.fig_roc(y, g, fv, curves))
+    stage_imgs = {}
+    for k, s_ in (('A', stage_A(coh)), ('B', stage_B(coh))):
+        sc = {'Age only': pa[fv], 'Final, noH': P['noH'][fv], 'Final, H': P['H'][fv]}
+        if l1['noH'] is not None:
+            sc['Single-eye numerics (L1)'] = l1['noH'][fv]
+        df = PL.stage_auc(y[fv], sc, s_[fv], g[fv])
+        if l1['noH'] is None:
+            df = pd.concat([df, pd.DataFrame([dict(method='Single-eye numerics (L1)', stage=j, n=int((s_[fv] == j).sum()),
+                                                   pos=int(y[fv][s_[fv] == j].sum()), auc=np.nan, lo=np.nan,
+                                                   hi=np.nan, small=True) for j in (1, 2, 3, 4)])])
+        df.to_csv(OUT / 'tables' / f'stage_auc_{k}.csv', index=False)
+        stage_imgs[k] = img(PL.fig_stage_auc(df, k))
+    strata_img = stage_imgs['A'] + stage_imgs['B']
 
     # ---- R feature dictionary
     desc = {'r': 'mean of the map on ring {a}–{b} mm, quadrant {q}', 'ext_val': 'extremum value',
