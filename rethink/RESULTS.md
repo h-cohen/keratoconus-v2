@@ -904,3 +904,12 @@ Reading: no single learner or input change beats the E25 LightGBM. The fixed ran
 is the best in both arms (+0.010 first visit, CI touching 0, P>0 0.93 in noH) and is the pre-declared final model:
 **noH (primary) 0.790 first visit / 0.768 all; H (auxiliary) 0.813 / 0.813**. Selected from 11 noH configurations
 on the same data. The blend's rank scores are per test fold; per-repeat AUCs and paired deltas are the fair comparison.
+
+## Final model freeze and cleanup (2026-11-13)
+
+User decision: the E28 blend is the final model in both arms (noH primary, H auxiliary). `freeze_final.py` refits
+both arms on all 944 scans plus the extra exams, writing `frozen/final.pkl`. Apparent in-sample AUCs are 0.888 (noH)
+and 0.911 (H); these are not results. For a new scan, each member's score is mapped to its percentile among the
+frozen member's 944 cohort scores, and the three percentiles are averaged.
+Lockbox: dropped (PROTOCOL 2026-11-12). Superseded scripts moved to `archive/`. Legacy `algo-pipeline/` removed
+(it remains in git history). The methods/results note is `publication_v2/report.html`.

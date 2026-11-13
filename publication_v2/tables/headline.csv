@@ -1,0 +1,4 @@
+arm,model,scans,positive scans,"AUC, all scans [95% CI]","AUC, first visit [95% CI]",per-repeat AUC (mean ± SD)
+noH — single visit (primary),E28_noH_blend,944,167,0.768 [0.714–0.817],0.790 [0.744–0.835],0.762 ± 0.012
+H — visit + fellow-eye treatment history (auxiliary),E28_H_blend,944,167,0.813 [0.767–0.857],0.813 [0.770–0.854],0.807 ± 0.007
+reference,"age only (logistic, same folds)",944,167,0.661 [0.598–0.723],0.680 [0.621–0.734],—

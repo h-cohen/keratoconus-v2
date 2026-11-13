@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CXL Referral Model Methods</title>
+<style>
+:root {{ --bg:#fbfbfa; --fg:#1d1d1f; --mute:#5f6368; --line:#e3e3e0; --acc:#1f5fa8; --acc2:#c0392b; --card:#fff; }}
+@media (prefers-color-scheme: dark) {{ :root:not([data-theme="light"]) {{ --bg:#16171a; --fg:#e8e8e6; --mute:#a0a4aa; --line:#2c2e33; --acc:#6ea8ff; --acc2:#ff8a7a; --card:#1d1f23; }} }}
+:root[data-theme="dark"] {{ --bg:#16171a; --fg:#e8e8e6; --mute:#a0a4aa; --line:#2c2e33; --acc:#6ea8ff; --acc2:#ff8a7a; --card:#1d1f23; }}
+body {{ background:var(--bg); color:var(--fg); font:16px/1.6 Georgia, 'Times New Roman', serif; margin:0; }}
+main {{ max-width:1000px; margin:0 auto; padding:24px 16px 80px; }}
+h1 {{ font-size:1.9rem; margin:.2em 0; }} h2 {{ margin-top:2.2em; border-bottom:1px solid var(--line); padding-bottom:.2em; }}
+h3 {{ margin-top:1.6em; }} .meta {{ color:var(--mute); font-size:.9rem; }}
+code, pre {{ font:13px/1.45 ui-monospace, Menlo, Consolas, monospace; }} pre {{ background:var(--card); border:1px solid var(--line); padding:12px; overflow-x:auto; }}
+table {{ border-collapse:collapse; width:100%; margin:12px 0; font:13px/1.4 system-ui, sans-serif; display:block; overflow-x:auto; }}
+th, td {{ border-bottom:1px solid var(--line); padding:5px 8px; text-align:left; vertical-align:top; }} th {{ background:var(--card); }}
+table.hl td {{ font-size:14px; }} table.small td {{ font-size:12px; }}
+.box {{ background:var(--card); border:1px solid var(--line); border-left:4px solid var(--acc); padding:12px 16px; margin:16px 0; }}
+.warn {{ border-left-color:var(--acc2); }}
+img {{ max-width:100%; height:auto; background:#fff; }}
+nav ol {{ columns:2; font-size:.95rem; }} @media (max-width:640px) {{ nav ol {{ columns:1; }} }}
+.flow {{ display:flex; flex-wrap:wrap; gap:8px; align-items:stretch; font:13px/1.35 system-ui, sans-serif; }}
+.flow div {{ background:var(--card); border:1px solid var(--line); padding:8px 10px; flex:1 1 170px; }}
+.flow b {{ display:block; color:var(--acc); }}
+</style>
+</head>
+<body><main>
+<h1>Predicting referral for corneal cross-linking from a single Pentacam visit</h1>
+<p class="meta">Methods and results backup note for the algorithmic part of the paper. Final model: E28 blend.
+Generated {date} by <code>publication_v2/build_report.py</code> from the logged results. Every number below is recomputed on each build.
+Aggregate data only.</p>
+
+<div class="box"><b>Headline.</b> The model sees one Pentacam visit, i.e. both eyes' numerics, both eyes' four maps, and age.
+It predicts whether a keratoconic eye will be referred for corneal cross-linking (CXL). First-visit AUC: <b>{noH_first}</b> (noH, primary).
+With the fellow eye's treatment history added (H, auxiliary), first-visit AUC is <b>{H_first}</b>.</div>
+
+<nav><h3>Contents</h3><ol>
+<li><a href="#task">Task, label and cohort</a></li><li><a href="#arms">Two arms: noH and H</a></li>
+<li><a href="#pipeline">Pipeline overview</a></li><li><a href="#fellow">Fellow eye at the same visit</a></li>
+<li><a href="#N">Block N: numerics</a></li><li><a href="#maps">Map decoding</a></li>
+<li><a href="#R">Block R: map measurements</a></li><li><a href="#H">Block H: fellow-eye treatment history</a></li>
+<li><a href="#train">Training rows and weighting</a></li><li><a href="#prep">In-fold preprocessing</a></li>
+<li><a href="#learners">Learners and the blend</a></li><li><a href="#eval">Evaluation protocol</a></li>
+<li><a href="#results">Results</a></li><li><a href="#strata">Stage and age strata</a></li>
+<li><a href="#frozen">Frozen model and scoring new scans</a></li><li><a href="#repro">Reproducibility</a></li>
+<li><a href="#notes">Notes for writing</a></li><li><a href="#rdict">Appendix: R feature dictionary</a></li>
+</ol></nav>
+
+<h2 id="task">1. Task, label and cohort</h2>
+<p><b>Task.</b> Given one Pentacam examination of a keratoconic eye, estimate the probability that the eye will be
+referred for corneal cross-linking. The prediction is per scan. The clinical claim is for the <b>first visit</b>,
+i.e. the earliest scan of each eye in the cohort.</p>
+<p><b>Label.</b> <code>y = 1</code> if the eye was cross-linked at any time according to the clinic's treatment sheet. Positive scans are
+those taken before the CXL date. Scans taken after an eye's CXL are excluded from the cohort.
+Positive scans fall 0–6 months before CXL (91), 6–12 months (41), 12–24 months (24) and more than 24 months (11).</p>
+<p><b>Cohort.</b> {n} scans, {n_eye} eyes, {n_pat} patients, {pos} positive scans. First visit: {n_first} eyes, {pos_first} positive.
+Age {age_mean} ± {age_sd} years (range {age_min}–{age_max}).
+Inclusion follows the original study: keratoconus, complete numerics, a four-map composite image, and front mean keratometry <code>Km F ≤ 55 D</code>.
+Scan dates are parsed from the image file, because the export's own date field has day/month swaps.
+Patients are keyed by a pseudonymous hash. No identifying fields are used.</p>
+
+<h2 id="arms">2. Two arms: noH (primary) and H (auxiliary)</h2>
+<p>Every analysis is run and reported for both arms, side by side. They differ in one input block:</p>
+<ul>
+<li><b>noH: single visit (primary result).</b> Only what the Pentacam measures at the visit: both eyes' numerics and maps, plus age.</li>
+<li><b>H: visit + fellow-eye treatment history (auxiliary).</b> noH plus block H, which records whether the
+<i>other</i> eye was already treated before the visit date (§8). H is clinical history taken from the treatment sheet, not the scanner, so the H arm is labelled "visit + fellow-eye treatment history".</li>
+</ul>
+
+<h2 id="pipeline">3. Pipeline overview</h2>
+<div class="flow">
+<div><b>1 · Visit</b>Scanned eye: 55 numerics (incl. age) and a four-map composite. Fellow eye: same-day exam.</div>
+<div><b>2 · Decode maps</b>Colour → physical units (µm, D) on a 145×145 grid. Left eyes are mirrored.</div>
+<div><b>3 · Features</b>N (205), R (96 × own / fellow / own−fellow = 288), 2 image flags; [+ H (5)].</div>
+<div><b>4 · In-fold prep</b>Fit R standardisation, clip at the 0.5/99.5% quantiles, median imputation.</div>
+<div><b>5 · Three learners</b>XGBoost, LightGBM (5-seed bag), elastic-net LR; each tuned by inner patient CV.</div>
+<div><b>6 · Blend</b>Equal-weight mean of the members' percentile ranks.</div>
+</div>
+<p>The noH input has 495 columns (205 N + 288 R + 2 flags). The H input has 500 (+ 5 H).</p>
+
+<h2 id="fellow">4. Fellow eye at the same visit</h2>
+<p>For each scan, the fellow is the other eye's examination on the <b>same calendar day</b>. It is found in the full raw Pentacam export of the clinic, about 11,760 exams.
+When several exams exist, the one with status "OK" is preferred, then the one with the fewest missing numerics.
+The fellow is chosen <b>without reading any label, CXL or keratoplasty field</b>. A fellow that was already treated contributes its measured numerics like any other.</p>
+<ul>
+<li>Fellow numerics: available for 941 of 944 scans.</li>
+<li>Fellow map image: a same-day four-map composite of the other eye exists for 563 of 944 scans. Where it is missing, the fellow R columns are missing (§10).</li>
+</ul>
+
+<h2 id="N">5. Block N: bilateral numerics (205 columns)</h2>
+<p>Per eye, N uses the scanner's 54 numerics plus age, and 11 engineered keratoconus indices. Each is a pure function of one scan:</p>
+<pre>kmax_minus_km        = KMax − Km F
+pachy_min_over_apex  = Pachy Min / Pachy Apex
+pachy_min_over_pupil = Pachy Min / Pachy Pupil
+pachy_min_per_age    = Pachy Min / age
+prog_mean, prog_max  = mean / max of the D*mm pachymetric progression indices
+pachy_drop_4mm       = D0mm Pachy − D4mm Pachy
+ecc_front_back       = Num. Ecc. F − Num. Ecc. B
+asph_ratio           = Asph. Q F / Asph. Q B
+elev_ratio           = Rf F / Rf B
+cvol_ratio           = C.Vol D 3mm / C.Vol D 10mm</pre>
+<table><tr><th>part</th><th>columns</th><th>content</th></tr>
+<tr><td>own</td><td>66</td><td>age, 54 numerics and 11 indices of the scanned eye</td></tr>
+<tr><td>fel</td><td>65</td><td>the same 65 non-age values for the fellow eye</td></tr>
+<tr><td>asym</td><td>65</td><td>own − fellow</td></tr>
+<tr><td>worse_*</td><td>8</td><td>1 if the scanned eye is worse than its fellow: steeper KMax, steeper K2, higher ISV, KI, IHD, IVA or prog_max; thinner Pachy Min</td></tr>
+<tr><td>has_fellow</td><td>1</td><td>whether a same-day fellow exam exists</td></tr></table>
+<p>In the LightGBM member, age is constrained to be <b>monotone decreasing</b>: younger patients are referred more often.</p>
+
+<h2 id="maps">6. Map decoding: colour maps to physical values</h2>
+<p>Each examination exports a "4 Maps Selectable" composite with four colour-coded maps on absolute scales:
+corneal thickness, sagittal front curvature, front elevation and back elevation (both relative to the best-fit sphere).
+Each map carries its own 31-step colour bar. The decoder samples the bar of <i>every</i> image, then assigns each map pixel the value of the nearest palette colour.
+Pixels far from every palette colour (text, symbols, axis marks) become missing.</p>
+<table><tr><th>map</th><th>scale</th></tr>
+<tr><td>thickness T</td><td>300 + 20k µm, k = 0…30</td></tr>
+<tr><td>sagittal front curvature K</td><td>labelled steps 60, 50, 48 … 17.5 D, with midpoints between them</td></tr>
+<tr><td>front / back elevation EF, EB</td><td>−75 + 5k µm vs BFS</td></tr></table>
+<p>The map boxes are those of <code>preprocessing/3_improved_crop_script.py</code>. Values are 2×2-pixel block medians on a 145 × 145 grid, about 0.069 mm per cell (28.9 px per mm), centred on the corneal vertex.
+<b>Left eyes are mirrored</b>, so +x is nasal and +y is superior for both eyes. Decoding reads no labels.</p>
+
+<h2 id="R">7. Block R: map measurements (96 per eye → 288 columns)</h2>
+<p>R is computed from the decoded maps with fixed, label-free formulas, within the central 8 mm (radius ≤ 4 mm). Rings and quadrants are on the mirrored grid.
+Quadrants: superior 45°–135°, inferior −135° to −45°, nasal |θ| ≤ 45°, temporal |θ| > 135°.</p>
+<table><tr><th>group</th><th>count</th><th>definition</th></tr>
+<tr><td>ring × quadrant means</td><td>64</td><td>4 maps × rings 0–1, 1–2, 2–3, 3–4 mm × 4 quadrants</td></tr>
+<tr><td>extremum</td><td>16</td><td>4 maps × (value, x, y, distance from centre) of the thinnest point (T) or the maximum (K, EF, EB) within 4 mm</td></tr>
+<tr><td>asymmetry</td><td>8</td><td>4 maps × (inferior − superior, nasal − temporal) mean on the 2–4 mm annulus</td></tr>
+<tr><td>dispersion</td><td>4</td><td>4 maps × standard deviation within 3 mm</td></tr>
+<tr><td>thickness progression</td><td>4</td><td>mean thickness on 1, 2 and 3 mm rings (±0.25 mm) around the thinnest point minus the thinnest value; the 3 mm / 1 mm ratio</td></tr></table>
+<p>A region is set to missing when more than 30% of its cells are undecodable. The full dictionary is in the <a href="#rdict">Appendix</a>.</p>
+<p><b>Bilateral use.</b> Inside each training fold, the 96 measurements are standardised with mean and SD fitted on the training rows' own maps. No PCA is applied.
+The fellow's maps (mirrored the same way) are transformed with the same scaler. Three copies enter the model: <code>R_own*</code>, <code>R_fel*</code> and <code>R_asym* = own − fellow</code>.
+Two flags mark availability: <code>own_image</code> and <code>has_fellow_image</code>.</p>
+
+<h2 id="H">8. Block H: fellow-eye treatment history (H arm only, 5 columns)</h2>
+<p>The source is the clinic's treatment sheet, which gives per-eye CXL and keratoplasty dates. Only dates <b>strictly before</b> the visit date count: a fellow CXL on the visit day is "not yet treated".</p>
+<table><tr><th>column</th><th>definition</th></tr>
+<tr><td>fellow_cxl_before_visit</td><td>1 if the other eye had CXL before the visit date</td></tr>
+<tr><td>years_since_fellow_cxl</td><td>time since that CXL, in years</td></tr>
+<tr><td>fellow_kp_before_visit</td><td>1 if the other eye had keratoplasty before the visit date</td></tr>
+<tr><td>fellow_cxl_unknown</td><td>the CXL cell is filled but has no parsable date. It is never treated as past.</td></tr>
+<tr><td>fellow_tx_missing</td><td>the patient is not in the sheet. The other columns are then missing.</td></tr></table>
+<p>In the cohort, 244 of 944 scans have a fellow eye cross-linked before the visit. <b>Direction:</b> a treated fellow <i>lowers</i> the predicted referral probability.
+This is consistent with clinical practice: a second eye is not referred by default just because the first was treated.</p>
+
+<h2 id="train">9. Training rows and weighting</h2>
+<ul>
+<li><b>Cohort rows</b> of the training fold.</li>
+<li><b>Extra labelled exams</b>, used for training only and never scored. These are 1,487 additional single-visit exams (299 positive, 503 patients) from the raw export.
+They follow the cohort rules: complete numerics, Km F ≤ 55, CXL eyes only before their CXL date, nothing on or after keratoplasty.
+Each extra exam has its own same-day fellow. Extras from cohort patients (900 rows) are used <b>only when that patient is in the training fold</b>.
+Extras have no map images, so their R columns are missing and <code>own_image = 0</code>.</li>
+<li><b>First-visit weight.</b> Cohort first-visit scans get sample weight 2 in the final fit of every member. All other rows get weight 1.</li>
+</ul>
+
+<h2 id="prep">10. In-fold preprocessing</h2>
+<p>Everything below is fitted on the training rows of the fold and then applied to the test rows:</p>
+<ol>
+<li>R standardisation (§7).</li>
+<li>Each column is clipped to the training rows' 0.5% and 99.5% quantiles.</li>
+<li>Missing values are filled with the training-row median of the clipped column. Any column with no observed value is filled with 0.</li>
+</ol>
+
+<h2 id="learners">11. Learners and the blend</h2>
+<p>All hyper-parameters are chosen by <b>4-fold patient-grouped stratified inner CV inside the training fold</b>, by mean inner AUC. The chosen setting is then refitted on all training rows with the sample weights of §9.</p>
+<table><tr><th>member</th><th>fixed settings</th><th>tuned grid</th></tr>
+<tr><td>XGBoost</td><td>η 0.03, subsample 0.8, colsample 0.5, min_child_weight 5, λ 1, scale_pos_weight = neg/pos, hist</td><td>max_depth {{2, 3}} × trees {{200, 500}}</td></tr>
+<tr><td>LightGBM (5-seed bag)</td><td>η 0.03, max_depth 2, min_child_samples 20, subsample 0.8, colsample 0.7, scale_pos_weight, age monotone decreasing; the tuned setting is refitted with 5 seeds and averaged</td><td>trees {{100, 300}} × leaves {{2, 4}}</td></tr>
+<tr><td>Elastic-net logistic</td><td>standardised inputs, saga solver, class_weight balanced</td><td>C {{0.01, 0.03, 0.1, 0.3}} × l1_ratio {{0.2, 0.5, 0.8}}</td></tr></table>
+<p><b>Blend.</b> Within each test fold, each member's predicted probabilities are converted to ranks divided by the number of test scans. The final score is the <b>unweighted mean</b> of the three. No weights are fitted.
+The members are complementary: two tree ensembles and one sparse linear model.</p>
+
+<h2 id="eval">12. Evaluation protocol</h2>
+<ul>
+<li><b>Outer CV:</b> 5-fold <code>StratifiedGroupKFold</code> grouped by patient, so both eyes and all visits of a patient stay in the same fold. Repeated 5 times with seeds 2026–2030.</li>
+<li><b>Pooled score:</b> each scan's out-of-fold score is averaged over the 5 repeats. The AUC is computed on these 944 averaged scores. The per-repeat AUC mean ± SD is also reported.</li>
+<li><b>First-visit AUC:</b> the same scores restricted to the earliest cohort scan of each eye ({n_first} eyes).</li>
+<li><b>95% CI:</b> patient-cluster bootstrap, 1,000 resamples of patients.</li>
+<li><b>Paired comparisons:</b> the same patient bootstrap applied to the AUC difference of two models scored on the same scans.</li>
+<li>No test-fold information reaches training: preprocessing, tuning, R scaling and the extra exams all respect the fold.</li>
+</ul>
+
+<h2 id="results">13. Results</h2>
+<h3>13.1 Headline</h3>
+{head}
+{roc}
+<h3>13.2 Paired comparisons (patient-cluster bootstrap)</h3>
+{deltas}
+<h3>13.3 Blend members alone</h3>
+{members}
+
+<h2 id="strata">14. Stage and age strata</h2>
+<p>Two staging approaches are reported side by side.
+<b>A:</b> front mean keratometry Km F. Stage 4 (≥ 55 D) is almost empty by construction, because the cohort inclusion filter is Km F ≤ 55.
+<b>B:</b> back mean radius Rm B.
+Intervals are half-open in the parameter's own direction. Age strata are &lt; 25, 25–29 and ≥ 30 years.
+A dash means the stratum has fewer than 3 positive scans or only one class.</p>
+{strata_img}
+{strata}
+
+<h2 id="frozen">15. Frozen model and scoring new scans</h2>
+<p><code>rethink/freeze_final.py</code> refits both arms on all {n} cohort scans plus all extra exams, using the same recipe and inner CV (seed 2026).
+The output is <code>rethink/frozen/final.pkl</code>, which is not shared because it is fitted on patient data.
+Ranks cannot be formed within a test fold for a single new scan. Instead, each member's score is mapped to its percentile among the frozen member's scores on the {n} cohort scans, and the three percentiles are averaged.
+The ordering matches the evaluated blend.</p>
+
+<h2 id="repro">16. Reproducibility</h2>
+<table><tr><th>step</th><th>script (rethink/)</th><th>output (rethink/data/, not shared)</th></tr>
+<tr><td>cohort, labels</td><td>prepare_data.py</td><td>cohort.parquet</td></tr>
+<tr><td>raw exports, fellows, extra exams</td><td>prepare_raw.py, prepare_raw_all.py, prepare_extra.py, prepare_history.py</td><td>raw_all_exams, extra_exams</td></tr>
+<tr><td>treatment dates (H)</td><td>prepare_fellow_tx.py</td><td>eye_tx.parquet</td></tr>
+<tr><td>map decoding</td><td>decode_maps.py, decode_all.py, decode_hr.py</td><td>decoded_hr.npy (N × 4 × 145 × 145)</td></tr>
+<tr><td>R measurements</td><td>radiomics.py</td><td>emb_R.npy (N × 96)</td></tr>
+<tr><td>features, fellow lookup</td><td>exp20_bilateral.py, exp21_bilateral_clean.py, exp22_bilateral.py</td><td>—</td></tr>
+<tr><td>model and CV</td><td>exp28_tricks.py <code>{{noH|H}} blend</code>; harness.py</td><td>results/oof/E28_*_blend.npy, experiments.csv</td></tr>
+<tr><td>freeze</td><td>freeze_final.py</td><td>frozen/final.pkl</td></tr>
+<tr><td>staging, this report</td><td>staging.py; publication_v2/build_report.py</td><td>publication_v2/</td></tr></table>
+<pre>.venv-gpu/bin/python -I rethink/exp28_tricks.py noH blend
+.venv-gpu/bin/python -I rethink/exp28_tricks.py H blend
+.venv-gpu/bin/python -I rethink/freeze_final.py
+.venv-gpu/bin/python -I publication_v2/build_report.py</pre>
+
+<h2 id="notes">17. Notes for writing</h2>
+<div class="box warn"><ul>
+<li><b>Model selection.</b> The final model was selected among 11 pre-declared learner and input configurations (E28), on the same cross-validated data it is reported on, without a held-out set.
+Report the number of configurations tried. Present the blend's gain over its LightGBM member as consistent but not significant (§13.2).</li>
+<li><b>Rank pooling.</b> Blend scores are within-fold ranks. The pooled AUC across folds is therefore slightly less directly comparable than per-repeat AUCs and paired deltas, which are the fair comparisons.</li>
+<li><b>H and the label share a source.</b> H and the label come from the same treatment sheet. Leakage is prevented by the strict "before the visit date" rule (§8). State this explicitly.</li>
+<li><b>Missing maps in training.</b> Extra exams have no maps: about 54% of the R values in the training rows are imputed and flagged by <code>own_image = 0</code>. All scored (cohort) scans have their own map.</li>
+<li><b>Stage 4 of approach A</b> holds only 5 scans, all negative, because of the Km F ≤ 55 inclusion filter. This is by design and is not a model failure.</li>
+<li><b>Explainability.</b> R columns are named regions (map × ring × quadrant), so TreeSHAP (XGBoost, LightGBM) and the exact linear decomposition (elastic-net) can be summed per region and drawn on the cornea. This is in progress on a separate branch.</li>
+</ul></div>
+
+<h2 id="rdict">Appendix: R feature dictionary (96 per eye)</h2>
+{rdict}
+</main></body></html>

@@ -70,10 +70,14 @@ python -I rethink/exp00_baselines.py   # sanity check: must reproduce the E00 ta
 |---|---|
 | `prepare_data.py` | Builds the frozen cohort. Inputs: `data/multimodal_dataset.csv`, `data/multimodal_dataset_features.txt`, `data/221204_v2/Combined_excel_KC.xlsx` (CXL / keratoplasty dates per eye), `results/age_subanalysis/cnn_features.npy` (frozen ResNet-18 features, 997×2048, row-aligned with the legacy cohort). Writes `rethink/data/cohort.parquet` (pseudonymous `pid`, `eid` = pid-eye, `scan_date`, `visit_idx`, `first_visit`, `y`, `months_to_cxl`, `legacy_row`, 55 numerics) and `cnn_frozen.npy` (aligned). `private_keys.csv` maps pid to the original id and image filename (needed to join images). |
 | `harness.py` | `load(split)`, `numeric_features()`, `evaluate()`, `cluster_boot_auc()`. Reports pooled OOF AUC with a patient-cluster bootstrap CI, the per-repeat mean ± SD, and the **first-visit AUC** (one scan per eye; this is the paper's "single visit" claim). |
-| `models.py` | Fold-safe builders: `logreg(cols, C)`, `xgb_tab(cols, **xgb)`, `legacy_multimodal(cols, k)`. `_xgb_fit` does early stopping on an inner patient-grouped split. |
-| `exp00_baselines.py` | E00 reference runs. |
-| `make_lockbox.py` | Already run; it refuses to run again. |
+| `exp28_tricks.py` | **Final model** (2026-11-13): E28 blend = rank mean of xgb, lgbm_bag, lr_en on N + R (+ H in the H arm). |
+| `freeze_final.py` | Refits both arms on all 944 scans → `frozen/final.pkl`; `predict(fz, D, idx)` scores new rows (percentile vs cohort). |
+| `radiomics.py`, `decode_*.py` | Block R: 96 map measurements from the decoded maps. |
+| `exp20/21/22_*.py` | Feature builders (fellow lookup, block N, H, assemble); imported by the final model. |
+| `archive/` | Superseded experiments (E00–E27 scripts, old freezes, external scorer). Their rows stay in experiments.csv. |
 | `PROTOCOL.md` | Frozen rules plus a change log. Changing the rules needs a dated entry and a reason. |
+
+Publication material: `publication_v2/` (`build_report.py` → `report.html`, the living methods/results note). Rebuild it after every new result.
 
 Name new experiments `rethink/expNN_<topic>.py`, with run names `ENN_<variant>`.
 
