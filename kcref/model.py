@@ -9,10 +9,12 @@ their scores on the 944 cohort scans (same ordering for a batch, defined for a s
 
 Usage (repo root):
   python -I kcref/model.py cv {noH|H}     5 x 5 CV, logged as final_{arm}
+  python -I kcref/model.py cv {noH|H} --blocks {L1|L2|L2b}   ladder rung (E29), logged as E29_ladder_{blocks}_{arm}
   python -I kcref/model.py freeze         refit both arms on all scans -> kcref/frozen/final.pkl (patient data)
 """
 import pickle
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -25,9 +27,10 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 
-import features as F
-from common import DATA, ROOT
-from evaluate import evaluate
+sys.path.insert(0, str(Path(__file__).parent))
+import features as F  # noqa: E402
+from common import DATA, ROOT  # noqa: E402
+from evaluate import evaluate  # noqa: E402
 
 W_FIRST = 2.0
 SEED = 2026
@@ -72,16 +75,36 @@ def inner_cv(X, y, g, make, grid, seed):
     return best
 
 
+def select_columns(cols, blocks):
+    """Columns of a feature-block ladder rung (E29); H columns are kept whenever present.
+    L1 own eye (age + numerics + indices); L2 block N; L2b L1 + own-eye maps; final everything."""
+    fellow = ('fel_', 'asym_', 'worse_')
+
+    def keep(c):
+        if blocks == 'final' or c in F.H_COLS:
+            return True
+        if blocks == 'L2':
+            return not c.startswith('R_') and c not in ('has_fellow_image', 'own_image')
+        own = not c.startswith(fellow + ('R_',)) and c not in ('has_fellow', 'has_fellow_image', 'own_image')
+        if blocks == 'L1':
+            return own
+        if blocks == 'L2b':
+            return own or c.startswith('R_own') or c == 'own_image'
+        raise ValueError(blocks)
+    return [c for c in cols if keep(c)]
+
+
 def matrix(fz, D, idx):
     X = F.assemble(D, idx, fz['use_h'], fz['encfit'])[fz['cols']]
     return X.clip(fz['lo'], fz['hi'], axis=1).fillna(fz['med']).fillna(0).values
 
 
-def fit(D, rows, use_h, seed):
-    """Fit preprocessing and the three members on visit rows `rows`."""
+def fit(D, rows, use_h, seed, blocks='final'):
+    """Fit preprocessing and the three members on visit rows `rows` (columns of ladder rung `blocks`)."""
     w = np.where(D['first'][rows], W_FIRST, 1.0)
     sc = F.fit_R(D, rows)
     X = F.assemble(D, rows, use_h, sc)
+    X = X[select_columns(list(X.columns), blocks)]
     lo, hi = X.quantile(0.005), X.quantile(0.995)
     fz = dict(use_h=use_h, encfit=sc, cols=list(X.columns), lo=lo, hi=hi, med=X.clip(lo, hi, axis=1).median(),
               models={})
@@ -100,10 +123,10 @@ def member_scores(fz, X):
     return {k: np.mean([m.predict_proba(X)[:, 1] for m in ms], axis=0) for k, ms in fz['models'].items()}
 
 
-def cv_fit_predict(D, use_h):
+def cv_fit_predict(D, use_h, blocks='final'):
     """fit_predict for evaluate.cv_oof: blend score = mean of the members' within-test-fold ranks."""
     def fp(dtr, dte, seed):
-        fz = fit(D, F.train_rows(D, dtr), use_h, seed)
+        fz = fit(D, F.train_rows(D, dtr), use_h, seed, blocks)
         s = member_scores(fz, matrix(fz, D, dte.crow.values))
         return np.mean([rankdata(s[k]) / len(dte) for k in MEMBERS], axis=0)
     return fp
@@ -126,9 +149,14 @@ def main():
     D = F.build(coh)
     if sys.argv[1] == 'cv':
         arm = sys.argv[2]
-        evaluate(f'final_{arm}', cv_fit_predict(D, arm == 'H'), coh,
-                 f'final model (rank blend xgb + lgbm_bag + lr_en on N + R{" + H" if arm == "H" else ""})',
-                 dict(arm=arm))
+        blocks = sys.argv[sys.argv.index('--blocks') + 1] if '--blocks' in sys.argv else 'final'
+        h = ' + H' if arm == 'H' else ''
+        if blocks == 'final':
+            evaluate(f'final_{arm}', cv_fit_predict(D, arm == 'H'), coh,
+                     f'final model (rank blend xgb + lgbm_bag + lr_en on N + R{h})', dict(arm=arm))
+        else:
+            evaluate(f'E29_ladder_{blocks}_{arm}', cv_fit_predict(D, arm == 'H', blocks), coh,
+                     f'E29 ladder rung {blocks}{h}: final blend on the rung columns', dict(arm=arm, blocks=blocks))
     elif sys.argv[1] == 'freeze':
         out = {}
         for arm in ('noH', 'H'):

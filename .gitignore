@@ -3,10 +3,12 @@ data/
 kcref/data/
 kcref/frozen/
 publication/
+publication_v2/local/
 paper/
 
 # run artefacts (experiments.csv and the result tables are tracked)
 kcref/results/oof/
+kcref/results/shap/
 kcref/results/ssl/
 kcref/results/ftL/
 kcref/results/*.log
@@ -22,3 +24,6 @@ algo-pipeline/
 kcref/results/*.flag
 kcref/results/*.sh
 kcref/results/lockbox_scores.csv
+
+# plan workspaces (local)
+.superpowers/

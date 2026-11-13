@@ -176,3 +176,28 @@ becomes the final model; report the number of variants tried (7 + 1) and the pai
 Three input-side noH variants added to `exp28_tricks.py` (lgbm_nan: native NaN instead of median imputation;
 lgbm_nofel: R without the fellow copy; pca_lr: PCA(k) + L2 logistic, k and C tuned in fold). The E28 count becomes
 7 + 3 + 1 = 11 noH configurations. H arm: the 7 learner variants, run for the two-arm rule (CLAUDE.md).
+
+### 2026-11-13 — E29 pre-declaration: feature-block ladder, explanation pass, matched pairs
+Design: `docs/superpowers/specs/2026-11-13-explainability-evaluation-design.md`. None of these results changes the
+frozen model; they describe it.
+- **Ladder.** The final blend (`model.py`, unchanged learners, tuning, training rows and folds) is refitted on column
+  subsets, for both arms (the H arm adds block H to every rung):
+  - L1 is own eye only: age + 54 numerics + 11 indices (66 columns, the previous paper's information);
+  - L2 is block N (205);
+  - L2b is L1 + own-eye R (96) + own_image (163);
+  - final is `E28_{arm}_blend`.
+
+  The six new runs are logged as `E29_ladder_{L1,L2,L2b}_{arm}`. Paired first-visit deltas (patient-cluster
+  bootstrap): L1→L2, L2→final, L1→L2b, L2b→final. Age only is a reference line, with no delta.
+- **Explanation pass.** The 25 final-model fits are re-run per arm to store exact out-of-fold SHAP:
+  - XGBoost and LightGBM through native TreeSHAP, the LR through linear SHAP;
+  - the blend attribution is the mean of the members' SHAP, each divided by the SD of its test-fold margin.
+
+  The pass must reproduce `E28_{arm}_blend` OOF exactly. It is not a new configuration and adds no experiments.csv row.
+- **Matched pairs (S1).** Pool: first-visit eyes with both images. Pairing rule:
+  1. For each referred eye, take its nearest non-referred eye on standardised (Km F, age), from the same stage A and a
+     different patient. Matching is greedy, by increasing distance, and each eye is used once.
+  2. Report the number of pairs and the fraction ordered correctly by L1 vs by the final noH model, with a two-sided
+     sign test on the discordant pairs.
+
+  Case figures are ranked by (final gap − L1 gap), and stay local (not in the repository).
