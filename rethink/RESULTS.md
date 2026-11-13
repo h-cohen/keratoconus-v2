@@ -879,3 +879,28 @@ head did not add class signal beyond G0. E27 stacks (H, noH) were stopped unfini
 - E25 done in both arms. E27 stacks stopped by the user; nothing running.
 - Still to do: paired deltas of the noH standalone runs against E24n_noH. Add E25/E27 noH columns to the stage tables
   (`staging.py`, A and B).
+
+## E28 — learner and input variants of the final non-stack model bi_R (pre-declared 2026-11-12/13, `exp28_tricks.py`)
+
+Input: numerics + fellow + age + R map measurements (495 columns in noH; 54% of the R values in the training rows are
+missing, since most extra exams have no maps). Paired delta = patient-cluster bootstrap on first-visit scans against
+E25_(noH_)bi_R_lgbm.
+
+| variant | noH AUC | noH first visit [95% CI] | noH Δ first | H AUC | H first visit [95% CI] | H Δ first |
+|---|---|---|---|---|---|---|
+| **blend** (rank mean of xgb, lgbm_bag, lr_en) | **0.768** | **0.790** [0.744–0.835] | +0.010 [−0.002, +0.023] | **0.813** | **0.813** [0.770–0.854] | +0.010 [−0.002, +0.022] |
+| lgbm_bag (5 seeds) | 0.757 | 0.781 | +0.001 | 0.804 | 0.803 | +0.000 |
+| reference bi_R_lgbm | 0.757 | 0.780 [0.730–0.824] | — | 0.805 | 0.803 [0.755–0.846] | — |
+| lgbm_nofel | 0.759 | 0.779 | −0.001 | — | — | — |
+| lgbm_deep | 0.752 | 0.778 | −0.002 | 0.793 | 0.798 | −0.006 |
+| lr_en (elastic net) | 0.749 | 0.777 | −0.004 | 0.794 | 0.799 | −0.005 |
+| xgb | 0.752 | 0.775 | −0.005 | 0.794 | 0.794 | −0.009 |
+| lgbm_nan (native NaN) | 0.750 | 0.774 | −0.006 | — | — | — |
+| et (ExtraTrees) | 0.737 | 0.767 | −0.013 | 0.788 | 0.799 | −0.004 |
+| pca_lr | 0.724 | 0.760 | −0.020 | — | — | — |
+| svm | 0.726 | 0.760 | −0.020 | 0.762 | 0.782 | −0.021 |
+
+Reading: no single learner or input change beats the E25 LightGBM. The fixed rank blend of trees + elastic-net
+is the best in both arms (+0.010 first visit, CI touching 0, P>0 0.93 in noH) and is the pre-declared final model:
+**noH (primary) 0.790 first visit / 0.768 all; H (auxiliary) 0.813 / 0.813**. Selected from 11 noH configurations
+on the same data. The blend's rank scores are per test fold; per-repeat AUCs and paired deltas are the fair comparison.
