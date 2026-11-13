@@ -616,3 +616,40 @@ def pair_table(sh, info):
                        'sign test p (two-sided)': f'{st["p_sign"]:.2g}'}])
     t.to_csv(TAB / 'pairs_stats.csv', index=False)
     return t
+
+
+# ---------------------------------------------------------------- E1 ladder
+RUNG_LABEL = {'L1': 'Own eye numerics (L1)', 'L2b': 'L1 + own-eye maps (L2b)', 'L2': 'L1 + fellow eye (L2 = block N)',
+              'final': 'L2 + all maps (final)'}
+
+
+def fig_ladder(lad, dl, age_auc):
+    """E1: first-visit AUC [95% CI] per rung, noH and H tracks; paired deltas annotated; age only as a reference line.
+    lad: arm, rung, auc, lo, hi.  dl: arm, step ('L1→L2' ...), d, lo, hi."""
+    rungs = [r for r in RUNG_LABEL if r in set(lad.rung)]
+    fig, ax = plt.subplots(figsize=(S.W2, 2.9))
+    framed(ax, 'x')
+    ax.axvline(age_auc, color=S.C['age'], lw=0.9, ls=(0, (1, 2)))
+    ax.text(age_auc, len(rungs) - 0.45, f' age only {age_auc:.3f}', color=S.C['age'], fontsize=6, va='bottom')
+    for arm, off in (('noH', -0.13), ('H', 0.13)):
+        d = lad[lad.arm == arm].set_index('rung')
+        for yi, r in enumerate(rungs):
+            if r not in d.index:
+                continue
+            q = d.loc[r]
+            ax.plot([q.lo, q.hi], [yi + off] * 2, color=S.C[arm], lw=1.6, solid_capstyle='round', zorder=3)
+            ax.plot(q.auc, yi + off, 'o', ms=5.5, mfc=S.C[arm], mec='white', mew=0.8, zorder=4,
+                    label=arm if yi == 0 else None)
+            ax.text(q.hi + 0.004, yi + off, f'{q.auc:.3f}', va='center', fontsize=6, color=S.C[arm])
+    ax.set_yticks(range(len(rungs)), [RUNG_LABEL[r] for r in rungs])
+    ax.invert_yaxis()
+    ax.set_xlabel('First-visit AUC (95% patient-cluster bootstrap CI)')
+    ax.legend(loc='lower right', title='Arm', title_fontsize=6.5)
+    txt = '\n'.join(f'{a}  {s}: Δ {x.d:+.3f} [{x.lo:+.3f}, {x.hi:+.3f}]'
+                    for a in ('noH', 'H') for s, x in dl[dl.arm == a].set_index('step').iterrows())
+    ax.text(1.02, 0.5, 'Paired Δ AUC, first visit\n' + txt, transform=ax.transAxes, fontsize=5.8, va='center',
+            family='monospace', color=S.C['ink'])
+    fig.tight_layout()
+    lad.to_csv(TAB / 'ladder.csv', index=False)
+    dl.to_csv(TAB / 'ladder_deltas.csv', index=False)
+    return S.save(fig, 'ladder')

@@ -62,6 +62,54 @@ def img(path):
     return f'<img alt="{path.stem}" src="data:image/png;base64,{base64.b64encode(path.read_bytes()).decode()}">'
 
 
+PENDING = '<div class="box warn">Pending: {what}. Rebuild after the run finishes.</div>'
+
+
+def e29_sections(coh, y, g, fv, P, pa):
+    """HTML for the E29 sections (ladder, SHAP, cornea, stage, robustness, pairs); 'pending' until artefacts exist."""
+    out = {}
+    have = {f'{r}_{a}': (RES / 'oof' / f'E29_ladder_{r}_{a}.npy').exists() for r in ('L1', 'L2', 'L2b') for a in ARMS}
+    if all(have.values()):
+        lad, dl = [], []
+        for a in ARMS:
+            o = {r: oof(f'E29_ladder_{r}_{a}') for r in ('L1', 'L2b', 'L2')}
+            o['final'] = P[a]
+            for r, p in o.items():
+                lad.append(dict(arm=a, rung=r, **dict(zip(('auc', 'lo', 'hi'), ci(y[fv], p[fv], g[fv])))))
+            for s0, s1 in (('L1', 'L2'), ('L2', 'final'), ('L1', 'L2b'), ('L2b', 'final')):
+                d = paired_delta(y[fv], o[s1][fv], o[s0][fv], g[fv])
+                dl.append(dict(arm=a, step=f'{s0}→{s1}', d=d[0], lo=d[1][0], hi=d[1][1], p_gt0=d[2]))
+        lad, dl = pd.DataFrame(lad), pd.DataFrame(dl)
+        out['ladder'] = img(PL.fig_ladder(lad, dl, roc_auc_score(y[fv], pa[fv]))) + table(dl.round(3))
+    else:
+        out['ladder'] = PENDING.format(what='ladder runs E29_ladder_{L1,L2,L2b}_{noH,H}')
+    if all((RES / 'shap' / f'{a}_oof.npz').exists() for a in ARMS):
+        info = PL.cohort_info()
+        shs = {a: PL.load_shap(a) for a in ARMS}
+        out['shap'] = (img(PL.fig_sources(shs, info)) + img(PL.fig_beeswarm(shs['noH'], info, 'noH')) +
+                       img(PL.fig_dependence(shs['noH'], info, 'noH')) +
+                       '<details><summary>H arm: top features and dependence</summary>' +
+                       img(PL.fig_beeswarm(shs['H'], info, 'H')) + img(PL.fig_dependence(shs['H'], info, 'H')) +
+                       '</details>')
+        tab = PL.r_table(shs['noH'], info)
+        out['cornea'] = (img(PL.fig_cornea(shs['noH'], info, 'noH')) + img(PL.fig_cornea(shs['noH'], info, 'noH', True))
+                         + img(PL.fig_mean_maps(info, tab)) +
+                         '<details><summary>H arm: corneal importance</summary>' +
+                         img(PL.fig_cornea(shs['H'], info, 'H')) + img(PL.fig_cornea(shs['H'], info, 'H', True)) +
+                         '</details>')
+        out['stage_shap'] = img(PL.fig_stage_shap(shs, info, 'A')) + img(PL.fig_stage_shap(shs, info, 'B'))
+        ab = pd.concat([pd.read_csv(OUT / 'tables' / f'shap_top_{a}.csv').assign(arm=a) for a in ARMS])
+        ab.to_csv(OUT / 'tables' / 'abcd.csv', index=False)
+        out['robust'] = (img(PL.fig_robustness(shs['noH'], info, 'noH')) + img(PL.fig_robustness(shs['H'], info, 'H'))
+                         + table(ab[['arm', 'rank', 'feature', 'abcd', 'source', 'mean_abs_shap']].round(4), 'small'))
+        out['pairs'] = (table(PL.pair_table(shs['noH'], info)) if have['L1_noH'] else
+                        PENDING.format(what='ladder rung L1 (needed for the pair comparison)'))
+    else:
+        for k in ('shap', 'cornea', 'stage_shap', 'robust', 'pairs'):
+            out[k] = PENDING.format(what='OOF SHAP explanation pass (kcref/explain.py shap {noH,H})')
+    return out
+
+
 def table(df, cls=''):
     return df.to_html(index=False, escape=True, border=0, classes=cls, na_rep='—')
 
@@ -180,6 +228,7 @@ def main():
     rdict = pd.DataFrame(rows)
     rdict.to_csv(OUT / 'tables' / 'r_features.csv', index=False)
 
+    e29 = e29_sections(coh, y, g, fv, P, pa)
     n_first, pos_first = int(fv.sum()), int(y[fv].sum())
     body = TEMPLATE.format(
         date=dt.date.today().isoformat(), n=len(y), pos=int(y.sum()), n_pat=coh.pid.nunique(),
@@ -187,7 +236,7 @@ def main():
         age_mean=f'{coh.age.mean():.1f}', age_sd=f'{coh.age.std():.1f}', age_min=int(coh.age.min()),
         age_max=int(coh.age.max()),
         head=table(head, 'hl'), deltas=table(deltas), members=table(members), strata=table(st, 'small'),
-        roc=roc_img, strata_img=strata_img, rdict=table(rdict, 'small'),
+        roc=roc_img, strata_img=strata_img, rdict=table(rdict, 'small'), **e29,
         noH_first=f'{log.loc[FINAL["noH"]].auc_first:.3f}', H_first=f'{log.loc[FINAL["H"]].auc_first:.3f}')
     (OUT / 'report.html').write_text(body, encoding='utf-8')
     print('wrote', OUT / 'report.html')
