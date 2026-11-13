@@ -63,6 +63,16 @@ def test_no_identifiers():
     assert not any(p in html for p in pids if len(p) >= 6)
 
 
+def test_funnel_matches_cohort():
+    import pandas as pd
+    import diagrams
+    c = pd.read_parquet(FG.DATA / 'cohort.parquet')
+    _, n, eyes, pts, pos, _ = diagrams.COHORT_FUNNEL[-1]
+    assert (n, eyes, pts, pos) == (len(c), c.eid.nunique(), c.pid.nunique(), int(c.y.sum()))
+    assert diagrams.FIRST_VISIT == (int(c.first_visit.sum()), int(c.y[c.first_visit].sum()))
+    assert diagrams.EXTRA_FUNNEL[-1][1] == len(pd.read_parquet(FG.DATA / 'extra_exams.parquet'))
+
+
 if __name__ == '__main__':
     for t in [v for k, v in dict(globals()).items() if k.startswith('test_')]:
         t()
