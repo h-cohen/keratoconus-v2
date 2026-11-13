@@ -27,7 +27,7 @@ nav ol { columns:2; font-size:.95rem; } @media (max-width:640px) { nav ol { colu
 </head>
 <body><main>
 <h1>Predicting referral for corneal cross-linking from a single Pentacam visit</h1>
-<p class="meta">Methods and results backup note for the algorithmic part of the paper. Final model: E28 blend.
+<p class="meta">Methods and results note for the algorithmic part of the paper.
 Generated 2026-11-13 by <code>publication_v2/build_report.py</code> from the logged results. Every number below is recomputed on each build.
 Aggregate data only.</p>
 
@@ -578,26 +578,28 @@ A dash means the stratum has fewer than 3 positive scans or only one class.</p>
 </table>
 
 <h2 id="frozen">15. Frozen model and scoring new scans</h2>
-<p><code>rethink/freeze_final.py</code> refits both arms on all 944 cohort scans plus all extra exams, using the same recipe and inner CV (seed 2026).
-The output is <code>rethink/frozen/final.pkl</code>, which is not shared because it is fitted on patient data.
+<p><code>python -I kcref/model.py freeze</code> refits both arms on all 944 cohort scans plus all extra exams, using the same recipe and inner CV (seed 2026).
+The output is <code>kcref/frozen/final.pkl</code>, which is not shared because it is fitted on patient data. <code>model.predict(fz, D, idx)</code> scores new rows.
 Ranks cannot be formed within a test fold for a single new scan. Instead, each member's score is mapped to its percentile among the frozen member's scores on the 944 cohort scans, and the three percentiles are averaged.
 The ordering matches the evaluated blend.</p>
 
 <h2 id="repro">16. Reproducibility</h2>
-<table><tr><th>step</th><th>script (rethink/)</th><th>output (rethink/data/, not shared)</th></tr>
-<tr><td>cohort, labels</td><td>prepare_data.py</td><td>cohort.parquet</td></tr>
-<tr><td>raw exports, fellows, extra exams</td><td>prepare_raw.py, prepare_raw_all.py, prepare_extra.py, prepare_history.py</td><td>raw_all_exams, extra_exams</td></tr>
-<tr><td>treatment dates (H)</td><td>prepare_fellow_tx.py</td><td>eye_tx.parquet</td></tr>
-<tr><td>map decoding</td><td>decode_maps.py, decode_all.py, decode_hr.py</td><td>decoded_hr.npy (N × 4 × 145 × 145)</td></tr>
-<tr><td>R measurements</td><td>radiomics.py</td><td>emb_R.npy (N × 96)</td></tr>
-<tr><td>features, fellow lookup</td><td>exp20_bilateral.py, exp21_bilateral_clean.py, exp22_bilateral.py</td><td>—</td></tr>
-<tr><td>model and CV</td><td>exp28_tricks.py <code>{noH|H} blend</code>; harness.py</td><td>results/oof/E28_*_blend.npy, experiments.csv</td></tr>
-<tr><td>freeze</td><td>freeze_final.py</td><td>frozen/final.pkl</td></tr>
-<tr><td>staging, this report</td><td>staging.py; publication_v2/build_report.py</td><td>publication_v2/</td></tr></table>
-<pre>.venv-gpu/bin/python -I rethink/exp28_tricks.py noH blend
-.venv-gpu/bin/python -I rethink/exp28_tricks.py H blend
-.venv-gpu/bin/python -I rethink/freeze_final.py
-.venv-gpu/bin/python -I publication_v2/build_report.py</pre>
+<table><tr><th>step</th><th>kcref/</th><th>output (kcref/data/, not shared)</th></tr>
+<tr><td>cohort and label</td><td>prepare_data.py</td><td>cohort.parquet</td></tr>
+<tr><td>same-day exams (fellow lookup)</td><td>prepare_raw_all.py</td><td>raw_all_exams.parquet</td></tr>
+<tr><td>extra training exams</td><td>prepare_extra.py</td><td>extra_exams.parquet</td></tr>
+<tr><td>treatment dates (H)</td><td>prepare_treatment.py</td><td>eye_tx.parquet</td></tr>
+<tr><td>map decoding</td><td>decode_all.py, decode_hr.py (decoder: decode_maps.py)</td><td>decoded_hr.npy (N × 4 × 145 × 145)</td></tr>
+<tr><td>block R</td><td>radiomics.py</td><td>emb_R.npy (N × 96)</td></tr>
+<tr><td>blocks N, H, R; training rows</td><td>features.py</td><td>—</td></tr>
+<tr><td>model, CV, freeze</td><td>model.py; evaluate.py</td><td>results/experiments.csv, results/oof/, frozen/final.pkl</td></tr>
+<tr><td>staging; this report</td><td>staging.py; publication_v2/build_report.py</td><td>publication_v2/</td></tr></table>
+<pre>python -I kcref/model.py cv noH
+python -I kcref/model.py cv H
+python -I kcref/model.py freeze
+python -I publication_v2/build_report.py</pre>
+<p>The reported numbers are the logged runs <code>E28_noH_blend</code> and <code>E28_H_blend</code>.
+<code>model.py</code> reproduces them: identical predictions on a test fold, checked when the code was consolidated (2026-11-13).</p>
 
 <h2 id="notes">17. Notes for writing</h2>
 <div class="box warn"><ul>

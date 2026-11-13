@@ -5,7 +5,6 @@ B  'Rm B (mm):' (back mean radius): 1 >= 5.70; 2 5.15-5.70; 3 4.95-5.15; 4 < 4.9
 Boundary values go to the milder stage for B (5.15 -> 2, 4.95 -> 3) and to the higher stage for A (48.0 -> 2),
 i.e. each stage is a half-open interval [lower, upper) in the parameter's own direction."""
 import numpy as np
-import pandas as pd
 
 
 def stage_A(df):

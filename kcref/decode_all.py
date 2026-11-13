@@ -1,10 +1,9 @@
-"""E19 step 1: decode EVERY '4 Maps Selectable' composite in data/image_scans (cohort or not) to physical maps.
+"""Step 5: decode every '4 Maps Selectable' composite in data/image_scans (cohort or not) to physical maps, 58 x 58.
 
 Same decoder as decode_maps.py (per-image 31-step palettes). Left eyes are mirrored so x is nasal-positive.
-Output (rethink/data/, gitignored): decoded_all.npy (N, 4, 58, 58) float32 and decoded_all_meta.parquet with
+Output (kcref/data/, gitignored): decoded_all.npy (N, 4, 58, 58) float32 and decoded_all_meta.parquet with
 pkey (patient key: cohort pid when the name matches a cohort patient, else a salted hash of the name),
-eye, date, cohort_row (row in cohort.parquet, -1 if not a cohort scan). No labels are read; the images are
-used only for self-supervised pretraining.
+eye, date, cohort_row (row in cohort.parquet, -1 if not a cohort scan). No labels are read.
 """
 import re
 import sys

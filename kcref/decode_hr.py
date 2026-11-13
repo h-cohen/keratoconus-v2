@@ -1,9 +1,9 @@
-"""E22 step 2: higher-resolution decoding of EVERY '4 Maps Selectable' composite (design section 5).
+"""Step 6: decoding of every '4 Maps Selectable' composite at 145 x 145 (the resolution used by radiomics.py).
 
 Same decoder and per-image 31-step palette check as decode_maps.py / decode_all.py, but 2x2-pixel block medians
 (145 x 145 per map instead of 58 x 58). Left eyes are mirrored (x nasal-positive). File order, pkey, eye, date
 and cohort_row are identical to decoded_all_meta.parquet (asserted), so the two tables are row-aligned.
-Output (rethink/data/, gitignored): decoded_hr.npy (N, 4, 145, 145) float16, NaN = undecodable / outside the
+Output (kcref/data/, gitignored): decoded_hr.npy (N, 4, 145, 145) float16, NaN = undecodable / outside the
 map; decoded_hr_meta.parquet = decoded_all_meta + per-map palette size and valid fraction. No labels are read.
 """
 import re

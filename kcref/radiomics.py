@@ -1,6 +1,6 @@
-"""E25 block R: hand-crafted measurements of the decoded physical maps (decoded_hr.npy, left eyes mirrored so +x is
-nasal for both eyes; +y superior). Label-free, per composite; written to rethink/data/emb_R.npy (2260 x n).
-Geometry as zernike.py: 145 x 145 cells, 2 px per cell, 28.9 px per mm, map centre = corneal vertex.
+"""Step 7, block R: 96 fixed, label-free measurements of each decoded composite (decoded_hr.npy, left eyes mirrored so
++x is nasal for both eyes; +y superior), written to kcref/data/emb_R.npy (one row per composite).
+Geometry: 145 x 145 cells, 2 px per cell, 28.9 px per mm, map centre = corneal vertex.
 Per map (thickness T, sagittal front curvature K, front / back elevation EF / EB), central 8 mm:
   ring x quadrant means: rings 0-1, 1-2, 2-3, 3-4 mm radius, quadrants superior / inferior / nasal / temporal (64);
   extremum (thinnest point for T, maximum for K / EF / EB): value, x, y, distance from centre (16);
@@ -8,7 +8,7 @@ Per map (thickness T, sagittal front curvature K, front / back elevation EF / EB
   map standard deviation within 3 mm (4).
 Thickness progression around the thinnest point: mean thickness on 1, 2, 3 mm rings around it minus the thinnest
 value, and the 3 mm value / 1 mm value ratio (4). Total 96. NaN where the map or > 30% of a region is missing.
-Usage: python -I rethink/radiomics.py
+Usage: python -I kcref/radiomics.py
 """
 import sys
 from pathlib import Path
@@ -16,10 +16,10 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent))
-from harness import DATA  # noqa: E402
-from zernike import CELL, PX_MM  # noqa: E402
+from common import DATA  # noqa: E402
 
 NMAP = ['T', 'K', 'EF', 'EB']
+CELL, PX_MM = 2, 28.9
 RINGS = [(0, 1), (1, 2), (2, 3), (3, 4)]
 
 

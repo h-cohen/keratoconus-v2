@@ -1,13 +1,12 @@
-"""Build publication_v2/report.html: the methods / results backup note for the final model (E28 blend).
+"""Build publication_v2/report.html: the methods and results note for the final model.
 
-Every number is recomputed from the logged artefacts (rethink/results/experiments.csv and rethink/results/oof/*.npy),
+Every number is recomputed from the logged artefacts (kcref/results/experiments.csv and kcref/results/oof/*.npy),
 so re-running this script after new work updates the report. Aggregate statistics only: no names, ids, dates of
 birth or original filenames. Writes report.html (self-contained, figures embedded), tables/*.csv, figures/*.png.
-Usage (repo root): .venv-gpu/bin/python -I publication_v2/build_report.py
+Usage: python -I publication_v2/build_report.py
 """
 import base64
 import datetime as dt
-import html
 import io
 import sys
 from pathlib import Path
@@ -22,13 +21,12 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = Path(__file__).parent
-sys.path.insert(0, str(ROOT / 'rethink'))
-from compare import paired_delta  # noqa: E402
-from harness import DATA, cluster_boot_auc  # noqa: E402
+sys.path.insert(0, str(ROOT / 'kcref'))
+from common import DATA, RES  # noqa: E402
+from evaluate import cluster_boot_auc, paired_delta  # noqa: E402
 from radiomics import names as r_names  # noqa: E402
 from staging import stage_A, stage_B  # noqa: E402
 
-RES = ROOT / 'rethink' / 'results'
 ARMS = {'noH': 'noH — single visit (primary)', 'H': 'H — visit + fellow-eye treatment history (auxiliary)'}
 FINAL = {a: f'E28_{a}_blend' for a in ARMS}
 MEMBERS = {'xgb': 'XGBoost', 'lgbm_bag': 'LightGBM (5-seed bag)', 'lr_en': 'Elastic-net logistic'}

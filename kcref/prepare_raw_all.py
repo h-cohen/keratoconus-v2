@@ -1,8 +1,8 @@
-"""E21 step 1: label-free table of EVERY raw Pentacam exam, for same-day fellow lookup.
+"""Step 2: label-free table of every raw Pentacam exam, used to find each scan's same-day fellow exam.
 
 Source: Raw_Combined_IdsMesh.xlsx (all 11,760 exams). No CXL, keratoplasty, diagnosis or label field is
 read, so whether a scan gets a fellow cannot depend on any label or treatment date.
-Output rethink/data/raw_all_exams.parquet: pid (cohort hash), eye, date, status_ok, age + 54 numerics
+Output kcref/data/raw_all_exams.parquet: pid (cohort hash), eye, date, status_ok, age + 54 numerics
 (cohort sign convention; NaN where the export has none).
 """
 import os
@@ -12,8 +12,7 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent))
-from prepare_data import pid_of  # noqa: E402
-from prepare_history import parse_date  # noqa: E402
+from prepare_data import parse_date, pid_of  # noqa: E402
 
 ROOT = Path(__file__).parent
 SRC = Path(os.environ.get('KC_SRC', Path(__file__).resolve().parents[1]), 'data/221204_v2/Raw_Combined_IdsMesh.xlsx')

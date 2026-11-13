@@ -1,4 +1,4 @@
-"""E17 step 2: decode the four Pentacam maps of each composite into physical values (single visit).
+"""Map decoder (library for decode_all.py / decode_hr.py): the four Pentacam maps of a composite to physical values.
 
 Each composite carries its own colour bars (31 steps each, separated by black lines). For every image the
 bars are sampled and every map pixel is assigned the value of the nearest palette colour; pixels far from
@@ -6,22 +6,14 @@ all palette colours (text, symbols, axis marks) become NaN.
   thickness  : 300 + 20k um       (k = 0..30, top to bottom)
   curvature  : sagittal front, D;  labelled steps 60, 50, 48, ... 17.5 with midpoints between them
   elevation  : front / back vs BFS, -75 + 5k um
-Map boxes are those of preprocessing/3_improved_crop_script.py (290 px, centres below). Output, in
-cohort order: rethink/data/decoded_maps.npy (N, 4, 58, 58) float32, 5x5-pixel block medians, and
-rethink/data/decoded_meta.parquet (palette check, thinnest-band centroid in px for scale calibration).
-No labels are read.
+Map boxes are those of preprocessing/3_improved_crop_script.py (290 px, centres below). Map scale: 28.9 px per mm
+(calibrated on the thickness map's ring spacing). No labels are read.
 """
-import os
-import sys
-from pathlib import Path
-
 import numpy as np
-import pandas as pd
-from PIL import Image
 
-ROOT = Path(__file__).parent
-DATA = ROOT / 'data'
-IMG = Path(os.environ.get('KC_SRC', Path(__file__).resolve().parents[1]), 'data/image_scans')
+from common import SRC
+
+IMG = SRC / 'image_scans'
 MAPS = ['corneal_thickness', 'curvature_front', 'elevation_front', 'elevation_back']
 CENTRE = {'corneal_thickness': (593, 243), 'curvature_front': (967, 243),
           'elevation_front': (593, 641), 'elevation_back': (967, 641)}
@@ -76,37 +68,3 @@ def blocks(v):
         out = np.nanmedian(b, -1)
     out[np.isnan(b).mean(-1) > .5] = np.nan
     return out
-
-
-def main():
-    keys = pd.read_csv(DATA / 'private_keys.csv', dtype=str)
-    on_disk = {f.name.lower(): f for f in IMG.glob('*.JPG')}
-    n = (2 * HALF) // BLOCK
-    out = np.full((len(keys), 4, n, n), np.nan, np.float32)
-    meta = []
-    for i, f in enumerate(keys.filename):
-        im = np.asarray(Image.open(on_disk[f.lower()]).convert('RGB')).astype(np.float32)
-        row = {}
-        for j, m in enumerate(MAPS):
-            v, npal = decode(im, m)
-            row[f'pal_{m}'] = npal
-            if v is None:
-                continue
-            out[i, j] = blocks(v)
-            if m == 'corneal_thickness':  # centroid of the thinnest band, px from the map centre
-                ys, xs = np.nonzero(v == np.nanmin(v))
-                row.update(thin_px_x=xs.mean() - HALF, thin_px_y=ys.mean() - HALF, thin_band=float(np.nanmin(v)))
-            if m == 'curvature_front':
-                ys, xs = np.nonzero(v == np.nanmax(v))
-                row.update(kmax_px_x=xs.mean() - HALF, kmax_px_y=ys.mean() - HALF, kmax_band=float(np.nanmax(v)))
-        meta.append(row)
-        if i % 100 == 0:
-            print(i, flush=True)
-    np.save(DATA / 'decoded_maps.npy', out)
-    meta = pd.DataFrame(meta)
-    meta.to_parquet(DATA / 'decoded_meta.parquet', index=False)
-    print(meta.describe().T.round(2).to_string())
-
-
-if __name__ == '__main__':
-    sys.exit(main())

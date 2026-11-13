@@ -1,34 +1,30 @@
-"""Build the frozen, pseudonymised analysis cohort for the clean re-analysis.
+"""Step 1: the pseudonymised analysis cohort, plus the id / date helpers shared by the other preparation steps.
 
-Inputs (never committed):
-  multimodal_dataset.csv, multimodal_dataset_features.txt   (scan-level table)
-  Combined_excel_KC.xlsx                                     (per-patient CXL / keratoplasty dates)
-  cnn_features.npy                                           (frozen ResNet-18 features, row-aligned
-                                                              with the legacy 997-scan cohort)
-Outputs (rethink/data/, gitignored):
-  cohort.parquet     one row per eligible scan; no names / national IDs
-  cnn_frozen.npy     CNN features re-aligned to cohort.parquet
-  private_keys.csv   pid <-> original id / image filename (stays local)
+Inputs (data/, never committed):
+  multimodal_dataset.csv, multimodal_dataset_features.txt   scan-level table, one row per four-map composite
+  221204_v2/Combined_excel_KC.xlsx                          per-eye CXL / keratoplasty dates (defines the label)
+Outputs (kcref/data/, gitignored):
+  cohort.parquet     one row per eligible scan, keyed by a salted-hash patient id; no names / national IDs
+  private_keys.csv   pid <-> original id / image filename (stays on the analysis machine)
   cohort_report.txt  exclusion flow
 
 Cohort rules (frozen 2026-11-06, see PROTOCOL.md):
-  1. legacy inclusion: all four maps present, no missing numeric feature, 'Km F (D):' <= 55
-     (kept identical to the submitted pipeline so results are comparable; note that the
-     filter is on mean front K, not KMax)
+  1. all four maps present, no missing numeric feature, 'Km F (D):' <= 55 (mean front K, as in the original study)
   2. drop scans of CXL-labelled eyes taken on/after the eye's CXL date (already treated)
   3. drop CXL-labelled eyes with no usable CXL date (timing cannot be verified)
   4. drop scans taken on/after a keratoplasty date in that eye
 """
 import argparse
-import os
 import datetime
 import hashlib
+import os
+import re
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-SALT = 'kc-v2-rethink'
+SALT = 'kc-v2-rethink'  # fixed: changing it changes every pid
 
 
 def to_date(v):
@@ -44,10 +40,28 @@ def pid_of(x):
     return 'P' + hashlib.sha256((SALT + str(x)).encode()).hexdigest()[:10]
 
 
+NEW_EXPORT_FROM = 10125  # Raw_Combined_IdsMesh.xlsx stacks two exports; rows from here on store dates correctly
+
+
+def parse_date(v, row):
+    """'Exam Date:' of the raw export. Old-export rows: text dates are month-first, and values Excel turned into
+    dates were read day-first (day and month swapped)."""
+    if isinstance(v, (datetime.datetime, pd.Timestamp)):
+        if row >= NEW_EXPORT_FROM:
+            return pd.Timestamp(v.year, v.month, v.day)
+        try:
+            return pd.Timestamp(v.year, v.day, v.month)
+        except ValueError:
+            return pd.NaT
+    if isinstance(v, str) and re.fullmatch(r'\d\d/\d\d/\d{4}', v.strip()):
+        return pd.to_datetime(v.strip(), format='%m/%d/%Y')
+    return pd.NaT
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--src', default=os.environ.get('KC_SRC', str(Path(__file__).resolve().parents[1])),
-                    help='repo checkout that holds data/ and results/age_subanalysis/ (env KC_SRC)')
+                    help='folder that holds data/ (env KC_SRC)')
     ap.add_argument('--out', default=str(Path(__file__).parent / 'data'))
     a = ap.parse_args()
     src, out = Path(a.src), Path(a.out)
@@ -59,10 +73,8 @@ def main():
     log.append(f'raw rows: {len(df)}')
     df = df[df['has_all_images']].dropna(subset=feats).copy()
     df = df[df['Km F (D):'] <= 55].reset_index(drop=True)
-    log.append(f'legacy cohort (4 maps, complete numerics, Km F<=55): {len(df)} scans, '
+    log.append(f'eligible (4 maps, complete numerics, Km F<=55): {len(df)} scans, '
                f'{df.ideye.nunique()} eyes, {df.id.nunique()} patients, {df.y.sum()} CXL-labelled')
-    cnn = np.load(src / 'results/age_subanalysis/cnn_features.npy')
-    assert len(cnn) == len(df), 'CNN cache misaligned with legacy cohort'
     df['legacy_row'] = np.arange(len(df))
 
     c = pd.read_excel(src / 'data/221204_v2/Combined_excel_KC.xlsx')
@@ -84,7 +96,6 @@ def main():
     df['scan_date'] = pd.to_datetime(df['scan_date'])  # filename date; 'Exam Date:' has d/m swaps
     df['months_to_cxl'] = (df['cxl_date'] - df['scan_date']).dt.days / 30.44
 
-    n0 = len(df)
     post = (df.y == 1) & (df.months_to_cxl <= 0)
     df = df[~post]
     log.append(f'excluded {post.sum()} CXL-labelled scans taken on/after CXL date')
@@ -109,7 +120,6 @@ def main():
             'legacy_row'] + feats
     df[['pid', 'id_norm', 'filename']].to_csv(out / 'private_keys.csv', index=False)
     df[keep].to_parquet(out / 'cohort.parquet', index=False)
-    np.save(out / 'cnn_frozen.npy', cnn[df['legacy_row'].values])
 
     e = df.groupby('eid').y.first()
     log.append(f'FINAL: {len(df)} scans, {df.eid.nunique()} eyes, {df.pid.nunique()} patients; '

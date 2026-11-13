@@ -1,5 +1,10 @@
 # Results log (branch `clean-rethink`)
 
+> **Historical log.** This file records every experiment in the order it was run (2026-11-06 to 2026-11-13).
+> Scripts and paths named here (`rethink/…`, `harness.py`, `expNN_*.py`) now live in `kcref/archive/`.
+> The final model is `kcref/model.py`; its runs are `E28_noH_blend` and `E28_H_blend`.
+
+
 Dev set only (713 scans, 289 patients, 125 positive eyes). Lockbox untouched. All numbers are
 pooled OOF AUC with a patient-cluster bootstrap 95% CI; `rep` is the mean of the 5 repeats.
 Paired ΔAUC vs age-only (LR) uses `rethink/compare.py` (same patient clusters resampled).

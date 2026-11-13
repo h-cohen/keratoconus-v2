@@ -1,5 +1,10 @@
 # Clean re-analysis protocol (branch `clean-rethink`)
 
+> **Historical log.** This file records every experiment in the order it was run (2026-11-06 to 2026-11-13).
+> Scripts and paths named here (`rethink/…`, `harness.py`, `expNN_*.py`) now live in `kcref/archive/`.
+> The final model is `kcref/model.py`; its runs are `E28_noH_blend` and `E28_H_blend`.
+
+
 Frozen 2026-11-06, before any new experiment was run. Changes to this file after the freeze are
 logged at the bottom with a date and reason.
 

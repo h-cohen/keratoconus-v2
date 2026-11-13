@@ -1,4 +1,4 @@
-"""E18 step 1: extra labelled single-visit exams from the raw Pentacam export, for TRAINING ONLY.
+"""Step 3: extra labelled single-visit exams from the raw Pentacam export, for training only.
 
 The raw export (Raw_Combined_IdsMesh.xlsx, 11,760 exams) carries the 55 numerics and the CXL fields for
 every exam. Its CXL field agrees with the cohort label for 944/944 cohort scans, its numerics match the
@@ -8,9 +8,9 @@ are kept when the patient is in the CXL clinic sheet (Combined_excel_KC.xlsx; pa
 carry label 0 because they were never followed in the clinic, so their label does not mean the same
 thing) and the cohort rules hold: complete numerics, Km F <= 55, CXL eyes only before their CXL date and
 with a usable date, no exam on/after keratoplasty.
-Output rethink/data/extra_exams.parquet: pid (cohort hash), eye, date, y, status_ok, cohort_patient,
+Output kcref/data/extra_exams.parquet: pid (cohort hash), eye, date, y, status_ok, cohort_patient,
 age + 54 numerics. No names, ids or dates of birth. Extras of cohort patients may only be used when the
-patient is in the training fold (exp18_augment.py enforces this).
+patient is in the training fold (features.train_rows enforces this).
 """
 import os
 import re
@@ -21,8 +21,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent))
-from prepare_data import pid_of, to_date  # noqa: E402
-from prepare_history import parse_date  # noqa: E402
+from prepare_data import parse_date, pid_of, to_date  # noqa: E402
 
 ROOT = Path(__file__).parent
 DATA = ROOT / 'data'
