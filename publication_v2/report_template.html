@@ -66,6 +66,10 @@ Patients are keyed by a pseudonymous hash. No identifying fields are used.</p>
 <h3>Cohort and training-row filtering</h3>
 <p>Rows removed at each rule and why: (a) the evaluated study cohort; (b) the extra labelled exams, which enter training folds only.</p>
 {filter_img}
+<p><b>(a) Study cohort</b> (unit: scans)</p>
+{filter_cohort}
+<p><b>(b) Extra training exams</b> (unit: exams; eyes not tracked in the raw export)</p>
+{filter_extra}
 
 <h2 id="arms">2. Two arms: noH (primary) and H (auxiliary)</h2>
 <p>Every analysis is run and reported for both arms, side by side. They differ in one input block:</p>

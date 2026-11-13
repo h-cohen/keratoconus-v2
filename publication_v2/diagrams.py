@@ -162,5 +162,23 @@ def fig_filtering():
     return S.save(fig, 'diagram_filtering')
 
 
+def funnel_tables():
+    """The two funnels as tables (step, counts, removed, reason); same constants as the figure."""
+    import pandas as pd
+    out = {}
+    for key, rows in (('cohort', COHORT_FUNNEL), ('extra', EXTRA_FUNNEL)):
+        t = []
+        for i, (lab, n, eyes, pts, pos, why) in enumerate(rows):
+            t.append({'step': lab, 'scans' if key == 'cohort' else 'exams': n, 'eyes': eyes, 'patients': pts,
+                      'CXL-labelled': pos, 'removed': None if i == 0 else rows[i - 1][1] - n,
+                      'reason for removal': why})
+        d = pd.DataFrame(t)
+        for c in d.columns[1:6]:
+            d[c] = d[c].astype('Int64')
+        out[key] = d
+        out[key].to_csv(S.OUT / 'tables' / f'filtering_{key}.csv', index=False)
+    return out
+
+
 if __name__ == '__main__':
     print(fig_dataflow(), fig_filtering())

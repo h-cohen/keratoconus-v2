@@ -237,7 +237,7 @@ def main():
         age_mean=f'{coh.age.mean():.1f}', age_sd=f'{coh.age.std():.1f}', age_min=int(coh.age.min()),
         age_max=int(coh.age.max()),
         head=table(head, 'hl'), deltas=table(deltas), members=table(members), strata=table(st, 'small'),
-        roc=roc_img, strata_img=strata_img, flow_img=img(DG.fig_dataflow()), filter_img=img(DG.fig_filtering()), rdict=table(rdict, 'small'), **e29,
+        roc=roc_img, strata_img=strata_img, flow_img=img(DG.fig_dataflow()), filter_img=img(DG.fig_filtering()), filter_cohort=table(DG.funnel_tables()['cohort']), filter_extra=table(DG.funnel_tables()['extra']), rdict=table(rdict, 'small'), **e29,
         noH_first=f'{log.loc[FINAL["noH"]].auc_first:.3f}', H_first=f'{log.loc[FINAL["H"]].auc_first:.3f}')
     (OUT / 'report.html').write_text(body, encoding='utf-8')
     print('wrote', OUT / 'report.html')

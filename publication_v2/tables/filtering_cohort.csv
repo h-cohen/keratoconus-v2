@@ -1,0 +1,6 @@
+step,scans,eyes,patients,CXL-labelled,removed,reason for removal
+"Image export, all scans",1218,677,481,283,,
+All four maps present,1017,574,413,232,201,one or more of the four maps missing in the composite
+Complete numerics,1017,574,413,232,0,missing Pentacam numeric (none)
+Km F ≤ 55 D,997,560,401,220,20,inclusion range of the original study (advanced cones)
+Study cohort,944,523,385,167,53,scan on/after the eye’s CXL date (already treated)
