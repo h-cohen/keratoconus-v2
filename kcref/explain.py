@@ -90,9 +90,21 @@ def sector(rname):
     return (m.group(1), int(m.group(2)), int(m.group(3)), m.group(4)) if m else None
 
 
+NICE = {'Pachy Min:': 'Thinnest pachymetry (µm)', 'Pachy Apex:': 'Apex pachymetry (µm)',
+        'Pachy Pupil:': 'Pupil-centre pachymetry (µm)', 'Pachy Min Pos X:': 'Thinnest point x (mm)',
+        'Pachy Min Pos Y:': 'Thinnest point y (mm)', 'ISV:': 'ISV (index of surface variance)',
+        'IVA:': 'IVA (index of vertical asymmetry)', 'KI:': 'KI (keratoconus index)', 'CKI:': 'CKI (central KI)',
+        'IHA:': 'IHA (index of height asymmetry)', 'IHD:': 'IHD (index of height decentration)',
+        'RSagMin:': 'Minimum sagittal radius (mm)', 'Num. Ecc. F:': 'Eccentricity front',
+        'Num. Ecc. B:': 'Eccentricity back', 'Asph. Q F:': 'Asphericity Q front', 'Asph. Q B:': 'Asphericity Q back',
+        'R Min (mm)': 'Minimum radius front (mm)', 'R Min B (mm):': 'Minimum radius back (mm)'}
+
+
 def _num_label(b):
     if b in ENG:
         return ENG[b]
+    if b in NICE:
+        return NICE[b]
     if b == 'KMax Sagittal Front (D)':
         return 'KMax sagittal front (D)'
     m = re.match(r'D(\d+)mm (Pachy|Prog)$', b)
@@ -160,6 +172,34 @@ def r_mask(cols, flags):
         f = family(c)
         out[:, j] = {'R_own': own, 'R_fel': fel, 'R_asym': own & fel}.get(f, out[:, j])
     return out
+
+
+# ---------------------------------------------------------------- matched pairs (S1)
+def match_pairs(df):
+    """Referred / not-referred pairs: same stage, different patient, nearest on z-scored (Km F, age); greedy over all
+    candidate pairs by increasing distance, each eye used once. df columns: pid, y, km, age, stage (positional rows)."""
+    z = df[['km', 'age']].values.astype(float)
+    z = (z - z.mean(0)) / z.std(0)
+    pos, neg = np.flatnonzero(df.y.values == 1), np.flatnonzero(df.y.values == 0)
+    st, pid = df.stage.values, df.pid.values
+    cand = [(float(np.hypot(*(z[i] - z[j]))), i, j) for i in pos for j in neg if st[i] == st[j] and pid[i] != pid[j]]
+    used, out = set(), []
+    for d, i, j in sorted(cand):
+        if i not in used and j not in used:
+            used |= {i, j}
+            out.append((i, j, d))
+    return pd.DataFrame(out, columns=['pos_idx', 'neg_idx', 'dist'])
+
+
+def pair_stats(pairs, s_final, s_L1):
+    """Fraction of pairs ordered correctly (referred eye scored higher) by each model; two-sided sign test on the
+    pairs where exactly one of the two models orders them correctly."""
+    from scipy.stats import binomtest
+    a = s_final[pairs.pos_idx.values] > s_final[pairs.neg_idx.values]
+    b = s_L1[pairs.pos_idx.values] > s_L1[pairs.neg_idx.values]
+    k, n = int((a & ~b).sum()), int((a ^ b).sum())
+    return dict(n_pairs=len(pairs), frac_final=float(a.mean()), frac_L1=float(b.mean()), final_only=k,
+                L1_only=n - k, p_sign=float(binomtest(k, n, 0.5).pvalue) if n else 1.0)
 
 
 # ---------------------------------------------------------------- SHAP

@@ -98,6 +98,22 @@ def test_abcd_examples():
     assert E.abcd('age') == 'other' and E.abcd('ISV:') == 'other'
 
 
+def test_match_rules():
+    import pandas as pd
+    rng = np.random.default_rng(1)
+    n = 200
+    df = pd.DataFrame(dict(pid=rng.integers(0, 120, n), y=(rng.random(n) < 0.25).astype(int), km=rng.normal(46, 3, n),
+                           age=rng.normal(25, 6, n), stage=rng.integers(1, 4, n)))
+    pr = E.match_pairs(df)
+    assert len(pr) > 10
+    assert (df.y.values[pr.pos_idx] == 1).all() and (df.y.values[pr.neg_idx] == 0).all()
+    assert (df.stage.values[pr.pos_idx] == df.stage.values[pr.neg_idx]).all()
+    assert (df.pid.values[pr.pos_idx] != df.pid.values[pr.neg_idx]).all()
+    assert pr.pos_idx.is_unique and pr.neg_idx.is_unique
+    st = E.pair_stats(pr, s_final=df.y.values + 0.1 * rng.normal(size=n), s_L1=rng.normal(size=n))
+    assert st['n_pairs'] == len(pr) and st['frac_final'] > st['frac_L1'] and 0 <= st['p_sign'] <= 1
+
+
 if __name__ == '__main__':
     for t in [v for k, v in dict(globals()).items() if k.startswith('test_')]:
         t()
