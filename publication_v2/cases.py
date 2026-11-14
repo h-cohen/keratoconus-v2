@@ -15,8 +15,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Wedge
 
-import plots as PL
-import style as S
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import plots as PL  # noqa: E402
+import style as S  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'kcref'))
 import explain as E  # noqa: E402
@@ -46,11 +47,13 @@ def draw(pairs, sub, shs, info, s_l1, name):
     fam = np.array([E.family(c) for c in sh['cols']])
     fams = list(PL.FAMILY_LABEL)
     n = len(pairs)
+    lim = 1.05 * max(abs(sh['shap'][sub[int(k)]][fam == f].sum()) for k in np.r_[pairs.pos_idx, pairs.neg_idx]
+                     for f in fams)
     fig = plt.figure(figsize=(S.W2, 2.05 * n))
-    gs = fig.add_gridspec(2 * n, 6, width_ratios=[0.55, 1, 1, 1, 1, 1.6], hspace=0.25, wspace=0.08)
+    gs = fig.add_gridspec(2 * n, 6, width_ratios=[0.95, 1, 1, 1, 1, 1.6], hspace=0.45, wspace=0.08)
     for p, pair in pairs.iterrows():
         for e, (key, lab) in enumerate(((pair.pos_idx, 'referred'), (pair.neg_idx, 'not referred'))):
-            i = sub[key]
+            i = sub[int(key)]
             r = 2 * p + e
             ax = fig.add_subplot(gs[r, 0])
             ax.axis('off')
@@ -83,8 +86,10 @@ def draw(pairs, sub, shs, info, s_l1, name):
             v = [sh['shap'][i, fam == f].sum() for f in fams]
             ax.barh(range(len(fams)), v, color=[S.C['H'] if x > 0 else S.C['noH'] for x in v], height=0.7)
             ax.axvline(0, color=S.C['mute'], lw=0.6)
+            ax.set_xlim(-lim, lim)
+            ax.grid(axis='x')
             ax.set_yticks(range(len(fams)), [PL.FAMILY_LABEL[f] for f in fams] if p == 0 and e == 0 else [],
-                          fontsize=5.2)
+                          fontsize=5.6)
             ax.yaxis.tick_right()
             ax.tick_params(labelsize=5.2, length=1.5)
             ax.invert_yaxis()

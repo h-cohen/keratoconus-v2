@@ -329,7 +329,7 @@ def fig_beeswarm(sh, info, arm, top=20):
     cb.outline.set_visible(False)
     ax.legend(handles=[Patch(color=S.ABCD[k], label=lab) for k, lab in
                        (('A', 'A: anterior curvature'), ('B', 'B: posterior surface'), ('C', 'C: thickness'))],
-              loc='lower right', fontsize=6, title='Belin ABCD', title_fontsize=6)
+              loc='upper left', bbox_to_anchor=(1.02, 0.25), fontsize=6, title='Belin ABCD', title_fontsize=6)
     fig.tight_layout()
     pd.DataFrame(rows[::-1]).to_csv(TAB / f'shap_top_{arm}.csv', index=False)
     return S.save(fig, f'shap_beeswarm_{arm}')
@@ -351,13 +351,13 @@ def fig_dependence(sh, info, arm, top=4):
         r = fv & sh['mask'][:, j] & np.isfinite(sh['raw'][:, j])
         x, z, st = sh['raw'][r, j].astype(float), sh['shap'][r, j], info['A'][r]
         ax.axhline(0, color=S.C['chance'], lw=0.6)
-        ax.scatter(x, z, c=cm((np.nan_to_num(st, nan=1) - 1) / 3), s=4, lw=0, alpha=0.8, rasterized=True)
+        ax.scatter(x, z, c=cm(0.3 + 0.7 * (np.nan_to_num(st, nan=1) - 1) / 3), s=4, lw=0, alpha=0.8, rasterized=True)
         tx, ty = _trend(x, z)
         ax.plot(tx, ty, color=S.C['ink'], lw=1.2)
         ax.set_xlabel(E.label(sh['cols'][j]), fontsize=6.3, wrap=True)
         S.panel_letter(ax, letter, x=-0.25)
     axes[0].set_ylabel('SHAP value')
-    fig.legend(handles=[Patch(color=cm(k / 3), label=f'A{k + 1}: {STAGE_LAB["A"][k + 1]}') for k in range(4)],
+    fig.legend(handles=[Patch(color=cm(0.3 + 0.7 * k / 3), label=f'A{k + 1}: {STAGE_LAB["A"][k + 1]}') for k in range(4)],
                loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.07), fontsize=6.3, title='Stage A (Km F, D)',
                title_fontsize=6.3)
     fig.tight_layout(w_pad=1.2)
@@ -389,7 +389,8 @@ def fig_cornea(sh, info, arm, signed=False):
     (0-4 mm, S/N/I/T; +x nasal for both eyes); below, the non-sector measurements of each map as a heat strip."""
     tab = r_table(sh, info)
     val = 'rho' if signed else 'mean_abs_shap'
-    vmax = np.nanmax(np.abs(tab[val])) if signed else np.nanmax(tab[val])
+    # 98th percentile, not the max: one dominant cell would wash out every other sector (colorbar marks the clip).
+    vmax = np.nanpercentile(np.abs(tab[val]) if signed else tab[val], 98)
     vmin, cmap = (-vmax, S.DIV) if signed else (0.0, S.SEQ)
     fig = plt.figure(figsize=(S.W2, 6.6))
     gs = fig.add_gridspec(4, 5, height_ratios=[1, 1, 1, 1.15], width_ratios=[0.32, 1, 1, 1, 1], hspace=0.12,
@@ -429,7 +430,7 @@ def fig_cornea(sh, info, arm, signed=False):
         for sp in ax.spines.values():
             sp.set_visible(False)
     cax = fig.add_axes([0.93, 0.5, 0.012, 0.3])
-    cb = fig.colorbar(plt.cm.ScalarMappable(cmap=cmap, norm=Normalize(vmin, vmax)), cax=cax)
+    cb = fig.colorbar(plt.cm.ScalarMappable(cmap=cmap, norm=Normalize(vmin, vmax)), cax=cax, extend='max')
     cb.set_label('Spearman ρ (value, SHAP)' if signed else 'Mean |SHAP|', fontsize=6.3)
     cb.outline.set_visible(False)
     fig.text(0.5, 0.005, 'Sectors: rings 0–1, 1–2, 2–3, 3–4 mm × quadrants; +x nasal (left eyes mirrored), +y superior. '
@@ -630,7 +631,8 @@ def fig_ladder(lad, dl, age_auc):
     fig, ax = plt.subplots(figsize=(S.W2, 2.9))
     framed(ax, 'x')
     ax.axvline(age_auc, color=S.C['age'], lw=0.9, ls=(0, (1, 2)))
-    ax.text(age_auc, len(rungs) - 0.45, f' age only {age_auc:.3f}', color=S.C['age'], fontsize=6, va='bottom')
+    ax.text(age_auc, 1.01, f'age only {age_auc:.3f}', color=S.C['age'], fontsize=6, va='bottom', ha='center',
+            transform=ax.get_xaxis_transform())
     for arm, off in (('noH', -0.13), ('H', 0.13)):
         d = lad[lad.arm == arm].set_index('rung')
         for yi, r in enumerate(rungs):
@@ -644,7 +646,7 @@ def fig_ladder(lad, dl, age_auc):
     ax.set_yticks(range(len(rungs)), [RUNG_LABEL[r] for r in rungs])
     ax.invert_yaxis()
     ax.set_xlabel('First-visit AUC (95% patient-cluster bootstrap CI)')
-    ax.legend(loc='lower right', title='Arm', title_fontsize=6.5)
+    ax.legend(loc='upper right', title='Arm', title_fontsize=6.5)
     txt = '\n'.join(f'{a}  {s}: Δ {x.d:+.3f} [{x.lo:+.3f}, {x.hi:+.3f}]'
                     for a in ('noH', 'H') for s, x in dl[dl.arm == a].set_index('step').iterrows())
     ax.text(1.02, 0.5, 'Paired Δ AUC, first visit\n' + txt, transform=ax.transAxes, fontsize=5.8, va='center',

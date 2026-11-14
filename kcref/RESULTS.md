@@ -918,3 +918,26 @@ and 0.911 (H); these are not results. For a new scan, each member's score is map
 frozen member's 944 cohort scores, and the three percentiles are averaged.
 Lockbox: dropped (PROTOCOL 2026-11-12). Superseded scripts moved to `archive/`. Legacy `algo-pipeline/` removed
 (it remains in git history). The methods/results note is `publication_v2/report.html`.
+
+## E29 explainability and evaluation (2026-11-14)
+
+Ladder (first-visit AUC [95% patient-cluster CI]; paired Δ from `publication_v2/tables/ladder_deltas.csv`):
+
+| rung | noH | H |
+|---|---|---|
+| L1 own-eye numerics + age (66 cols) | 0.679 [0.623–0.735] | 0.717 [0.664–0.770] |
+| L2b = L1 + own-eye maps | 0.689 [0.632–0.742] | 0.719 [0.665–0.770] |
+| L2 = block N (adds fellow eye) | 0.773 [0.726–0.820] | 0.792 [0.746–0.837] |
+| final (E28) | 0.790 | 0.813 |
+
+Age alone: 0.680. Paired Δ noH: L1→L2 +0.094 [+0.047, +0.144]; L2→final +0.017 [+0.001, +0.034];
+L1→L2b +0.010 [−0.017, +0.038]. H: L1→L2 +0.075 [+0.035, +0.119]; L2→final +0.021 [+0.002, +0.040];
+L1→L2b +0.002 [−0.021, +0.027]. Reading: the gain over a single-eye model comes from the fellow eye; own-eye maps
+alone add nothing measurable, but maps add a small, significant increment on top of the fellow eye.
+
+SHAP pass (`explain.py shap`): reproduces E28 OOF up to one tree-threading rank swap (max |diff| 0.0018 = 1/(3 n_test));
+pooled AUC identical (noH 0.76213, H 0.80665). Largest source, first visit: fellow-derived numerics (noH ~41% of
+mean |SHAP|), then age; own-eye maps smallest of the clinical sources. Stable across the 25 CV fits.
+
+S1 matched pairs (76 pairs, same stage A, nearest on Km F and age, different patient): final noH orders 76.3%
+correctly vs single-eye L1 52.6%; discordant 23 vs 5, sign test p = 0.00091.

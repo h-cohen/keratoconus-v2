@@ -1,0 +1,21 @@
+feature,abcd,median_rank,p5,p95
+Age (years),other,1.0,1.0,1.0
+Years since fellow-eye CXL,other,3.0,2.0,3.0
+Thinnest pachymetry / age,C,3.0,2.0,4.0
+"IVA (index of vertical asymmetry), fellow",other,4.0,2.0,4.0
+Fellow eye cross-linked before visit,other,7.0,5.0,11.599999999999994
+"Pachymetric progression at 4 mm, fellow",C,7.0,5.0,28.19999999999999
+"Front elevation (µm), inferior − superior, 2–4 mm, own − fellow",other,9.0,5.0,22.19999999999999
+"KI (keratoconus index), fellow",other,10.0,5.0,38.99999999999997
+"IHD (index of height decentration), fellow",other,14.0,6.0,39.599999999999966
+Fellow maps available,other,9.0,6.0,363.7999999999998
+"KMax − Km front (D), fellow",A,14.0,8.0,64.39999999999993
+"Pupil-centre pachymetry (µm), fellow",C,15.0,7.0,36.599999999999994
+Worse than fellow: IVA (index of vertical asymmetry),other,16.0,8.0,31.39999999999999
+"Corneal volume 3mm, fellow",other,22.0,9.2,40.8
+"Back elevation (µm), nasal − temporal, 2–4 mm, own",B,28.0,7.200000000000001,62.99999999999997
+KMax − Km front (D),A,25.0,10.0,170.99999999999983
+Own maps available,other,25.0,8.4,59.19999999999996
+"Thinnest pachymetry / age, fellow",C,21.0,8.2,48.8
+"Back elevation (µm), maximum x (mm, nasal +), own − fellow",B,23.0,8.0,78.59999999999997
+Thinnest / pupil pachymetry,C,23.0,12.8,420.7999999999993

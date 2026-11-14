@@ -11,7 +11,7 @@ Age only,4,3,0,,,,True
 "Final, H",2,105,18,0.8454661558109834,0.7572514204545455,0.9275390405572408,False
 "Final, H",3,22,7,0.9142857142857144,,,True
 "Final, H",4,3,0,,,,True
-Single-eye numerics (L1),1,393,100,,,,True
-Single-eye numerics (L1),2,105,18,,,,True
-Single-eye numerics (L1),3,22,7,,,,True
+Single-eye numerics (L1),1,393,100,0.6347781569965869,0.5669767587185037,0.6966491991122691,False
+Single-eye numerics (L1),2,105,18,0.7650063856960408,0.6477252673796792,0.8679357594487069,False
+Single-eye numerics (L1),3,22,7,0.9142857142857144,,,True
 Single-eye numerics (L1),4,3,0,,,,True

@@ -1,0 +1,41 @@
+rank,feature,column,abcd,source,mean_abs_shap,arm
+1,Age (years),age,other,age,0.6129430358839267,noH
+2,Thinnest pachymetry / age,pachy_min_per_age,C,own_num,0.3498625919701437,noH
+3,"IVA (index of vertical asymmetry), fellow",fel_IVA:,other,fellow_num,0.3140415421483487,noH
+4,"Pachymetric progression at 4 mm, fellow",fel_D4mm Prog,C,fellow_num,0.11562441231072512,noH
+5,"KI (keratoconus index), fellow",fel_KI:,other,fellow_num,0.11173538246874724,noH
+6,"Front elevation (µm), inferior − superior, 2–4 mm, own − fellow",R_asym84,other,fellow_maps,0.08476778500883458,noH
+7,"IHD (index of height decentration), fellow",fel_IHD:,other,fellow_num,0.07499198575837578,noH
+8,"Thinnest pachymetry / age, fellow",fel_pachy_min_per_age,C,fellow_num,0.06851732930772378,noH
+9,"Corneal volume 3mm, fellow",fel_C.Vol D 3mm:,other,fellow_num,0.0647185303940744,noH
+10,Worse than fellow: IVA (index of vertical asymmetry),worse_IVA:,other,fellow_num,0.06464914934522834,noH
+11,"KMax − Km front (D), fellow",fel_kmax_minus_km,A,fellow_num,0.06418059434293323,noH
+12,"Pupil-centre pachymetry (µm), fellow",fel_Pachy Pupil:,C,fellow_num,0.05534206976262891,noH
+13,"Back elevation (µm), nasal − temporal, 2–4 mm, own",R_own87,B,own_maps,0.049101803422653245,noH
+14,Own maps available,own_image,other,flags,0.04709458415166082,noH
+15,"Back elevation (µm), 2–3 mm temporal, own",R_own59,B,own_maps,0.04075170769692034,noH
+16,"Front elevation (µm), 1–2 mm nasal, fellow",R_fel38,other,fellow_maps,0.03966549593324007,noH
+17,"Pachymetric progression at 6 mm, fellow",fel_D6mm Prog,C,fellow_num,0.03798842562144535,noH
+18,"Thickness (µm), thinnest point distance from centre (mm), fellow",R_fel67,C,fellow_maps,0.03600924810756058,noH
+19,"Pachymetric progression at 8 mm, fellow",fel_D8mm Prog,C,fellow_num,0.03406372482851313,noH
+20,"Back elevation (µm), 3–4 mm superior, own",R_own60,B,own_maps,0.03367669445181409,noH
+1,Age (years),age,other,age,0.6038772872825998,H
+2,Years since fellow-eye CXL,years_since_fellow_cxl,other,H,0.46730475839873614,H
+3,Thinnest pachymetry / age,pachy_min_per_age,C,own_num,0.32841011040587487,H
+4,"IVA (index of vertical asymmetry), fellow",fel_IVA:,other,fellow_num,0.2747040487423324,H
+5,Fellow eye cross-linked before visit,fellow_cxl_before_visit,other,H,0.14215762487386555,H
+6,"Pachymetric progression at 4 mm, fellow",fel_D4mm Prog,C,fellow_num,0.11163027946312297,H
+7,"Front elevation (µm), inferior − superior, 2–4 mm, own − fellow",R_asym84,other,fellow_maps,0.09711071276996612,H
+8,"KI (keratoconus index), fellow",fel_KI:,other,fellow_num,0.0890858930350927,H
+9,"IHD (index of height decentration), fellow",fel_IHD:,other,fellow_num,0.07405180825409254,H
+10,Fellow maps available,has_fellow_image,other,flags,0.07103398870759005,H
+11,"KMax − Km front (D), fellow",fel_kmax_minus_km,A,fellow_num,0.06283514993790197,H
+12,"Pupil-centre pachymetry (µm), fellow",fel_Pachy Pupil:,C,fellow_num,0.06052406484695166,H
+13,Worse than fellow: IVA (index of vertical asymmetry),worse_IVA:,other,fellow_num,0.05637707746222454,H
+14,"Corneal volume 3mm, fellow",fel_C.Vol D 3mm:,other,fellow_num,0.04678772402388397,H
+15,"Back elevation (µm), nasal − temporal, 2–4 mm, own",R_own87,B,own_maps,0.045755094629632224,H
+16,KMax − Km front (D),kmax_minus_km,A,own_num,0.04439780885033669,H
+17,Own maps available,own_image,other,flags,0.04406417402899738,H
+18,"Thinnest pachymetry / age, fellow",fel_pachy_min_per_age,C,fellow_num,0.04269596863185193,H
+19,"Back elevation (µm), maximum x (mm, nasal +), own − fellow",R_asym77,B,fellow_maps,0.04191683924996905,H
+20,Thinnest / pupil pachymetry,pachy_min_over_pupil,C,own_num,0.039126008098412934,H
