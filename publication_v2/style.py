@@ -47,7 +47,7 @@ def save(fig, name, local=False):
     """figures/{name}.pdf + .png (300 dpi), or local/ for individual-level figures (gitignored). Returns the PNG."""
     d = OUT / ('local' if local else 'figures')
     d.mkdir(exist_ok=True)
-    fig.savefig(d / f'{name}.pdf', bbox_inches='tight')
+    fig.savefig(d / f'{name}.pdf', bbox_inches='tight', metadata={'CreationDate': None})  # reproducible bytes
     fig.savefig(d / f'{name}.png', dpi=300, bbox_inches='tight', facecolor='white')
     plt.close(fig)
     return d / f'{name}.png'
