@@ -933,7 +933,8 @@ Ladder (first-visit AUC [95% patient-cluster CI]; paired Δ from `publication_v2
 Age alone: 0.680. Paired Δ noH: L1→L2 +0.094 [+0.047, +0.144]; L2→final +0.017 [+0.001, +0.034];
 L1→L2b +0.010 [−0.017, +0.038]. H: L1→L2 +0.075 [+0.035, +0.119]; L2→final +0.021 [+0.002, +0.040];
 L1→L2b +0.002 [−0.021, +0.027]. Reading: the gain over a single-eye model comes from the fellow eye; own-eye maps
-alone add nothing measurable, but maps add a small, significant increment on top of the fellow eye.
+alone add nothing measurable; on top of the fellow eye, maps add a small, borderline increment (first visit
++0.017, CI lower bound +0.001; pooled all-scan AUC 0.762 → 0.768).
 
 SHAP pass (`explain.py shap`): reproduces E28 OOF up to one tree-threading rank swap (max |diff| 0.0018 = 1/(3 n_test));
 pooled AUC identical (noH 0.76213, H 0.80665). Largest source, first visit: fellow-derived numerics (noH ~41% of

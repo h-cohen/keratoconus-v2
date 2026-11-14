@@ -296,12 +296,12 @@ def shap_pass(arm):
                         fit_imp=np.array(st['fit_imp']), member_imp=np.mean(st['member_imp'], axis=0),
                         cols=np.array(st['cols']), raw=raw_values(D, coh.crow.values, st['cols']), oof=oof.mean(0))
     # Saved before the check so a mismatch never discards the run. Tree-model threading can swap two near-tied
-    # eyes in one member's ranking: one swap moves a blend score by 1/(3 n_test) (~0.0018). Tolerate a few such
-    # swaps, but require the pooled AUC to match E28 to 4 decimals.
+    # eyes in one member's ranking: one swap moves a blend score by 1/(3 n_test) (~0.0018). Tolerate up to two such
+    # swaps (at most 2), but require the pooled AUC to match E28 to 4 decimals.
     d = float(np.abs(oof - ref).max())
     y = coh.y.values
     a_got, a_ref = (np.mean([roc_auc_score(y, r) for r in z]) for z in (oof, ref))
-    assert d <= 3 / (3 * 150) and abs(a_got - a_ref) < 1e-4, \
+    assert d <= 2 / (3 * 150) and abs(a_got - a_ref) < 1e-4, \
         f'explanation pass drifted from E28_{arm}_blend: max |diff| {d}, AUC {a_got:.5f} vs {a_ref:.5f}'
     print(f'saved results/shap/{arm}_oof.npz; oof matches E28 (max |diff| {d:.2g}, AUC {a_got:.5f} vs {a_ref:.5f})')
     return out
