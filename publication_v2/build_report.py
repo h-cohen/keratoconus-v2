@@ -103,7 +103,7 @@ def e29_sections(coh, y, g, fv, P, pa):
         ab.to_csv(OUT / 'tables' / 'abcd.csv', index=False)
         out['robust'] = (img(PL.fig_robustness(shs['noH'], info, 'noH')) + img(PL.fig_robustness(shs['H'], info, 'H'))
                          + table(ab[['arm', 'rank', 'feature', 'abcd', 'source', 'mean_abs_shap']].round(4), 'small'))
-        out['pairs'] = (table(PL.pair_table(shs['noH'], info)) if have['L1_noH'] else
+        out['pairs'] = (img(PL.fig_pairs(shs, info)) + table(PL.pair_table(shs, info)) if have['L1_noH'] and have['L1_H'] else
                         PENDING.format(what='ladder rung L1 (needed for the pair comparison)'))
     else:
         for k in ('shap', 'cornea', 'stage_shap', 'robust', 'pairs'):
@@ -190,6 +190,8 @@ def main():
     curves['Age only'] = (pa, PL.S.C['age'], (0, (1, 1.5)))
     roc_img = img(PL.fig_roc(y, g, fv, curves))
     stage_imgs = {}
+    ladder_oof = {(r, a): oof(f'E29_ladder_{r}_{a}') for r in ('L1', 'L2') for a in ARMS
+                  if (RES / 'oof' / f'E29_ladder_{r}_{a}.npy').exists()}
     for k, s_ in (('A', stage_A(coh)), ('B', stage_B(coh))):
         sc = {'Age only': pa[fv], 'Final, noH': P['noH'][fv], 'Final, H': P['H'][fv]}
         if l1['noH'] is not None:
@@ -201,7 +203,23 @@ def main():
                                                    hi=np.nan, small=True) for j in (1, 2, 3, 4)])])
         df.to_csv(OUT / 'tables' / f'stage_auc_{k}.csv', index=False)
         stage_imgs[k] = img(PL.fig_stage_auc(df, k))
-    strata_img = stage_imgs['A'] + stage_imgs['B']
+        if len(ladder_oof) == 4:      # per arm: the ladder rungs per stage (age, L1, L2, final)
+            for a in ARMS:
+                sca = {'Age only': pa[fv], 'Single-eye numerics (L1)': ladder_oof[('L1', a)][fv],
+                       'Both eyes, numerics (L2)': ladder_oof[('L2', a)][fv], f'Final, {a}': P[a][fv]}
+                da = PL.stage_auc(y[fv], sca, s_[fv], g[fv])
+                da.to_csv(OUT / 'tables' / f'stage_auc_{k}_ladder_{a}.csv', index=False)
+                stage_imgs[f'{k}_{a}'] = img(PL.fig_stage_auc(da, k, f'stage_auc_{k}_ladder_{a}',
+                                                              f'{a} arm: ladder rungs by stage {k}'))
+    if len(ladder_oof) == 4:
+        for a in ARMS:
+            stage_imgs[f'roc_{a}'] = img(PL.fig_roc(y, g, fv, {
+                f'Final, {a}': (P[a], PL.S.C[a], '-'), 'Both eyes, numerics (L2)': (ladder_oof[('L2', a)], PL.S.C['L2'], '-'),
+                'Single-eye numerics (L1)': (ladder_oof[('L1', a)], PL.S.C['L1'], (0, (4, 2))),
+                'Age only': (pa, PL.S.C['age'], (0, (1, 1.5)))}, f'roc_ladder_{a}', f'{a} arm: ladder rungs'))
+    strata_img = stage_imgs['A'] + stage_imgs['B'] + ''.join(
+        f'<details><summary>{a} arm: ladder rungs per stage and ROC</summary>' + stage_imgs.get(f'A_{a}', '') +
+        stage_imgs.get(f'B_{a}', '') + stage_imgs.get(f'roc_{a}', '') + '</details>' for a in ARMS)
 
     # ---- R feature dictionary
     desc = {'r': 'mean of the map on ring {a}–{b} mm, quadrant {q}', 'ext_val': 'extremum value',

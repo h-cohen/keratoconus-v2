@@ -45,8 +45,8 @@ def stage_auc(y, scores, stage, groups, min_class=10):
     return pd.DataFrame(rows)
 
 
-METHOD_COL = {'Age only': S.C['age'], 'Single-eye numerics (L1)': S.C['L1'], 'Final, noH': S.C['noH'],
-              'Final, H': S.C['H']}
+METHOD_COL = {'Age only': S.C['age'], 'Single-eye numerics (L1)': S.C['L1'], 'Both eyes, numerics (L2)': S.C['L2'],
+              'Final, noH': S.C['noH'], 'Final, H': S.C['H']}
 
 
 def framed(ax, grid='both'):
@@ -67,7 +67,7 @@ def shades(hex_, n=4):
     return [tuple(1 - (1 - c) * t) for t in np.linspace(0.38, 1.0, n)]
 
 
-def fig_stage_auc(df, staging):
+def fig_stage_auc(df, staging, name=None, suptitle=None):
     """One panel per method; bars = first-visit AUC per stage, CI whiskers, AUC printed above; hatched = too few eyes
     for a CI (< 10 referred or < 10 not referred)."""
     methods = [m for m in METHOD_COL if m in set(df.method)] + [m for m in df.method.unique() if m not in METHOD_COL]
@@ -105,11 +105,14 @@ def fig_stage_auc(df, staging):
     for ax in axes[::2]:
         ax.set_ylabel('ROC-AUC, first visit (95% CI)')
     for ax in axes:
-        ax.text(4.55, 0.515, 'Random', ha='right', va='bottom', fontsize=5.8, color='#8A8A8A')
+        ax.text(1.008, 0.5, 'Random', ha='left', va='center', fontsize=5.6, color='#8A8A8A',
+                transform=ax.get_yaxis_transform(), clip_on=False)
     fig.text(0.5, -0.015, f'{STAGE_TITLE[staging]}  ·  under each bar: range, stage, referred / eyes  ·  '
              'hatched: < 10 referred or < 10 not referred, no CI', ha='center', fontsize=6.2, color=S.C['mute'])
+    if suptitle:
+        fig.suptitle(suptitle, x=0.01, ha='left', fontsize=8.5, fontweight='bold', color=S.C['ink'])
     fig.tight_layout(w_pad=1.5, h_pad=1.8)
-    return S.save(fig, f'stage_auc_{staging}')
+    return S.save(fig, name or f'stage_auc_{staging}')
 
 
 FPR = np.linspace(0, 1, 201)
@@ -134,7 +137,7 @@ def roc_band(y, p, g, n=1000, seed=0):
     return tp, np.percentile(out, 2.5, 0), np.percentile(out, 97.5, 0)
 
 
-def fig_roc(y, g, fv, curves):
+def fig_roc(y, g, fv, curves, name='roc_final', suptitle=None):
     """ROC, all scans and first visit, with 95% patient-cluster bootstrap bands for the shaded curves.
     curves: {label: (score, colour, linestyle)}; solid curves get a band, dashed / dotted references do not."""
     fig, axes = plt.subplots(1, 2, figsize=(S.W2, 3.45))
@@ -165,9 +168,11 @@ def fig_roc(y, g, fv, curves):
         S.panel_letter(ax, letter, x=-0.2, y=1.02)
     fig.text(0.5, -0.01, 'Shaded: 95% patient-cluster bootstrap band (1000 resamples); AUC with 95% CI.', ha='center',
              fontsize=6.2, color=S.C['mute'])
+    if suptitle:
+        fig.suptitle(suptitle, x=0.01, ha='left', fontsize=8.5, fontweight='bold', color=S.C['ink'])
     fig.tight_layout(w_pad=2.5)
-    pd.DataFrame(rows).to_csv(TAB / 'roc.csv', index=False)
-    return S.save(fig, 'roc_final')
+    pd.DataFrame(rows).to_csv(TAB / ('roc.csv' if name == 'roc_final' else f'{name}.csv'), index=False)
+    return S.save(fig, name)
 
 
 def legend_sources(ax, keys, **kw):
@@ -595,7 +600,7 @@ def fig_robustness(sh, info, arm, top=20):
 
 
 # ---------------------------------------------------------------- S1 matched pairs (statistics only)
-def pairs(sh, info):
+def pairs(sh, info, arm='noH'):
     """Matched pairs on first-visit eyes with both maps (explain.match_pairs). Returns (pairs on the sub-frame,
     sub -> cohort row index, final noH OOF, L1 OOF)."""
     j = [sh['cols'].index('has_fellow_image'), sh['cols'].index('own_image')]
@@ -604,19 +609,55 @@ def pairs(sh, info):
     df = pd.DataFrame(dict(pid=info['pid'][sub], y=info['y'][sub], km=info['km'][sub], age=info['age'][sub],
                            stage=info['A'][sub]))
     pr = E.match_pairs(df)
-    l1 = np.load(RES / 'oof' / 'E29_ladder_L1_noH.npy').mean(0)
+    l1 = np.load(RES / 'oof' / f'E29_ladder_L1_{arm}.npy').mean(0)
     return pr, sub, sh['oof'], l1
 
 
-def pair_table(sh, info):
-    pr, sub, s_fin, s_l1 = pairs(sh, info)
-    st = E.pair_stats(pr.assign(pos_idx=sub[pr.pos_idx], neg_idx=sub[pr.neg_idx]), s_fin, s_l1)
-    t = pd.DataFrame([{'matched pairs': st['n_pairs'], 'ordered correctly, single-eye L1': f'{st["frac_L1"]:.1%}',
-                       'ordered correctly, final noH': f'{st["frac_final"]:.1%}',
-                       'only final correct': st['final_only'], 'only L1 correct': st['L1_only'],
-                       'sign test p (two-sided)': f'{st["p_sign"]:.2g}'}])
+def pair_table(shs, info):
+    """S1 statistics for both arms (same matched pairs; each arm's final vs its own L1 rung)."""
+    rows = []
+    for arm in ('noH', 'H'):
+        pr, sub, s_fin, s_l1 = pairs(shs[arm], info, arm)
+        st = E.pair_stats(pr.assign(pos_idx=sub[pr.pos_idx], neg_idx=sub[pr.neg_idx]), s_fin, s_l1)
+        rows.append({'arm': arm, 'matched pairs': st['n_pairs'], 'ordered correctly, single-eye L1': f'{st["frac_L1"]:.1%}',
+                     'ordered correctly, final': f'{st["frac_final"]:.1%}', 'only final correct': st['final_only'],
+                     'only L1 correct': st['L1_only'], 'sign test p (two-sided)': f'{st["p_sign"]:.2g}'})
+    t = pd.DataFrame(rows)
     t.to_csv(TAB / 'pairs_stats.csv', index=False)
     return t
+
+
+def fig_pairs(shs, info):
+    """S1: per matched pair, score gap (referred minus not referred) under the single-eye L1 model (x) and the final
+    model (y). Upper half = final orders the pair correctly; right half = L1 does."""
+    fig, axes = plt.subplots(1, 2, figsize=(S.W2, 3.3), sharex=True, sharey=True)
+    for ax, arm, letter in zip(axes, ('noH', 'H'), 'ab'):
+        pr, sub, s_fin, s_l1 = pairs(shs[arm], info, arm)
+        p, q = sub[pr.pos_idx.values], sub[pr.neg_idx.values]
+        gx, gy = s_l1[p] - s_l1[q], s_fin[p] - s_fin[q]
+        framed(ax)
+        ax.axhline(0, color='#9A9A9A', lw=0.8)
+        ax.axvline(0, color='#9A9A9A', lw=0.8)
+        ax.add_patch(plt.Rectangle((-1, 0), 1, 1, color=S.C[arm], alpha=0.08, lw=0, zorder=0))
+        good = gy > 0
+        ax.scatter(gx[good], gy[good], s=16, color=S.C[arm], edgecolor='white', lw=0.5, zorder=3,
+                   label=f'final correct ({good.sum()})')
+        ax.scatter(gx[~good], gy[~good], s=16, facecolor='white', edgecolor=S.C['mute'], lw=0.8, zorder=3,
+                   label=f'final wrong ({(~good).sum()})')
+        n_fo, n_lo = int(((gy > 0) & (gx <= 0)).sum()), int(((gy <= 0) & (gx > 0)).sum())
+        ax.text(-0.95, 0.93, f'only final correct: {n_fo}', fontsize=6.3, color=S.C[arm], fontweight='bold', va='top')
+        ax.text(0.95, -0.93, f'only L1 correct: {n_lo}', fontsize=6.3, color=S.C['mute'], ha='right', va='bottom')
+        ax.set(xlim=(-1, 1), ylim=(-1, 1), aspect='equal', xlabel='Score gap, single-eye numerics (L1)')
+        if letter == 'a':
+            ax.set_ylabel('Score gap, final model')
+        ax.set_title(f'{arm} arm', loc='center', color=S.C[arm])
+        ax.legend(loc='lower left', fontsize=5.8, handletextpad=0.3)
+        S.panel_letter(ax, letter, x=-0.16, y=1.02)
+    fig.text(0.5, -0.02, f'{len(pr)} pairs: each referred first-visit eye with the nearest not-referred eye (same stage A, '
+             'Km F and age, other patient). Gap = referred − not-referred score; > 0 = pair ordered correctly.',
+             ha='center', fontsize=6, color=S.C['mute'])
+    fig.tight_layout(w_pad=2)
+    return S.save(fig, 'pairs_gap')
 
 
 # ---------------------------------------------------------------- E1 ladder

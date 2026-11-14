@@ -34,7 +34,7 @@ def ranked_pairs():
     """Matched pairs (with scores) ranked by final-minus-L1 gap; the noH and H SHAP dicts and the cohort info."""
     info = PL.cohort_info()
     shs = {a: PL.load_shap(a) for a in ('noH', 'H')}
-    pr, sub, s_fin, s_l1 = PL.pairs(shs['noH'], info)
+    pr, sub, s_fin, s_l1 = PL.pairs(shs['noH'], info, 'noH')
     p, q = sub[pr.pos_idx.values], sub[pr.neg_idx.values]
     pr = pr.assign(gain=(s_fin[p] - s_fin[q]) - (s_l1[p] - s_l1[q]))
     return pr.sort_values('gain', ascending=False).reset_index(drop=True), sub, shs, info, s_l1

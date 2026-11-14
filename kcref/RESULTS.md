@@ -941,4 +941,5 @@ pooled AUC identical (noH 0.76213, H 0.80665). Largest source, first visit: fell
 mean |SHAP|), then age; own-eye maps smallest of the clinical sources. Stable across the 25 CV fits.
 
 S1 matched pairs (76 pairs, same stage A, nearest on Km F and age, different patient): final noH orders 76.3%
-correctly vs single-eye L1 52.6%; discordant 23 vs 5, sign test p = 0.00091.
+correctly vs single-eye L1 52.6%; discordant 23 vs 5, sign test p = 0.00091. H arm (same pairs, final H vs L1 H):
+77.6% vs 59.2%; discordant 22 vs 8, p = 0.016.

@@ -209,7 +209,7 @@ The members are complementary: two tree ensembles and one sparse linear model.</
 <p>First-visit AUC per stage, one panel per method (bars: AUC; whiskers: 95% patient-cluster bootstrap CI; hatched: fewer than 10 referred or 10 not-referred eyes, no CI). Two staging approaches are reported side by side.
 <b>A:</b> front mean keratometry Km F. Stage 4 (≥ 55 D) is almost empty by construction, because the cohort inclusion filter is Km F ≤ 55.
 <b>B:</b> back mean radius Rm B.
-Intervals are half-open in the parameter's own direction. Age strata are &lt; 25, 25–29 and ≥ 30 years.
+Intervals are half-open in the parameter's own direction. Age strata are &lt; 25, 25–29 and ≥ 30 years. Collapsed under the figures, per arm: each ladder rung (age, L1, L2, final) by stage A and B, and the matching ROC curves.
 A dash means the stratum has fewer than 3 positive scans or only one class.</p>
 {strata_img}
 {strata}
@@ -253,7 +253,7 @@ Features are tagged with the Belin ABCD component they measure: A anterior curva
 <h2 id="pairs">20. Matched pairs: eyes the single-eye model cannot separate</h2>
 <p>Pre-declared rule (PROTOCOL.md, E29): each referred first-visit eye with both maps is paired with the nearest not-referred eye on standardised Km F and age, from the same stage A and a different patient.
 Each eye is used once.
-The table gives the fraction of pairs ordered correctly (referred eye scored higher) by the single-eye model L1 and by the final noH model, with a sign test on the discordant pairs.
+The figure plots, for every pair, the score gap (referred minus not-referred) under the single-eye model L1 against the final model, for both arms (each arm against its own L1 rung, same pairs). The table gives the fraction ordered correctly by each, with a sign test on the discordant pairs. Scores are within-fold ranks averaged over the 5 repeats, so a pair can span two folds; one patient may appear in two pairs, so the sign test slightly overstates independence.
 Scores are within-fold ranks averaged over repeats, so cross-fold comparisons are approximate.
 Case figures with individual maps are kept locally (<code>publication_v2/local/</code>) and are not part of this report.</p>
 {pairs}

@@ -1,6 +1,6 @@
 step,exams,eyes,patients,CXL-labelled,removed,reason for removal
 Raw Pentacam export,11760,,,,,
-Patients of the CXL clinic,4683,,,,7077,patients outside the clinic sheet were never followed for CXL: label not comparable
+Patients of the CXL clinic,4683,,,,7077,patient not followed in the CXL clinic: label not comparable
 "Complete numerics, Km F ≤ 55 D",4167,,,,516,same rules as the cohort
 Before CXL / keratoplasty,2431,,,,1736,"exam on/after CXL or keratoplasty, or CXL undated"
 Extra training exams,1487,,503,299,944,exam is one of the 944 cohort scans
