@@ -145,7 +145,7 @@ def _funnel(ax, rows, title, unit_note):
         w = max(0.07, 0.42 * (n / top) ** 0.5)
         last = i == len(rows) - 1
         ax.add_patch(FancyBboxPatch((0.25 - w / 2, i - 0.32), w, 0.64, boxstyle='round,pad=0,rounding_size=0.02',
-                                    fc=S.C['noH'] if last else '#C9D7EA', ec='none'))
+                                    fc=S.C['noH'] if last else '#CBD3EC', ec='none'))
         narrow = w < 0.13
         ax.text(0.25 + w / 2 + 0.012 if narrow else 0.25, i, f'{n:,}', ha='left' if narrow else 'center',
                 va='center', fontsize=7, fontweight='bold', color='white' if last and not narrow else INK)

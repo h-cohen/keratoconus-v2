@@ -13,15 +13,16 @@ OUT = Path(__file__).parent
 MM = 1 / 25.4
 W1, W2 = 89 * MM, 183 * MM  # single / double column (inches)
 
-C = {'noH': '#2A6FB0', 'H': '#C77700', 'age': '#9A9A9A', 'L1': '#4D4D4D', 'L2': '#7A9CC6', 'L2b': '#7FB7A4',
+# Palette A: Nature Publishing Group (NPG) hues, navy / vermilion for the two arms.
+C = {'noH': '#2E4C9E', 'H': '#E64B35', 'age': '#9A9A9A', 'L1': '#4D4D4D', 'L2': '#6F86D6', 'L2b': '#00A087',
      'ink': '#1D1D1F', 'mute': '#6B6B6B', 'grid': '#E6E6E3', 'chance': '#C8C8C8'}
-SRC = {'own_num': '#1F6FB4', 'own_maps': '#5BA8DE', 'fellow_num': '#C2561A', 'fellow_maps': '#E3A33B',
-       'H': '#8E5BB5', 'age': '#8C8C8C', 'flags': '#BDBDBD'}
+SRC = {'own_num': '#2E4C9E', 'own_maps': '#6F86D6', 'fellow_num': '#00A087', 'fellow_maps': '#7CBF4A',
+       'H': '#E64B35', 'age': '#8C8C8C', 'flags': '#BDBDBD'}
 SRC_LABEL = {'own_num': 'Own eye, numerics', 'own_maps': 'Own eye, maps', 'fellow_num': 'Fellow-derived, numerics',
              'fellow_maps': 'Fellow-derived, maps', 'age': 'Age', 'flags': 'Map availability',
              'H': 'Fellow treatment history'}
-ABCD = {'A': '#1F6FB4', 'B': '#8E5BB5', 'C': '#C2561A', 'other': '#BDBDBD'}
-SEQ = LinearSegmentedColormap.from_list('kc_seq', ['#F6F7F9', '#C9D7EA', '#86A9D2', '#3F72AE', '#123A6B'])
+ABCD = {'A': '#2E4C9E', 'B': '#00A087', 'C': '#E64B35', 'other': '#BDBDBD'}
+SEQ = LinearSegmentedColormap.from_list('kc_seq', ['#F7F8FB', '#CBD3EC', '#8C9FD6', '#4A64B3', '#1B2C66'])
 DIV = 'RdBu_r'
 MAP_CMAP = {'T': 'cividis', 'K': 'magma', 'EF': 'RdBu_r', 'EB': 'RdBu_r'}
 

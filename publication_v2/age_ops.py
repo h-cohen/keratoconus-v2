@@ -14,7 +14,7 @@ AGE_CUTS = (22, 27, 34)                       # first-visit age quartiles, round
 AGE_LAB = {1: '< 22', 2: '22–26', 3: '27–33', 4: '≥ 34'}
 PL.STAGE_LAB['age_group'] = AGE_LAB
 PL.STAGE_TITLE['age_group'] = 'Age group (years)'
-REF_COL, NOREF_COL = '#A8322D', '#BFC5CE'     # referred / not referred (data, not arms)
+REF_COL, NOREF_COL = '#34404D', '#BFC5CE'     # referred / not referred (data, not arms)
 SLATE = '#4F6272'
 TAB = PL.TAB
 
