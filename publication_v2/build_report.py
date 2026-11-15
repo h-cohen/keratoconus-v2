@@ -19,6 +19,7 @@ OUT = Path(__file__).parent
 sys.path[:0] = [str(ROOT / 'kcref'), str(OUT)]
 import plots as PL  # noqa: E402
 import diagrams as DG  # noqa: E402
+import age_ops as AO  # noqa: E402
 from common import DATA, RES  # noqa: E402
 from evaluate import cluster_boot_auc, paired_delta  # noqa: E402
 from radiomics import names as r_names  # noqa: E402
@@ -111,6 +112,78 @@ def e29_sections(coh, y, g, fv, P, pa):
     return out
 
 
+def age_sections(coh, y, g, fv, P, pa):
+    """E30 (PROTOCOL.md 2026-11-15): age groups, age-adjusted AUC, operating characteristics, key findings."""
+    out = {}
+    grp = AO.age_group(coh.age.values)
+    info = PL.cohort_info()
+    info['age_group'] = AO.age_group(info['age'])
+    lad = {(r, a): oof(f'E29_ladder_{r}_{a}') for r in ('L1', 'L2b', 'L2') for a in ARMS}
+    out['age_first'] = f'{roc_auc_score(y[fv], pa[fv]):.3f}'
+    out['age_cohort'] = img(AO.fig_age_cohort(info)) + table(AO.age_cohort_table(info).round(3), 'small')
+    sc = {'Age only': pa[fv], 'Single-eye numerics (L1)': lad[('L1', 'noH')][fv], 'Final, noH': P['noH'][fv],
+          'Final, H': P['H'][fv]}
+    df = PL.stage_auc(y[fv], sc, grp[fv], g[fv])
+    df.to_csv(OUT / 'tables' / 'stage_auc_age_group.csv', index=False)
+    fin = df[df.method.str.startswith('Final')].auc
+    out['age_range'] = f'{fin.min():.2f}–{fin.max():.2f}'
+    det = ''
+    for a in ARMS:
+        da = PL.stage_auc(y[fv], {'Age only': pa[fv], 'Single-eye numerics (L1)': lad[('L1', a)][fv],
+                                  'Both eyes, numerics (L2)': lad[('L2', a)][fv], f'Final, {a}': P[a][fv]},
+                          grp[fv], g[fv])
+        da.to_csv(OUT / 'tables' / f'stage_auc_age_group_ladder_{a}.csv', index=False)
+        det += img(PL.fig_stage_auc(da, 'age_group', f'stage_auc_age_group_ladder_{a}',
+                                    f'{a} arm: ladder rungs by age group'))
+    out['age_auc'] = (img(PL.fig_stage_auc(df, 'age_group')) + img(AO.fig_age_roc(y, g, fv, P, grp)) +
+                      '<details><summary>Per arm: ladder rungs (age, L1, L2, final) by age group</summary>' + det +
+                      '</details>')
+    meth = {'Age only': None, 'Single-eye numerics (L1)': 'L1', 'L1 + own maps (L2b)': 'L2b',
+            'Both eyes, numerics (L2)': 'L2', 'Final': 'final'}
+    scores = {(a, m): (pa if r is None else P[a] if r == 'final' else lad[(r, a)]) for a in ARMS for m, r in meth.items()}
+    adj = AO.age_adjusted_table(y, g, fv, grp, scores)
+    t = adj.assign(**{'crude AUC [95% CI]': [fmt(r.auc, r.lo, r.hi) for r in adj.itertuples()],
+                      'age-adjusted AUC [95% CI]': [fmt(r.auc_within, r.lo_within, r.hi_within) for r in adj.itertuples()]})
+    out['age_adj'] = img(AO.fig_age_adjusted(adj)) + table(t[['arm', 'method', 'crude AUC [95% CI]',
+                                                              'age-adjusted AUC [95% CI]']])
+    shs = {a: PL.load_shap(a) for a in ARMS}
+    out['age_shap'] = img(AO.fig_age_shap(shs, info)) + img(PL.fig_stage_shap(shs, info, 'age_group'))
+    curves = {'Final, noH': (P['noH'], PL.S.C['noH'], '-'), 'Final, H': (P['H'], PL.S.C['H'], '-'),
+              'Single-eye numerics (L1)': (lad[('L1', 'noH')], PL.S.C['L1'], (0, (4, 2))),
+              'Age only': (pa, PL.S.C['age'], (0, (1, 1.5)))}
+    ops = AO.operating_table(y, g, fv, {'Final, noH': P['noH'], 'Final, H': P['H'],
+                                        'Single-eye numerics (L1), noH': lad[('L1', 'noH')], 'Age only': pa})
+    fig = AO.fig_operating(y, g, fv, curves, P)
+    pr = pd.read_csv(OUT / 'tables' / 'precision_recall.csv')
+    pr = pd.DataFrame({'method': pr.method, 'average precision [95% CI]': [fmt(r.ap, r.lo, r.hi) for r in pr.itertuples()],
+                       'prevalence': pr.prevalence.round(3)})
+    out['operating'] = img(fig) + table(pr) + table(ops)
+    # key findings (numbers from this build)
+    lt = pd.read_csv(OUT / 'tables' / 'ladder_deltas.csv').set_index(['arm', 'step'])
+    ps = pd.read_csv(OUT / 'tables' / 'pairs_stats.csv').set_index('arm')
+    A = adj.set_index(['arm', 'method'])
+    o90 = ops[(ops.method == 'Final, noH') & (ops['target sensitivity'] == '0.90')].iloc[0]
+    o90l = ops[(ops.method == 'Single-eye numerics (L1), noH') & (ops['target sensitivity'] == '0.90')].iloc[0]
+    d = lambda a, s: f"{lt.loc[(a, s)].d:+.3f} [{lt.loc[(a, s)].lo:+.3f}, {lt.loc[(a, s)].hi:+.3f}]"
+    lab = 'Single-eye numerics (L1)'
+    sv = pd.read_csv(OUT / 'tables' / 'shap_sources.csv')
+    sv = sv[(sv.view == 'Information source') & (sv.arm == 'noH')].sort_values('mean_abs_shap', ascending=False)
+    src = [s.lower().replace(',', '') for s in sv.group[:2]]
+    ci_ = pd.read_csv(OUT / 'tables' / 'cornea_importance_noH.csv').sort_values('mean_abs_shap', ascending=False)
+    reg = '; '.join(ci_.label.str.replace(' (µm)', '', regex=False)[:3])
+    out['key_findings'] = f"""<div class="box"><b>Key findings</b> (first visit, noH primary; H in brackets)<ol>
+<li><b>Discrimination.</b> First-visit AUC {roc_auc_score(y[fv], P['noH'][fv]):.3f} ({roc_auc_score(y[fv], P['H'][fv]):.3f}), against {out['age_first']} for age alone and {roc_auc_score(y[fv], lad[('L1', 'noH')][fv]):.3f} for the single-eye numerics of the previous paper (§13, §15).</li>
+<li><b>The fellow eye carries the gain.</b> Adding the fellow eye to the single-eye model: ΔAUC {d('noH', 'L1→L2')} ({d('H', 'L1→L2')}). Adding the own eye's maps instead: {d('noH', 'L1→L2b')}. Maps on top of both eyes' numerics: {d('noH', 'L2→final')}, a small, borderline increment (§15).</li>
+<li><b>More than age.</b> Among eyes of the same age group, the single-eye model is near chance (age-adjusted AUC {A.loc[('noH', lab)].auc_within:.3f}); the final model keeps {A.loc[('noH', 'Final')].auc_within:.3f} ({A.loc[('H', 'Final')].auc_within:.3f}) (§21).</li>
+<li><b>Matched pairs.</b> In {int(ps.loc['noH', 'matched pairs'])} pairs matched on stage, Km F and age, the final model orders {ps.loc['noH', 'ordered correctly, final']} correctly against {ps.loc['noH', 'ordered correctly, single-eye L1']} for the single-eye model (sign test p = {ps.loc['noH', 'sign test p (two-sided)']}) (§20).</li>
+<li><b>What it uses.</b> By information source, {src[0]} and {src[1]} carry the most SHAP. Among map measurements, elevation dominates: the top regions are {reg} (§16–§17).</li>
+<li><b>Operating point.</b> At sensitivity 0.90 the final noH model has specificity {o90['specificity [95% CI]']} and flags {o90['eyes flagged']} eyes; the single-eye model flags {o90l['eyes flagged']} (§13.4).</li>
+</ol></div>"""
+    devrec = OUT / 'dev_record.html'
+    out['devrec'] = devrec.read_text(encoding='utf-8') if devrec.exists() else PENDING.format(what='development record')
+    return out
+
+
 def table(df, cls=''):
     return df.to_html(index=False, escape=True, border=0, classes=cls, na_rep='—')
 
@@ -166,8 +239,7 @@ def main():
     # ---- strata: stages A / B, age
     strata = {'A (Km F, D)': (stage_A(coh), {1: '< 48', 2: '48–53', 3: '53–55', 4: '≥ 55'}),
               'B (Rm B, mm)': (stage_B(coh), {1: '≥ 5.70', 2: '5.15–5.70', 3: '4.95–5.15', 4: '< 4.95'})}
-    ag = np.select([coh.age < 25, coh.age < 30], [1, 2], 3)
-    strata['age (years)'] = (ag, {1: '< 25', 2: '25–29', 3: '≥ 30'})
+    strata['age group (years)'] = (AO.age_group(coh.age.values), AO.AGE_LAB)
     rows = []
     for sname, (s, lab) in strata.items():
         for k, l in lab.items():
@@ -248,6 +320,7 @@ def main():
     rdict.to_csv(OUT / 'tables' / 'r_features.csv', index=False)
 
     e29 = e29_sections(coh, y, g, fv, P, pa)
+    e30 = age_sections(coh, y, g, fv, P, pa)
     n_first, pos_first = int(fv.sum()), int(y[fv].sum())
     body = TEMPLATE.format(
         date=dt.date.today().isoformat(), n=len(y), pos=int(y.sum()), n_pat=coh.pid.nunique(),
@@ -255,7 +328,7 @@ def main():
         age_mean=f'{coh.age.mean():.1f}', age_sd=f'{coh.age.std():.1f}', age_min=int(coh.age.min()),
         age_max=int(coh.age.max()),
         head=table(head, 'hl'), deltas=table(deltas), members=table(members), strata=table(st, 'small'),
-        roc=roc_img, strata_img=strata_img, flow_img=img(DG.fig_dataflow()), filter_img=img(DG.fig_filtering()), filter_cohort=table(DG.funnel_tables()['cohort']), filter_extra=table(DG.funnel_tables()['extra']), rdict=table(rdict, 'small'), **e29,
+        roc=roc_img, strata_img=strata_img, flow_img=img(DG.fig_dataflow()), filter_img=img(DG.fig_filtering()), filter_cohort=table(DG.funnel_tables()['cohort']), filter_extra=table(DG.funnel_tables()['extra']), rdict=table(rdict, 'small'), **e29, **e30,
         noH_first=f'{log.loc[FINAL["noH"]].auc_first:.3f}', H_first=f'{log.loc[FINAL["H"]].auc_first:.3f}')
     (OUT / 'report.html').write_text(body, encoding='utf-8')
     print('wrote', OUT / 'report.html')

@@ -97,7 +97,8 @@ def fig_stage_auc(df, staging, name=None, suptitle=None):
             top = r.auc if r.small else r.hi
             ax.text(k, top + 0.018, f'AUC = {r.auc:.2f}', ha='center', va='bottom', fontsize=6.3, fontweight='bold',
                     color=S.C['ink'])
-        ax.set_xticks([1, 2, 3, 4], [f'{STAGE_LAB[staging][k]}\n(Stage {k})\n{int(d.loc[k].pos)}/{int(d.loc[k].n)}'
+        word = 'Group' if staging == 'age_group' else 'Stage'
+        ax.set_xticks([1, 2, 3, 4], [f'{STAGE_LAB[staging][k]}\n({word} {k})\n{int(d.loc[k].pos)}/{int(d.loc[k].n)}'
                                      for k in (1, 2, 3, 4)], fontsize=6.3)
         ax.set(ylim=(0, 1.1), xlim=(0.4, 4.6))
         ax.set_yticks(np.arange(0, 1.01, 0.2))
@@ -107,7 +108,8 @@ def fig_stage_auc(df, staging, name=None, suptitle=None):
     for ax in axes:
         ax.text(1.008, 0.5, 'Random', ha='left', va='center', fontsize=5.6, color='#8A8A8A',
                 transform=ax.get_yaxis_transform(), clip_on=False)
-    fig.text(0.5, -0.015, f'{STAGE_TITLE[staging]}  ·  under each bar: range, stage, referred / eyes  ·  '
+    fig.text(0.5, -0.015, f'{STAGE_TITLE[staging]}  ·  under each bar: range, '
+             f'{"group" if staging == "age_group" else "stage"}, referred / eyes  ·  '
              'hatched: < 10 referred or < 10 not referred, no CI', ha='center', fontsize=6.2, color=S.C['mute'])
     if suptitle:
         fig.suptitle(suptitle, x=0.01, ha='left', fontsize=8.5, fontweight='bold', color=S.C['ink'])

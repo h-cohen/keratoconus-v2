@@ -34,6 +34,7 @@ Aggregate data only.</p>
 <div class="box"><b>Headline.</b> The model sees one Pentacam visit, i.e. both eyes' numerics, both eyes' four maps, and age.
 It predicts whether a keratoconic eye will be referred for corneal cross-linking (CXL). First-visit AUC: <b>{noH_first}</b> (noH, primary).
 With the fellow eye's treatment history added (H, auxiliary), first-visit AUC is <b>{H_first}</b>.</div>
+{key_findings}
 
 <nav><h3>Contents</h3><ol>
 <li><a href="#task">Task, label and cohort</a></li><li><a href="#arms">Two arms: noH and H</a></li>
@@ -46,8 +47,9 @@ With the fellow eye's treatment history added (H, auxiliary), first-visit AUC is
 <li><a href="#ladder">Feature-block ladder</a></li><li><a href="#shap">What the model uses (SHAP)</a></li>
 <li><a href="#cornea">Where on the cornea</a></li><li><a href="#stageshap">Explanations by stage</a></li>
 <li><a href="#robust">Robustness and clinical anchoring</a></li><li><a href="#pairs">Matched pairs</a></li>
-<li><a href="#frozen">Frozen model and scoring new scans</a></li><li><a href="#repro">Reproducibility</a></li>
-<li><a href="#notes">Notes for writing</a></li><li><a href="#rdict">Appendix: R feature dictionary</a></li>
+<li><a href="#age">Age: more than age?</a></li><li><a href="#frozen">Frozen model and scoring new scans</a></li><li><a href="#repro">Reproducibility</a></li>
+<li><a href="#notes">Notes for writing</a></li>
+</ol><ol type="A" style="columns:1"><li><a href="#devrec">Appendix A: development record</a></li><li><a href="#rdict">Appendix B: R feature dictionary</a></li>
 </ol></nav>
 
 <h2 id="task">1. Task, label and cohort</h2>
@@ -204,12 +206,19 @@ The members are complementary: two tree ensembles and one sparse linear model.</
 {deltas}
 <h3>13.3 Blend members alone</h3>
 {members}
+<h3 id="ops">13.4 Operating characteristics</h3>
+<p>First visit (E30, pre-declared). (a) Precision–recall curves; the dotted line is the prevalence (a random model). Average precision (AP) with 95% patient-cluster bootstrap CI is in the first table.
+(b, c) Score distributions of referred and not-referred eyes, with the threshold that keeps sensitivity at 0.90.
+The second table gives specificity, PPV, NPV and the number of eyes flagged at sensitivity 0.80, 0.90 and 0.95.
+Thresholds are chosen on the same out-of-fold scores, so these numbers are descriptive and slightly optimistic; a deployed threshold must be set on new data.
+Calibration is not reported: blend scores are within-fold ranks (the frozen model outputs a cohort percentile), not probabilities.</p>
+{operating}
 
 <h2 id="strata">14. Stage and age strata</h2>
 <p>First-visit AUC per stage, one panel per method (bars: AUC; whiskers: 95% patient-cluster bootstrap CI; hatched: fewer than 10 referred or 10 not-referred eyes, no CI). Two staging approaches are reported side by side.
 <b>A:</b> front mean keratometry Km F. Stage 4 (≥ 55 D) is almost empty by construction, because the cohort inclusion filter is Km F ≤ 55.
 <b>B:</b> back mean radius Rm B.
-Intervals are half-open in the parameter's own direction. Age strata are &lt; 25, 25–29 and ≥ 30 years. Collapsed under the figures, per arm: each ladder rung (age, L1, L2, final) by stage A and B, and the matching ROC curves.
+Intervals are half-open in the parameter's own direction. Age strata in the table are the pre-declared groups of §21 (&lt; 22, 22–26, 27–33, ≥ 34 years). Collapsed under the figures, per arm: each ladder rung (age, L1, L2, final) by stage A and B, and the matching ROC curves.
 A dash means the stratum has fewer than 3 positive scans or only one class.</p>
 {strata_img}
 {strata}
@@ -258,13 +267,34 @@ Scores are within-fold ranks averaged over repeats, so cross-fold comparisons ar
 Case figures with individual maps are kept locally (<code>publication_v2/local/</code>) and are not part of this report.</p>
 {pairs}
 
-<h2 id="frozen">21. Frozen model and scoring new scans</h2>
+<h2 id="age">21. Age: does the model see more than age?</h2>
+<p>Age is the strongest single predictor of referral in this cohort (age-only AUC {age_first} at the first visit): young eyes are referred far more often.
+A model can therefore look good by ranking young eyes above old ones. This section asks what the model adds among eyes of similar age (E30, pre-declared in PROTOCOL.md).
+Age groups are the first-visit age quartiles, rounded and fixed in advance: <b>1: &lt; 22, 2: 22–26, 3: 27–33, 4: ≥ 34 years</b>. All results use first-visit eyes; every analysis is shown for both arms.</p>
+<h3>21.1 Cohort by age</h3>
+<p>(a) Age distribution of referred and not-referred eyes. (b) Referral rate per age group (Wilson 95% CI). (c) Referral rate per age group and stage A: age and severity both shape the referral decision. Group 4 (≥ 34) holds only 8 referred eyes, so its AUCs carry no CI.</p>
+{age_cohort}
+<h3>21.2 Discrimination within age groups</h3>
+<p>First-visit AUC per age group, one panel per method (bars as in §14). Age alone is near chance within a group by design; the single-eye model L1 is too.
+The final model keeps an AUC of {age_range} across the groups (both arms). ROC curves per group follow; the per-arm ladder (age, L1, L2, final) by age group is collapsed below.</p>
+{age_auc}
+<h3>21.3 Age-adjusted AUC</h3>
+<p>The age-adjusted AUC counts only referred / not-referred pairs from the same age group (each pair weighted equally) and answers: given two eyes of similar age, how often does the model rank the referred one higher?
+Age alone scores 0.500 by construction. The gap between crude and adjusted AUC is the part of a model's performance that comes from age.
+CIs: patient-cluster bootstrap (1000 resamples).</p>
+{age_adj}
+<h3>21.4 How the model uses age</h3>
+<p>(a, b) SHAP of the age column against age: the contribution falls steadily with age and changes sign near 30 years, in both arms. Thinnest pachymetry per age (a block N column) also carries age and is not shown here.
+The heat map gives each information source's share of |grouped SHAP| per age group: the fellow eye's share is highest in groups 2–3, and age dominates more in the youngest and oldest groups, where referral is most and least common.</p>
+{age_shap}
+
+<h2 id="frozen">22. Frozen model and scoring new scans</h2>
 <p><code>python -I kcref/model.py freeze</code> refits both arms on all {n} cohort scans plus all extra exams, using the same recipe and inner CV (seed 2026).
 The output is <code>kcref/frozen/final.pkl</code>, which is not shared because it is fitted on patient data. <code>model.predict(fz, D, idx)</code> scores new rows.
 Ranks cannot be formed within a test fold for a single new scan. Instead, each member's score is mapped to its percentile among the frozen member's scores on the {n} cohort scans, and the three percentiles are averaged.
 The ordering matches the evaluated blend.</p>
 
-<h2 id="repro">22. Reproducibility</h2>
+<h2 id="repro">23. Reproducibility</h2>
 <table><tr><th>step</th><th>kcref/</th><th>output (kcref/data/, not shared)</th></tr>
 <tr><td>cohort and label</td><td>prepare_data.py</td><td>cohort.parquet</td></tr>
 <tr><td>same-day exams (fellow lookup)</td><td>prepare_raw_all.py</td><td>raw_all_exams.parquet</td></tr>
@@ -275,7 +305,8 @@ The ordering matches the evaluated blend.</p>
 <tr><td>blocks N, H, R; training rows</td><td>features.py</td><td>—</td></tr>
 <tr><td>model, CV, freeze</td><td>model.py; evaluate.py</td><td>results/experiments.csv, results/oof/, frozen/final.pkl</td></tr>
 <tr><td>ladder, OOF SHAP (E29)</td><td>model.py cv --blocks; explain.py shap</td><td>results/oof/E29_*, results/shap/ (not shared)</td></tr>
-<tr><td>staging; this report; figures</td><td>staging.py; publication_v2/build_report.py, plots.py, style.py</td><td>publication_v2/</td></tr></table>
+<tr><td>age groups, operating characteristics (E30)</td><td>publication_v2/age_ops.py</td><td>publication_v2/figures, tables</td></tr>
+<tr><td>staging; this report; figures</td><td>staging.py; publication_v2/build_report.py, plots.py, style.py, diagrams.py</td><td>publication_v2/</td></tr></table>
 <pre>python -I kcref/model.py cv noH
 python -I kcref/model.py cv H
 python -I kcref/model.py freeze
@@ -283,7 +314,7 @@ python -I publication_v2/build_report.py</pre>
 <p>The reported numbers are the logged runs <code>E28_noH_blend</code> and <code>E28_H_blend</code>.
 <code>model.py</code> reproduces them: identical predictions on a test fold, checked when the code was consolidated (2026-11-13).</p>
 
-<h2 id="notes">23. Notes for writing</h2>
+<h2 id="notes">24. Notes for writing</h2>
 <div class="box warn"><ul>
 <li><b>Model selection.</b> The final model was selected among 11 pre-declared learner and input configurations (E28), on the same cross-validated data it is reported on, without a held-out set.
 Report the number of configurations tried. Present the blend's gain over its LightGBM member as consistent but not significant (§13.2).</li>
@@ -294,6 +325,9 @@ Report the number of configurations tried. Present the blend's gain over its Lig
 <li><b>Explainability.</b> SHAP shows what the model uses, not what causes referral. Credit between own, fellow and own − fellow encodings is not identifiable; use the ladder (§15) for "the fellow eye adds X".</li>
 </ul></div>
 
-<h2 id="rdict">Appendix: R feature dictionary (96 per eye)</h2>
+<h2 id="devrec">Appendix A: development record — everything that was tried</h2>
+{devrec}
+
+<h2 id="rdict">Appendix B: R feature dictionary (96 per eye)</h2>
 {rdict}
 </main></body></html>

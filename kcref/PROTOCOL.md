@@ -201,3 +201,22 @@ frozen model; they describe it.
      sign test on the discordant pairs.
 
   Case figures are ranked by (final gap − L1 gap), and stay local (not in the repository).
+
+### 2026-11-15 — E30 pre-declaration: age groups, operating characteristics (user: complete report)
+Descriptive analyses of the frozen E28 blends and the E29 ladder OOF scores, both arms. No model is refitted and no
+experiments.csv row is added. Declared before any per-group number was computed (only the first-visit age
+distribution and referral rate per 5-year band were looked at to choose the groups).
+- **Age groups.** Cut points are the first-visit age quartiles, rounded: < 22, 22–26, 27–33, ≥ 34 years. Fixed here;
+  no other grouping is reported. Per group, first visit:
+  - n, referred, referral rate (Wilson 95% CI); age × stage A counts and referral rates;
+  - AUC (patient-cluster bootstrap CI; no CI when < 10 referred or < 10 not referred) for age only, L1, L2 and final,
+    per arm; ROC curves of the final model per group;
+  - share of each information source in |grouped SHAP| per group; SHAP of the age column against age.
+- **Age-adjusted AUC.** AUC counted only over referred / not-referred pairs from the same age group (pairs weighted
+  equally), patient-cluster bootstrap CI, for age only, L1, L2, L2b and final, both arms. Age alone scores near 0.5 on
+  this measure by construction; it answers "how well does the model rank eyes of similar age".
+- **Operating characteristics.** First visit, both arms and L1: thresholds set at sensitivity 0.80, 0.90 and 0.95 on
+  the pooled OOF scores; report specificity, PPV, NPV and the number of eyes flagged, with patient-cluster bootstrap
+  CIs of specificity at the fixed threshold. The thresholds are chosen on the same data (optimistic; descriptive only).
+  Precision-recall curves with average precision; score distributions by label. Calibration is not reported: blend
+  scores are within-fold ranks, not probabilities.

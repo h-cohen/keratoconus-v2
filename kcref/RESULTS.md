@@ -943,3 +943,31 @@ mean |SHAP|), then age; own-eye maps smallest of the clinical sources. Stable ac
 S1 matched pairs (76 pairs, same stage A, nearest on Km F and age, different patient): final noH orders 76.3%
 correctly vs single-eye L1 52.6%; discordant 23 vs 5, sign test p = 0.00091. H arm (same pairs, final H vs L1 H):
 77.6% vs 59.2%; discordant 22 vs 8, p = 0.016.
+
+## E30 — age groups and operating characteristics (pre-declared 2026-11-15, `publication_v2/age_ops.py`)
+Descriptive analyses of `E28_{arm}_blend` and the E29 ladder OOF scores; no refit, no experiments.csv row. First visit
+(523 eyes, 125 referred). Age groups (first-visit quartiles): < 22, 22–26, 27–33, ≥ 34 years.
+
+| age group | eyes | referred (rate) | age only | L1 noH | final noH | final H |
+|---|---|---|---|---|---|---|
+| < 22 | 120 | 44 (37%) | 0.378 | 0.554 | 0.647 [0.537–0.754] | 0.711 [0.612–0.806] |
+| 22–26 | 133 | 44 (33%) | 0.497 | 0.490 | 0.716 [0.620–0.803] | 0.734 [0.639–0.828] |
+| 27–33 | 132 | 29 (22%) | 0.610 | 0.504 | 0.821 [0.740–0.902] | 0.845 [0.765–0.923] |
+| ≥ 34 | 138 | 8 (6%) | 0.590 | 0.651 | 0.737 (no CI) | 0.762 (no CI) |
+
+**Age-adjusted AUC** (only referred / not-referred pairs within the same age group), crude → adjusted:
+
+| rung | noH | H |
+|---|---|---|
+| age only | 0.680 → 0.500 [0.427–0.564] | same |
+| L1 | 0.679 → 0.527 [0.462–0.589] | 0.717 → 0.596 [0.530–0.655] |
+| L2b | 0.689 → 0.562 [0.501–0.618] | 0.719 → 0.610 [0.549–0.667] |
+| L2 | 0.773 → 0.700 [0.644–0.760] | 0.792 → 0.729 [0.674–0.782] |
+| final | 0.790 → 0.725 [0.670–0.781] | 0.813 → 0.759 [0.709–0.809] |
+
+The single-eye model's performance is almost entirely age; the fellow eye supplies most of what the model knows beyond
+age. SHAP of age falls monotonically with age and crosses 0 near 30 years (both arms).
+
+**Operating characteristics** (thresholds on the same OOF scores, descriptive): at sensitivity 0.90, specificity
+noH 0.500 [0.450–0.551] (312/523 flagged), H 0.555 [0.508–0.606] (290), L1 0.379 [0.320–0.438] (360), age only 0.405
+(350). Average precision (prevalence 0.239): noH 0.489 [0.408–0.592], H 0.555 [0.468–0.652], L1 0.380, age 0.327.
