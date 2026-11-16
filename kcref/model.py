@@ -1,5 +1,6 @@
 """The final model: an equal-weight rank blend of XGBoost, a 5-seed LightGBM bag and an elastic-net logistic
-regression on N + R (+ H in the H arm). See publication_v2/report.html for the full description.
+regression on N + R (+ H in the H arm), without the 11 derived indices (E31 adoption, FINAL_DROP). See
+publication_v2/report.html for the full description.
 
 Per training fold: training rows = fold cohort scans + extra exams (features.train_rows); first-visit scans
 weight 2; R scaler, 0.5/99.5% clipping and median imputation fitted on the training rows; each member's
@@ -9,8 +10,10 @@ their scores on the 944 cohort scans (same ordering for a batch, defined for a s
 
 Usage (repo root):
   python -I kcref/model.py cv {noH|H}     5 x 5 CV, logged as final_{arm}
-  python -I kcref/model.py cv {noH|H} --blocks {L1|L2|L2b}   ladder rung (E29), logged as E29_ladder_{blocks}_{arm}
+  python -I kcref/model.py cv {noH|H} --blocks {L1|L2|L2b}   ladder rung on the final feature set, logged as
+                                                             E31_ladder_{blocks}_{arm} (E29 rungs before E31)
   python -I kcref/model.py cv {noH|H} --drop {noeng|noagepachy}   derived-index ablation (E31), logged as E31_{drop}_{arm}
+  python -I kcref/model.py cv {noH|H} --drop none   all columns (the E28 blend), logged as E28_{arm}_blend
   python -I kcref/model.py freeze         refit both arms on all scans -> kcref/frozen/final.pkl (patient data)
 """
 import pickle
@@ -38,6 +41,7 @@ SEED = 2026
 MEMBERS = ('xgb', 'lgbm_bag', 'lr_en')
 ENG = ('kmax_minus_km', 'pachy_min_over_apex', 'pachy_min_over_pupil', 'pachy_min_per_age', 'prog_mean', 'prog_max',
        'pachy_drop_4mm', 'ecc_front_back', 'asph_ratio', 'elev_ratio', 'cvol_ratio')  # features.engineer outputs
+FINAL_DROP = 'noeng'  # E31 adoption (2026-11-16, pre-declared rule): the final model has no derived indices
 
 
 def spw(y):
@@ -112,7 +116,7 @@ def matrix(fz, D, idx):
     return X.clip(fz['lo'], fz['hi'], axis=1).fillna(fz['med']).fillna(0).values
 
 
-def fit(D, rows, use_h, seed, blocks='final', drop=None):
+def fit(D, rows, use_h, seed, blocks='final', drop=FINAL_DROP):
     """Fit preprocessing and the three members on visit rows `rows` (columns of ladder rung `blocks`)."""
     w = np.where(D['first'][rows], W_FIRST, 1.0)
     sc = F.fit_R(D, rows)
@@ -136,7 +140,7 @@ def member_scores(fz, X):
     return {k: np.mean([m.predict_proba(X)[:, 1] for m in ms], axis=0) for k, ms in fz['models'].items()}
 
 
-def cv_fit_predict(D, use_h, blocks='final', drop=None):
+def cv_fit_predict(D, use_h, blocks='final', drop=FINAL_DROP):
     """fit_predict for evaluate.cv_oof: blend score = mean of the members' within-test-fold ranks."""
     def fp(dtr, dte, seed):
         fz = fit(D, F.train_rows(D, dtr), use_h, seed, blocks, drop)
@@ -165,7 +169,11 @@ def main():
         blocks = sys.argv[sys.argv.index('--blocks') + 1] if '--blocks' in sys.argv else 'final'
         drop = sys.argv[sys.argv.index('--drop') + 1] if '--drop' in sys.argv else None
         h = ' + H' if arm == 'H' else ''
-        if drop is not None:
+        if drop == 'none':
+            evaluate(f'E28_{arm}_blend', cv_fit_predict(D, arm == 'H', drop=None), coh,
+                     f'E28 blend on all N + R{h} columns (re-run 2026-11-16 after the working-copy loss)',
+                     dict(arm=arm, drop='none'))
+        elif drop is not None:
             evaluate(f'E31_{drop}_{arm}', cv_fit_predict(D, arm == 'H', drop=drop), coh,
                      f'E31 ablation {drop}: final blend on N + R{h} without the dropped derived indices',
                      dict(arm=arm, drop=drop))
@@ -173,8 +181,9 @@ def main():
             evaluate(f'final_{arm}', cv_fit_predict(D, arm == 'H'), coh,
                      f'final model (rank blend xgb + lgbm_bag + lr_en on N + R{h})', dict(arm=arm))
         else:
-            evaluate(f'E29_ladder_{blocks}_{arm}', cv_fit_predict(D, arm == 'H', blocks), coh,
-                     f'E29 ladder rung {blocks}{h}: final blend on the rung columns', dict(arm=arm, blocks=blocks))
+            evaluate(f'E31_ladder_{blocks}_{arm}', cv_fit_predict(D, arm == 'H', blocks), coh,
+                     f'ladder rung {blocks}{h}: final blend on the rung columns, no derived indices',
+                     dict(arm=arm, blocks=blocks, drop=FINAL_DROP))
     elif sys.argv[1] == 'freeze':
         out = {}
         for arm in ('noH', 'H'):

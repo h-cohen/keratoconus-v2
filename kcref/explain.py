@@ -259,12 +259,14 @@ def raw_values(D, idx, cols):
 
 
 def shap_pass(arm):
-    """Re-run the 25 final-model fits of `arm`, storing out-of-fold blend SHAP; asserts the OOF equals E28."""
+    """Re-run the 25 final-model fits of `arm`, storing out-of-fold blend SHAP; asserts the OOF equals the final
+    model's CV run (E31_noeng_{arm}, the adopted feature set)."""
     coh = M.cohort()
     D = F.build(coh)
     use_h = arm == 'H'
     smoke = os.environ.get('KC_SHAP_SMOKE') == '1'
-    ref = np.load(RES / 'oof' / f'E28_{arm}_blend.npy')
+    ref_name = f'E31_{M.FINAL_DROP}_{arm}'
+    ref = np.load(RES / 'oof' / f'{ref_name}.npy')
     st = dict(shap={}, fit_imp=[], member_imp=[], cols=None)
 
     def fp(dtr, dte, seed):
@@ -297,13 +299,13 @@ def shap_pass(arm):
                         cols=np.array(st['cols']), raw=raw_values(D, coh.crow.values, st['cols']), oof=oof.mean(0))
     # Saved before the check so a mismatch never discards the run. Tree-model threading can swap two near-tied
     # eyes in one member's ranking: one swap moves a blend score by 1/(3 n_test) (~0.0018). Tolerate up to two such
-    # swaps (at most 2), but require the pooled AUC to match E28 to 4 decimals.
+    # swaps (at most 2), but require the pooled AUC to match the reference run to 4 decimals.
     d = float(np.abs(oof - ref).max())
     y = coh.y.values
     a_got, a_ref = (np.mean([roc_auc_score(y, r) for r in z]) for z in (oof, ref))
     assert d <= 2 / (3 * 150) and abs(a_got - a_ref) < 1e-4, \
-        f'explanation pass drifted from E28_{arm}_blend: max |diff| {d}, AUC {a_got:.5f} vs {a_ref:.5f}'
-    print(f'saved results/shap/{arm}_oof.npz; oof matches E28 (max |diff| {d:.2g}, AUC {a_got:.5f} vs {a_ref:.5f})')
+        f'explanation pass drifted from {ref_name}: max |diff| {d}, AUC {a_got:.5f} vs {a_ref:.5f}'
+    print(f'saved results/shap/{arm}_oof.npz; oof matches {ref_name} (max |diff| {d:.2g}, AUC {a_got:.5f} vs {a_ref:.5f})')
     return out
 
 

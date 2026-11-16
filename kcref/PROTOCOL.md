@@ -243,3 +243,20 @@ discrimination beyond the raw numerics they are computed from? Concern: they spl
   arms (H follows the noH decision; its difference is reported). On adoption: the explanation pass, the E29 ladder
   rungs (same columns removed), the frozen model and the report are redone on the adopted feature set, and the
   configuration count includes all E31 runs.
+
+### 2026-11-16 — E31 adoption and re-run after the working-copy loss
+- **Decision (pre-declared rule applied).** First E31 runs (2026-11-15/16): noH first-visit AUC `noeng` 0.786 vs
+  E28 0.790 (Δ −0.004, paired 95% CI −0.010 to +0.003): within the 0.010 tolerance, so `noeng` is adopted as the
+  final feature set for both arms (`model.FINAL_DROP`). H: 0.808 vs 0.813 (Δ −0.005, CI −0.012 to +0.001).
+- **Re-run.** An outside script then wiped the working copy (built data, OOF scores, logs, SHAP, frozen model and the
+  unpushed commits; the code was recovered from the session log). The data are rebuilt from `data/` with the same
+  code and fixed salt, and these runs are repeated with unchanged configuration (appended to experiments.csv; the lost
+  rows are not re-created by hand):
+  - `E28_{arm}_blend` (`--drop none`, all columns; the comparison), `E31_noeng_{arm}` (the final model),
+    `E31_noagepachy_{arm}`;
+  - ladder rungs on the final feature set: `E31_ladder_{L1,L2,L2b}_{arm}` (E29 rungs had all columns);
+  - explanation pass (`explain.py shap`) checked against `E31_noeng_{arm}`, then `model.py freeze`.
+- The adoption stands on the first runs; the re-run numbers are reported as the results. If the re-run noH Δ falls
+  outside the tolerance this is reported, not used to reverse the decision.
+- `E22_ref_single_num` and `E25_*_bi_R_lgbm` OOF scores were lost and their archive scripts no longer run; the report
+  drops those two paired comparisons (their logged AUCs remain in experiments.csv) and adds the E28 comparison.

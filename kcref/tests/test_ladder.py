@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 sys.path[:0] = [str(Path(__file__).resolve().parents[1]), str(Path(__file__).parent)]
-from model import drop_columns, select_columns  # noqa: E402
+from model import FINAL_DROP, drop_columns, select_columns  # noqa: E402
 from tests_cols import columns  # noqa: E402
 
 
@@ -36,8 +36,19 @@ def test_e31_drops():
         assert drop_columns(cols, None) == cols
 
 
+
+def test_final_feature_set_is_noeng():
+    # E31 adoption (2026-11-16): the final model drops the 34 derived-index columns by default
+    assert FINAL_DROP == 'noeng'
+    for use_h, extra in ((False, 0), (True, 5)):
+        got = drop_columns(select_columns(columns(use_h), 'final'), FINAL_DROP)
+        assert len(got) == 495 + extra - 34, len(got)
+        assert 'pachy_min_per_age' not in got and 'Pachy Min:' in got
+
+
 if __name__ == '__main__':
     test_counts()
     test_l1_is_own_eye_only()
     test_e31_drops()
+    test_final_feature_set_is_noeng()
     print('ok')

@@ -3,8 +3,10 @@
 ## Project
 
 Predict physician referral for corneal cross-linking (CXL) in keratoconus from a single Pentacam visit.
-The paper goes to a new journal; the earlier TVST submission is superseded. The final model is fixed (2026-11-13):
-the rank blend of XGBoost, a 5-seed LightGBM bag and an elastic-net LR on blocks N + R (+ H), in `kcref/model.py`.
+The paper goes to a new journal; the earlier TVST submission is superseded. The final model is fixed (2026-11-13;
+feature set updated by E31 on 2026-11-16): the rank blend of XGBoost, a 5-seed LightGBM bag and an elastic-net LR on
+blocks N + R (+ H) without the 11 derived indices (`FINAL_DROP = 'noeng'`), in `kcref/model.py`. Its CV run is
+`E31_noeng_{arm}`; `E28_{arm}_blend` (all columns) is the comparison.
 The methods/results note `publication_v2/report.html` is the source for the algorithmic part of the paper.
 Rebuild it with `python -I publication_v2/build_report.py` after every new result.
 
@@ -35,7 +37,10 @@ Rebuild it with `python -I publication_v2/build_report.py` after every new resul
 ## Layout and data
 
 - Code: `kcref/`. See README.md for the data-flow diagram and the run order.
-- Built data: `kcref/data/`, gitignored. Fitted models: `kcref/frozen/`, gitignored.
+- Built data: `kcref/data/`, gitignored. Fitted models: `kcref/frozen/`, gitignored. SHAP files (`kcref/results/shap/`)
+  hold raw clinical values and are gitignored. Everything else a result needs (experiments.csv, OOF scores in
+  `kcref/results/oof/`, run logs, tables, figures, report) is committed and pushed after every run: the working copy
+  was once wiped by an outside script (2026-11-16) and only what was on GitHub survived.
 - Sources: `data/` (or `KC_SRC`). These are `multimodal_dataset.csv`, `221204_v2/Raw_Combined_IdsMesh.xlsx` (raw export,
   11,760 exams), `221204_v2/Combined_excel_KC.xlsx` (CXL / keratoplasty dates, which define the label) and
   `image_scans/` (four-map composites).

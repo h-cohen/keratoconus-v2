@@ -6,12 +6,11 @@ publication/
 publication_v2/local/
 paper/
 
-# run artefacts (experiments.csv and the result tables are tracked)
-kcref/results/oof/
+# run artefacts: experiments.csv, result tables, OOF scores (results/oof/) and run logs are tracked.
+# SHAP files hold each scan's raw clinical values (patient data) and stay local; rebuild with explain.py.
 kcref/results/shap/
 kcref/results/ssl/
 kcref/results/ftL/
-kcref/results/*.log
 results/
 !kcref/results/
 
