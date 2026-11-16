@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 sys.path[:0] = [str(Path(__file__).resolve().parents[1]), str(Path(__file__).parent)]
-from model import select_columns  # noqa: E402
+from model import drop_columns, select_columns  # noqa: E402
 from tests_cols import columns  # noqa: E402
 
 
@@ -24,7 +24,20 @@ def test_l1_is_own_eye_only():
     assert 'age' in got and 'fellow_cxl_before_visit' in got
 
 
+def test_e31_drops():
+    for use_h in (False, True):
+        cols = columns(use_h)
+        eng = drop_columns(cols, 'noeng')
+        assert len(cols) - len(eng) == 34, len(cols) - len(eng)
+        assert not any('per_age' in c or 'ratio' in c or 'kmax_minus_km' in c or 'prog_max' in c for c in eng)
+        assert 'Pachy Min:' in eng and 'fel_D4mm Prog' in eng and 'age' in eng
+        ap = drop_columns(cols, 'noagepachy')
+        assert sorted(set(cols) - set(ap)) == ['asym_pachy_min_per_age', 'fel_pachy_min_per_age', 'pachy_min_per_age']
+        assert drop_columns(cols, None) == cols
+
+
 if __name__ == '__main__':
     test_counts()
     test_l1_is_own_eye_only()
+    test_e31_drops()
     print('ok')

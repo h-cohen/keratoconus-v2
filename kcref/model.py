@@ -10,6 +10,7 @@ their scores on the 944 cohort scans (same ordering for a batch, defined for a s
 Usage (repo root):
   python -I kcref/model.py cv {noH|H}     5 x 5 CV, logged as final_{arm}
   python -I kcref/model.py cv {noH|H} --blocks {L1|L2|L2b}   ladder rung (E29), logged as E29_ladder_{blocks}_{arm}
+  python -I kcref/model.py cv {noH|H} --drop {noeng|noagepachy}   derived-index ablation (E31), logged as E31_{drop}_{arm}
   python -I kcref/model.py freeze         refit both arms on all scans -> kcref/frozen/final.pkl (patient data)
 """
 import pickle
@@ -35,6 +36,8 @@ from evaluate import evaluate  # noqa: E402
 W_FIRST = 2.0
 SEED = 2026
 MEMBERS = ('xgb', 'lgbm_bag', 'lr_en')
+ENG = ('kmax_minus_km', 'pachy_min_over_apex', 'pachy_min_over_pupil', 'pachy_min_per_age', 'prog_mean', 'prog_max',
+       'pachy_drop_4mm', 'ecc_front_back', 'asph_ratio', 'elev_ratio', 'cvol_ratio')  # features.engineer outputs
 
 
 def spw(y):
@@ -94,17 +97,27 @@ def select_columns(cols, blocks):
     return [c for c in cols if keep(c)]
 
 
+def drop_columns(cols, drop):
+    """E31 ablation: 'noeng' removes the 11 engineered indices (own, fel_, asym_, worse_ forms); 'noagepachy' removes
+    thinnest pachymetry / age (own, fel_, asym_); None keeps all."""
+    if drop is None:
+        return list(cols)
+    names = {'noeng': ENG, 'noagepachy': ('pachy_min_per_age',)}[drop]
+    gone = {p + n for n in names for p in ('', 'fel_', 'asym_', 'worse_')}
+    return [c for c in cols if c not in gone]
+
+
 def matrix(fz, D, idx):
     X = F.assemble(D, idx, fz['use_h'], fz['encfit'])[fz['cols']]
     return X.clip(fz['lo'], fz['hi'], axis=1).fillna(fz['med']).fillna(0).values
 
 
-def fit(D, rows, use_h, seed, blocks='final'):
+def fit(D, rows, use_h, seed, blocks='final', drop=None):
     """Fit preprocessing and the three members on visit rows `rows` (columns of ladder rung `blocks`)."""
     w = np.where(D['first'][rows], W_FIRST, 1.0)
     sc = F.fit_R(D, rows)
     X = F.assemble(D, rows, use_h, sc)
-    X = X[select_columns(list(X.columns), blocks)]
+    X = X[drop_columns(select_columns(list(X.columns), blocks), drop)]
     lo, hi = X.quantile(0.005), X.quantile(0.995)
     fz = dict(use_h=use_h, encfit=sc, cols=list(X.columns), lo=lo, hi=hi, med=X.clip(lo, hi, axis=1).median(),
               models={})
@@ -123,10 +136,10 @@ def member_scores(fz, X):
     return {k: np.mean([m.predict_proba(X)[:, 1] for m in ms], axis=0) for k, ms in fz['models'].items()}
 
 
-def cv_fit_predict(D, use_h, blocks='final'):
+def cv_fit_predict(D, use_h, blocks='final', drop=None):
     """fit_predict for evaluate.cv_oof: blend score = mean of the members' within-test-fold ranks."""
     def fp(dtr, dte, seed):
-        fz = fit(D, F.train_rows(D, dtr), use_h, seed, blocks)
+        fz = fit(D, F.train_rows(D, dtr), use_h, seed, blocks, drop)
         s = member_scores(fz, matrix(fz, D, dte.crow.values))
         return np.mean([rankdata(s[k]) / len(dte) for k in MEMBERS], axis=0)
     return fp
@@ -150,8 +163,13 @@ def main():
     if sys.argv[1] == 'cv':
         arm = sys.argv[2]
         blocks = sys.argv[sys.argv.index('--blocks') + 1] if '--blocks' in sys.argv else 'final'
+        drop = sys.argv[sys.argv.index('--drop') + 1] if '--drop' in sys.argv else None
         h = ' + H' if arm == 'H' else ''
-        if blocks == 'final':
+        if drop is not None:
+            evaluate(f'E31_{drop}_{arm}', cv_fit_predict(D, arm == 'H', drop=drop), coh,
+                     f'E31 ablation {drop}: final blend on N + R{h} without the dropped derived indices',
+                     dict(arm=arm, drop=drop))
+        elif blocks == 'final':
             evaluate(f'final_{arm}', cv_fit_predict(D, arm == 'H'), coh,
                      f'final model (rank blend xgb + lgbm_bag + lr_en on N + R{h})', dict(arm=arm))
         else:

@@ -220,3 +220,26 @@ distribution and referral rate per 5-year band were looked at to choose the grou
   CIs of specificity at the fixed threshold. The thresholds are chosen on the same data (optimistic; descriptive only).
   Precision-recall curves with average precision; score distributions by label. Calibration is not reported: blend
   scores are within-fold ranks, not probabilities.
+
+### 2026-11-15 — E31 pre-declaration: derived-index ablation (user: are the ratio features redundant?)
+Question: do the 11 engineered indices of `features.engineer` (ratios, differences, progression summaries) add
+discrimination beyond the raw numerics they are computed from? Concern: they split SHAP credit with their inputs, and
+`pachy_min_per_age` (thinnest pachymetry / age, SHAP rank 2) mixes age into a corneal feature.
+- **Variants** (final blend, same 5 × 5 CV, seeds, preprocessing and inner tuning; only columns removed), both arms:
+  - `E31_noeng_{arm}`: drop the 11 indices for the own eye, the fellow (`fel_`), own − fellow (`asym_`) and
+    `worse_prog_max` (34 columns);
+  - `E31_noagepachy_{arm}`: drop `pachy_min_per_age`, `fel_pachy_min_per_age`, `asym_pachy_min_per_age` (3 columns).
+  4 configurations, logged in experiments.csv.
+- **Comparison.** First-visit and pooled AUC difference vs `E28_{arm}_blend`, paired patient-cluster bootstrap CI
+  (1000), each arm.
+- **Decision rule (fixed now).** A variant is "equivalent" if the first-visit AUC difference is ≥ −0.005 and its 95%
+  CI includes 0; otherwise the indices are kept. The final model stays frozen either way; replacing it with an
+  equivalent simpler variant is a user decision, reported with the configuration count. If the indices are kept, the
+  SHAP source grouping counts `pachy_min_per_age` (all prefixes) under age as a sensitivity view.
+- **Amendment (2026-11-15, user, before any E31 result): prefer explainability.** "If the results are only slightly
+  worse prefer that so we can provide better explainability." Fixed tolerance: a variant is adopted as the new final
+  model if its noH (primary) first-visit AUC is at most 0.010 below `E28_noH_blend` (point estimate). `noeng` is
+  preferred over `noagepachy` when both qualify; if neither does, E28 stays final. The same feature set is used in both
+  arms (H follows the noH decision; its difference is reported). On adoption: the explanation pass, the E29 ladder
+  rungs (same columns removed), the frozen model and the report are redone on the adopted feature set, and the
+  configuration count includes all E31 runs.
