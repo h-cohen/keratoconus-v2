@@ -27,9 +27,8 @@ from radiomics import names as r_names  # noqa: E402
 from staging import stage_A, stage_B  # noqa: E402
 
 ARMS = {'noH': 'noH — single visit (primary)', 'H': 'H — visit + fellow-eye treatment history (auxiliary)'}
-FINAL = {a: f'E28_{a}_blend' for a in ARMS}
+FINAL = {a: f'E31_noeng_{a}' for a in ARMS}  # E31 adoption: no derived indices
 MEMBERS = {'xgb': 'XGBoost', 'lgbm_bag': 'LightGBM (5-seed bag)', 'lr_en': 'Elastic-net logistic'}
-REF = {'noH': 'E25_noH_bi_R_lgbm', 'H': 'E25_bi_R_lgbm'}
 
 
 def oof(name):
@@ -71,11 +70,11 @@ PENDING = '<div class="box warn">Pending: {what}. Rebuild after the run finishes
 def e29_sections(coh, y, g, fv, P, pa):
     """HTML for the E29 sections (ladder, SHAP, cornea, stage, robustness, pairs); 'pending' until artefacts exist."""
     out = {}
-    have = {f'{r}_{a}': (RES / 'oof' / f'E29_ladder_{r}_{a}.npy').exists() for r in ('L1', 'L2', 'L2b') for a in ARMS}
+    have = {f'{r}_{a}': (RES / 'oof' / f'E31_ladder_{r}_{a}.npy').exists() for r in ('L1', 'L2', 'L2b') for a in ARMS}
     if all(have.values()):
         lad, dl = [], []
         for a in ARMS:
-            o = {r: oof(f'E29_ladder_{r}_{a}') for r in ('L1', 'L2b', 'L2')}
+            o = {r: oof(f'E31_ladder_{r}_{a}') for r in ('L1', 'L2b', 'L2')}
             o['final'] = P[a]
             for r, p in o.items():
                 lad.append(dict(arm=a, rung=r, **dict(zip(('auc', 'lo', 'hi'), ci(y[fv], p[fv], g[fv])))))
@@ -85,7 +84,7 @@ def e29_sections(coh, y, g, fv, P, pa):
         lad, dl = pd.DataFrame(lad), pd.DataFrame(dl)
         out['ladder'] = img(PL.fig_ladder(lad, dl, roc_auc_score(y[fv], pa[fv]))) + table(dl.round(3))
     else:
-        out['ladder'] = PENDING.format(what='ladder runs E29_ladder_{L1,L2,L2b}_{noH,H}')
+        out['ladder'] = PENDING.format(what='ladder runs E31_ladder_{L1,L2,L2b}_{noH,H}')
     if all((RES / 'shap' / f'{a}_oof.npz').exists() for a in ARMS):
         info = PL.cohort_info()
         shs = {a: PL.load_shap(a) for a in ARMS}
@@ -176,7 +175,7 @@ def age_sections(coh, y, g, fv, P, pa):
     grp = AO.age_group(coh.age.values)
     info = PL.cohort_info()
     info['age_group'] = AO.age_group(info['age'])
-    lad = {(r, a): oof(f'E29_ladder_{r}_{a}') for r in ('L1', 'L2b', 'L2') for a in ARMS}
+    lad = {(r, a): oof(f'E31_ladder_{r}_{a}') for r in ('L1', 'L2b', 'L2') for a in ARMS}
     out['age_first'] = f'{roc_auc_score(y[fv], pa[fv]):.3f}'
     out['age_cohort'] = img(AO.fig_age_cohort(info)) + table(AO.age_cohort_table(info).round(3), 'small')
     sc = {'Age only': pa[fv], 'Single-eye numerics (L1)': lad[('L1', 'noH')][fv], 'Final, noH': P['noH'][fv],
@@ -273,8 +272,7 @@ def main():
     # ---- paired deltas
     rows = []
     for a in ARMS:
-        for lab, q in [('age only', pa), ('single-scan numerics reference', oof('E22_ref_single_num')),
-                       ('LightGBM member alone', oof(REF[a]))]:
+        for lab, q in [('age only', pa), ('E28 blend, all columns incl. derived indices', oof(f'E28_{a}_blend'))]:
             d0 = paired_delta(y, P[a], q, g)
             d1 = paired_delta(y[fv], P[a][fv], q[fv], g[fv])
             rows.append({'arm': a, 'final blend minus': lab,
@@ -313,15 +311,15 @@ def main():
     st.to_csv(OUT / 'tables' / 'strata.csv', index=False)
 
     # ---- figures (E29 style)
-    l1 = {a: oof(f'E29_ladder_L1_{a}') if (RES / 'oof' / f'E29_ladder_L1_{a}.npy').exists() else None for a in ARMS}
+    l1 = {a: oof(f'E31_ladder_L1_{a}') if (RES / 'oof' / f'E31_ladder_L1_{a}.npy').exists() else None for a in ARMS}
     curves = {'Final, noH': (P['noH'], PL.S.C['noH'], '-'), 'Final, H': (P['H'], PL.S.C['H'], '-')}
     if l1['noH'] is not None:
         curves['Single-eye numerics (L1)'] = (l1['noH'], PL.S.C['L1'], (0, (4, 2)))
     curves['Age only'] = (pa, PL.S.C['age'], (0, (1, 1.5)))
     roc_img = img(PL.fig_roc(y, g, fv, curves))
     stage_imgs = {}
-    ladder_oof = {(r, a): oof(f'E29_ladder_{r}_{a}') for r in ('L1', 'L2') for a in ARMS
-                  if (RES / 'oof' / f'E29_ladder_{r}_{a}.npy').exists()}
+    ladder_oof = {(r, a): oof(f'E31_ladder_{r}_{a}') for r in ('L1', 'L2') for a in ARMS
+                  if (RES / 'oof' / f'E31_ladder_{r}_{a}.npy').exists()}
     for k, s_ in (('A', stage_A(coh)), ('B', stage_B(coh))):
         sc = {'Age only': pa[fv], 'Final, noH': P['noH'][fv], 'Final, H': P['H'][fv]}
         if l1['noH'] is not None:

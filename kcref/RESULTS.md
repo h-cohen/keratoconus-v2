@@ -984,3 +984,22 @@ noH 0.500 [0.450–0.551] (312/523 flagged), H 0.555 [0.508–0.606] (290), L1 0
   maps with side and direction; the twelve leading R measurements (SHAP vs value, where the rolling-median SHAP crosses
   0); sector atlas by referral status, stage A, stage B and age group (share of the group total); mean maps of all four
   maps. A 12-eye case gallery is built locally only (`publication_v2/local/`).
+
+## 2026-11-16 — E31 derived-index ablation: simpler feature set adopted; full re-run after working-copy loss
+First-visit AUC [95% CI] (paired Δ vs E28, patient-cluster bootstrap):
+
+| arm | E28 (all columns) | E31_noeng (adopted) | Δ [95% CI] | E31_noagepachy | Δ [95% CI] |
+|---|---|---|---|---|---|
+| noH | 0.790 [0.744–0.835] | 0.786 [0.741–0.830] | −0.004 [−0.010, +0.003] | 0.785 | −0.005 [−0.011, +0.000] |
+| H | 0.813 [0.770–0.854] | 0.808 [0.764–0.849] | −0.005 [−0.012, +0.001] | 0.807 | −0.007 [−0.012, −0.001] |
+
+- Pre-declared rule met (noH Δ ≥ −0.010): **the final model drops the 11 derived indices** (34 columns;
+  `model.FINAL_DROP = 'noeng'`), both arms. Pooled AUC noH 0.763, H 0.808.
+- Ladder on the adopted set (first visit, noH / H): L1 0.673 / 0.713, L2b 0.684 / 0.717, L2 0.768 / 0.787
+  (E29 with indices: 0.679 / 0.717, 0.689 / 0.719, 0.773 / 0.792). The fellow-eye step (L1 → L2) is unchanged.
+- SHAP pass reproduces `E31_noeng_{arm}` (max |diff| 0.0018 = one near-tie swap; pooled AUC equal to 4 decimals).
+  Frozen model refitted on the adopted set.
+- **Re-run.** An outside script wiped the working copy after the first E31 runs. Code recovered from the session log;
+  data rebuilt (cohort identical: 944 scans, 523 eyes, 385 patients, 167 positive); all runs above repeated and
+  reproduced the first E31 numbers to 3 decimals. E28 blend re-run (`--drop none`) reproduced 0.790 / 0.813.
+  E22/E25 comparison OOFs are lost; the report drops those two comparisons. OOF scores and logs are now committed.

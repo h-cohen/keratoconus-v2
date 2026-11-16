@@ -611,7 +611,7 @@ def pairs(sh, info, arm='noH'):
     df = pd.DataFrame(dict(pid=info['pid'][sub], y=info['y'][sub], km=info['km'][sub], age=info['age'][sub],
                            stage=info['A'][sub]))
     pr = E.match_pairs(df)
-    l1 = np.load(RES / 'oof' / f'E29_ladder_L1_{arm}.npy').mean(0)
+    l1 = np.load(RES / 'oof' / f'E31_ladder_L1_{arm}.npy').mean(0)
     return pr, sub, sh['oof'], l1
 
 

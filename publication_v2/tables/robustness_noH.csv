@@ -1,21 +1,21 @@
 feature,abcd,median_rank,p5,p95
 Age (years),other,1.0,1.0,1.0
-Thinnest pachymetry / age,C,2.0,2.0,3.0
-"IVA (index of vertical asymmetry), fellow",other,3.0,2.0,3.0
-"Pachymetric progression at 4 mm, fellow",C,5.0,4.0,17.0
-"KI (keratoconus index), fellow",other,5.0,4.0,21.0
-"Front elevation (µm), inferior − superior, 2–4 mm, own − fellow",other,9.0,4.0,24.799999999999997
-"IHD (index of height decentration), fellow",other,11.0,4.0,36.599999999999966
-"Thinnest pachymetry / age, fellow",C,11.0,4.4,27.199999999999974
-"Corneal volume 3mm, fellow",other,11.0,5.2,27.39999999999999
-Worse than fellow: IVA (index of vertical asymmetry),other,12.0,6.0,29.399999999999977
-"KMax − Km front (D), fellow",A,13.0,6.0,38.0
-"Pupil-centre pachymetry (µm), fellow",C,15.0,6.2,30.199999999999974
-"Back elevation (µm), nasal − temporal, 2–4 mm, own",B,21.0,6.6000000000000005,37.8
-Own maps available,other,19.0,7.4,68.99999999999994
-"Back elevation (µm), 2–3 mm temporal, own",B,27.0,7.0,58.79999999999998
-"Front elevation (µm), 1–2 mm nasal, fellow",other,28.0,6.6000000000000005,91.19999999999996
-"Pachymetric progression at 6 mm, fellow",C,22.0,6.6000000000000005,62.19999999999993
-"Thickness (µm), thinnest point distance from centre (mm), fellow",C,29.0,17.0,159.7999999999997
-"Pachymetric progression at 8 mm, fellow",C,28.0,6.200000000000002,62.999999999999986
-"Back elevation (µm), 3–4 mm superior, own",B,25.0,8.4,102.79999999999995
+"IVA (index of vertical asymmetry), fellow",other,2.0,2.0,2.0
+"KI (keratoconus index), fellow",other,4.0,3.0,13.799999999999997
+"Pachymetric progression at 4 mm, fellow",C,5.0,3.0,13.59999999999998
+"Front elevation (µm), inferior − superior, 2–4 mm, own − fellow",other,7.0,3.0,18.0
+"IHD (index of height decentration), fellow",other,11.0,3.2,39.199999999999946
+Worse than fellow: IVA (index of vertical asymmetry),other,8.0,5.0,21.599999999999994
+"Front elevation (µm), 1–2 mm nasal, fellow",other,17.0,4.2,82.59999999999997
+"Back elevation (µm), nasal − temporal, 2–4 mm, own",B,17.0,5.0,50.39999999999998
+"Corneal volume 3mm, fellow",other,13.0,4.6000000000000005,81.19999999999986
+"Pupil-centre pachymetry (µm), fellow",C,16.0,6.0,26.0
+"Back elevation (µm), 2–3 mm temporal, own",B,23.0,5.2,65.19999999999999
+"Thickness (µm), thinnest point distance from centre (mm), fellow",C,25.0,13.4,230.5999999999995
+"Back elevation (µm), 3–4 mm superior, own",B,24.0,6.0,58.79999999999997
+"Corneal volume 3mm, own − fellow",other,18.0,7.4,67.39999999999998
+"Pachymetric progression at 6 mm, fellow",C,19.0,5.0,46.199999999999974
+Own maps available,other,22.0,10.0,64.59999999999998
+"Minimum radius front (mm), fellow",A,27.0,7.6000000000000005,60.39999999999999
+"Pachymetric progression at 8 mm, fellow",C,30.0,5.200000000000002,57.8
+"Back elevation (µm), maximum x (mm, nasal +), own − fellow",B,33.0,7.2,135.99999999999997

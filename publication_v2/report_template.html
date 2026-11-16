@@ -85,12 +85,12 @@ Patients are keyed by a pseudonymous hash. No identifying fields are used.</p>
 <div class="flow">
 <div><b>1 · Visit</b>Scanned eye: 55 numerics (incl. age) and a four-map composite. Fellow eye: same-day exam.</div>
 <div><b>2 · Decode maps</b>Colour → physical units (µm, D) on a 145×145 grid. Left eyes are mirrored.</div>
-<div><b>3 · Features</b>N (205), R (96 × own / fellow / own−fellow = 288), 2 image flags; [+ H (5)].</div>
+<div><b>3 · Features</b>N (171), R (96 × own / fellow / own−fellow = 288), 2 image flags; [+ H (5)].</div>
 <div><b>4 · In-fold prep</b>Fit R standardisation, clip at the 0.5/99.5% quantiles, median imputation.</div>
 <div><b>5 · Three learners</b>XGBoost, LightGBM (5-seed bag), elastic-net LR; each tuned by inner patient CV.</div>
 <div><b>6 · Blend</b>Equal-weight mean of the members' percentile ranks.</div>
 </div>
-<p>The noH input has 495 columns (205 N + 288 R + 2 flags). The H input has 500 (+ 5 H).</p>
+<p>The noH input has 461 columns (171 N + 288 R + 2 flags). The H input has 466 (+ 5 H).</p>
 
 <h3>Data flow with tensor sizes</h3>
 {flow_img}
@@ -104,8 +104,8 @@ The fellow is chosen <b>without reading any label, CXL or keratoplasty field</b>
 <li>Fellow map image: a same-day four-map composite of the other eye exists for 563 of 944 scans. Where it is missing, the fellow R columns are missing (§10).</li>
 </ul>
 
-<h2 id="N">5. Block N: bilateral numerics (205 columns)</h2>
-<p>Per eye, N uses the scanner's 54 numerics plus age, and 11 engineered keratoconus indices. Each is a pure function of one scan:</p>
+<h2 id="N">5. Block N: bilateral numerics (171 columns)</h2>
+<p>Per eye, N uses the scanner's 54 numerics plus age. Earlier versions (up to E28) also used 11 engineered indices, each a pure function of one scan (listed below). <b>E31 removed them</b> (pre-declared ablation, §13.2): they re-express numerics already in N, split SHAP credit with their inputs, and one (Pachy Min / age) mixed age into a corneal feature. Removing them cost 0.004 first-visit AUC in noH, inside the pre-declared tolerance of 0.010, so the simpler set was adopted for both arms. Removed indices:</p>
 <pre>kmax_minus_km        = KMax − Km F
 pachy_min_over_apex  = Pachy Min / Pachy Apex
 pachy_min_over_pupil = Pachy Min / Pachy Pupil
@@ -117,10 +117,10 @@ asph_ratio           = Asph. Q F / Asph. Q B
 elev_ratio           = Rf F / Rf B
 cvol_ratio           = C.Vol D 3mm / C.Vol D 10mm</pre>
 <table><tr><th>part</th><th>columns</th><th>content</th></tr>
-<tr><td>own</td><td>66</td><td>age, 54 numerics and 11 indices of the scanned eye</td></tr>
-<tr><td>fel</td><td>65</td><td>the same 65 non-age values for the fellow eye</td></tr>
-<tr><td>asym</td><td>65</td><td>own − fellow</td></tr>
-<tr><td>worse_*</td><td>8</td><td>1 if the scanned eye is worse than its fellow: steeper KMax, steeper K2, higher ISV, KI, IHD, IVA or prog_max; thinner Pachy Min</td></tr>
+<tr><td>own</td><td>55</td><td>age and 54 numerics of the scanned eye</td></tr>
+<tr><td>fel</td><td>54</td><td>the same 54 non-age values for the fellow eye</td></tr>
+<tr><td>asym</td><td>54</td><td>own − fellow</td></tr>
+<tr><td>worse_*</td><td>7</td><td>1 if the scanned eye is worse than its fellow: steeper KMax, steeper K2, higher ISV, KI, IHD or IVA; thinner Pachy Min</td></tr>
 <tr><td>has_fellow</td><td>1</td><td>whether a same-day fellow exam exists</td></tr></table>
 <p>In the LightGBM member, age is constrained to be <b>monotone decreasing</b>: younger patients are referred more often.</p>
 
@@ -203,8 +203,10 @@ The members are complementary: two tree ensembles and one sparse linear model.</
 {head}
 {roc}
 <h3>13.2 Paired comparisons (patient-cluster bootstrap)</h3>
+<p>The second row of each arm is the E31 ablation: the final model minus the E28 blend, which also used the 11 derived indices (§5). The decision rule was fixed before the result (PROTOCOL.md, E31): adopt the simpler set if the noH first-visit AUC is at most 0.010 lower. The ablation that dropped only Pachy Min / age (E31_noagepachy) scored 0.785 / 0.807 first visit (noH / H).</p>
 {deltas}
 <h3>13.3 Blend members alone</h3>
+<p>Members of the E28 blend (all columns, including the derived indices); member runs were not repeated on the E31 set.</p>
 {members}
 <h3 id="ops">13.4 Operating characteristics</h3>
 <p>First visit (E30, pre-declared). (a) Precision–recall curves; the dotted line is the prevalence (a random model). Average precision (AP) with 95% patient-cluster bootstrap CI is in the first table.
@@ -224,10 +226,10 @@ A dash means the stratum has fewer than 3 positive scans or only one class.</p>
 {strata}
 
 <h2 id="ladder">15. Feature-block ladder: where the gain comes from</h2>
-<p>The same blend, training rows, inner tuning and folds, refitted on nested column sets (E29, pre-declared). Only the columns change.
-<b>L1</b> is the own eye only (age + 54 numerics + 11 indices, 66 columns), the information of the previous single-eye paper.
-<b>L2</b> adds the fellow eye and own − fellow differences (block N, 205).
-<b>L2b</b> adds the own eye's maps to L1 instead (163).
+<p>The same blend, training rows, inner tuning and folds, refitted on nested column sets (E29 design, pre-declared; re-run on the E31 set as E31_ladder_*). Only the columns change.
+<b>L1</b> is the own eye only (age + 54 numerics, 55 columns), the information of the previous single-eye paper.
+<b>L2</b> adds the fellow eye and own − fellow differences (block N, 171).
+<b>L2b</b> adds the own eye's maps to L1 instead (152).
 <b>Final</b> is N + R (+ H).
 The H arm adds block H to every rung.
 Paired Δ uses the same patient-cluster bootstrap on first-visit eyes.
@@ -311,13 +313,12 @@ The ordering matches the evaluated blend.</p>
 python -I kcref/model.py cv H
 python -I kcref/model.py freeze
 python -I publication_v2/build_report.py</pre>
-<p>The reported numbers are the logged runs <code>E28_noH_blend</code> and <code>E28_H_blend</code>.
-<code>model.py</code> reproduces them: identical predictions on a test fold, checked when the code was consolidated (2026-11-13).</p>
+<p>The reported numbers are the logged runs <code>E31_noeng_noH</code> and <code>E31_noeng_H</code> (<code>model.py cv {{arm}} --drop noeng</code>, identical to the default). The comparison <code>E28_{{arm}}_blend</code> is <code>--drop none</code>. All runs were repeated on 2026-11-16 from rebuilt data after a loss of the working copy and reproduced the earlier E31 AUCs to 3 decimals. OOF scores and logs are in the repository (<code>kcref/results/oof/</code>).</p>
 
 <h2 id="notes">24. Notes for writing</h2>
 <div class="box warn"><ul>
-<li><b>Model selection.</b> The final model was selected among 11 pre-declared learner and input configurations (E28), on the same cross-validated data it is reported on, without a held-out set.
-Report the number of configurations tried. Present the blend's gain over its LightGBM member as consistent but not significant (§13.2).</li>
+<li><b>Model selection.</b> The final model was selected among 11 pre-declared learner and input configurations (E28), then simplified by the pre-declared E31 ablation (4 more configurations), on the same cross-validated data it is reported on, without a held-out set.
+Report the number of configurations tried. State that the simplification traded 0.004 AUC for interpretability by a rule fixed before the result.</li>
 <li><b>Rank pooling.</b> Blend scores are within-fold ranks. The pooled AUC across folds is therefore slightly less directly comparable than per-repeat AUCs and paired deltas, which are the fair comparisons.</li>
 <li><b>H and the label share a source.</b> H and the label come from the same treatment sheet. Leakage is prevented by the strict "before the visit date" rule (§8). State this explicitly.</li>
 <li><b>Missing maps in training.</b> Extra exams have no maps: about 54% of the R values in the training rows are imputed and flagged by <code>own_image = 0</code>. All scored (cohort) scans have their own map.</li>
