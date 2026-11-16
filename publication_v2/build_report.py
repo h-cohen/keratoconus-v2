@@ -20,6 +20,7 @@ sys.path[:0] = [str(ROOT / 'kcref'), str(OUT)]
 import plots as PL  # noqa: E402
 import diagrams as DG  # noqa: E402
 import age_ops as AO  # noqa: E402
+import atlas as AT  # noqa: E402
 from common import DATA, RES  # noqa: E402
 from evaluate import cluster_boot_auc, paired_delta  # noqa: E402
 from radiomics import names as r_names  # noqa: E402
@@ -110,6 +111,63 @@ def e29_sections(coh, y, g, fv, P, pa):
         for k in ('shap', 'cornea', 'stage_shap', 'robust', 'pairs'):
             out[k] = PENDING.format(what='OOF SHAP explanation pass (kcref/explain.py shap {noH,H})')
     return out
+
+
+def atlas_sections():
+    """Appendix C: clinical reading atlas (aggregate figures from atlas.py); individual eyes stay local (cases.py)."""
+    if not all((RES / 'shap' / f'{a}_oof.npz').exists() for a in ARMS):
+        return {'atlas': PENDING.format(what='OOF SHAP explanation pass')}
+    info = PL.cohort_info()
+    shs = {a: PL.load_shap(a) for a in ARMS}
+    figs = {a: dict(read=AT.fig_reading_map(shs[a], info, a), gal=AT.fig_r_gallery(shs[a], info, a),
+                    **{by: AT.fig_atlas(shs[a], info, a, by) for by in ('label', 'stageA', 'stageB', 'age')})
+            for a in ARMS}
+    rm = pd.read_csv(OUT / 'tables' / 'reading_map_noH.csv')
+    rg = pd.read_csv(OUT / 'tables' / 'reading_guide_noH.csv')
+    top3 = '; '.join(f'{r.map.lower()} {r.location} (mostly {r.leading_side}, {r.direction})'
+                     for r in rm.head(3).itertuples())
+    by_map = rm.groupby('map').importance.sum().sort_values(ascending=False)
+    tab_read = rm[['rank', 'map', 'location', 'leading_side', 'direction', 'rho_leading', 'share_own', 'share_fel',
+                   'share_asym']].rename(columns={'share_own': 'share own', 'share_fel': 'share fellow',
+                                                  'share_asym': 'share own − fellow', 'rho_leading': 'ρ'})
+    tab_guide = rg[['rank', 'feature', 'side', 'direction', 'trend_zero_crossing', 'median_referred',
+                    'median_not_referred', 'n_eyes']].rename(columns={
+                        'trend_zero_crossing': 'SHAP trend crosses 0 at', 'median_referred': 'median, referred',
+                        'median_not_referred': 'median, not referred'})
+    det = lambda title, *ps: f'<details><summary>{title}</summary>' + ''.join(img(q) for q in ps) + '</details>'
+    html = f"""<div class="box"><b>How to read this appendix.</b> The figures answer two clinical questions about the final
+model: <i>where on the cornea</i> its decision is made, and <i>which direction</i> of each corneal measurement raises the
+referral score. All figures pool first-visit eyes (no individual eye is shown). Importance = mean |SHAP| of the region,
+summed over the own eye, the fellow eye and the own − fellow difference. Superior is up and nasal is right in every
+dartboard (left eyes mirrored). <b>Short version (noH):</b> look first at {top3}. By map, the ten leading sectors are
+{", ".join(f"{m.lower()} {100 * v / by_map.sum():.0f}%" for m, v in by_map.items())} of their combined importance.</div>
+<h3>C.1 Where to look: the ten leading corneal sectors</h3>
+{img(figs['noH']['read'])}{table(tab_read.round(2), 'small')}{det('H arm: leading sectors', figs['H']['read'])}
+<h3>C.2 The twelve leading corneal measurements, one by one</h3>
+<p>Each panel plots the measurement (x, in the map unit) against its SHAP value (y; above 0 raises the referral score),
+for referred (navy) and not-referred (grey) first-visit eyes. The black line is the rolling median; the dashed line marks
+where it crosses 0, i.e. the value at which this measurement turns from lowering to raising the score. These reading
+points are descriptive: they are learned on this cohort, interact with the other features and are not validated
+clinical thresholds.</p>
+{img(figs['noH']['gal'])}{table(tab_guide.round(3), 'small')}{det('H arm: twelve leading measurements', figs['H']['gal'])}
+<h3>C.3 Does the place to look change with the patient?</h3>
+<p>Colour is each sector's share of its group's total sector importance, so groups whose SHAP magnitudes differ (advanced
+stages carry much more) read on one scale; the group total is printed beside each row.</p>
+<h4>By referral status</h4>{img(figs['noH']['label'])}
+<h4>By stage A (Km F)</h4>{img(figs['noH']['stageA'])}
+<h4>By stage B (Rm B)</h4>{img(figs['noH']['stageB'])}
+<h4>By age group (§21)</h4>{img(figs['noH']['age'])}
+{det('H arm: atlas by referral status, stage A, stage B and age', *(figs['H'][k] for k in ('label', 'stageA', 'stageB', 'age')))}
+<h3>C.4 What referred corneas look like: all four maps</h3>
+<p>Mean map of referred and not-referred first-visit eyes and their difference, with the top 3 own-eye sectors of each map
+outlined.</p>
+{img(PL.fig_mean_maps(info, PL.r_table(shs['noH'], info), maps=('T', 'K', 'EF', 'EB'), name='cornea_mean_maps_all'))}
+<h3>C.5 Individual eyes</h3>
+<p>A gallery of 12 individual eyes (correct referrals, correct non-referrals, false positives and false negatives) with
+their maps, the sectors that moved their score and their per-family contributions is built by <code>cases.py</code> into
+<code>publication_v2/local/report_cases.html</code>. It stays on the local machine (individual maps are not part of the
+repository; user decision 2026-11-13).</p>"""
+    return {'atlas': html}
 
 
 def age_sections(coh, y, g, fv, P, pa):
@@ -321,6 +379,7 @@ def main():
 
     e29 = e29_sections(coh, y, g, fv, P, pa)
     e30 = age_sections(coh, y, g, fv, P, pa)
+    e31a = atlas_sections()
     n_first, pos_first = int(fv.sum()), int(y[fv].sum())
     body = TEMPLATE.format(
         date=dt.date.today().isoformat(), n=len(y), pos=int(y.sum()), n_pat=coh.pid.nunique(),
@@ -328,7 +387,7 @@ def main():
         age_mean=f'{coh.age.mean():.1f}', age_sd=f'{coh.age.std():.1f}', age_min=int(coh.age.min()),
         age_max=int(coh.age.max()),
         head=table(head, 'hl'), deltas=table(deltas), members=table(members), strata=table(st, 'small'),
-        roc=roc_img, strata_img=strata_img, flow_img=img(DG.fig_dataflow()), filter_img=img(DG.fig_filtering()), filter_cohort=table(DG.funnel_tables()['cohort']), filter_extra=table(DG.funnel_tables()['extra']), rdict=table(rdict, 'small'), **e29, **e30,
+        roc=roc_img, strata_img=strata_img, flow_img=img(DG.fig_dataflow()), filter_img=img(DG.fig_filtering()), filter_cohort=table(DG.funnel_tables()['cohort']), filter_extra=table(DG.funnel_tables()['extra']), rdict=table(rdict, 'small'), **e29, **e30, **e31a,
         noH_first=f'{log.loc[FINAL["noH"]].auc_first:.3f}', H_first=f'{log.loc[FINAL["H"]].auc_first:.3f}')
     (OUT / 'report.html').write_text(body, encoding='utf-8')
     print('wrote', OUT / 'report.html')

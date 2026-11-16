@@ -244,7 +244,7 @@ def prepare(sh):
 def col_importance(sh, rows):
     """Mean |SHAP| per column over `rows`, counting only rows where the column's map exists."""
     m = sh['mask'] & rows[:, None]
-    return np.abs(sh['Zm']).sum(0) / np.maximum(m.sum(0), 1)
+    return np.abs(sh['Zm'][rows]).sum(0) / np.maximum(m.sum(0), 1)
 
 
 def group_importance(sh, rows, key=E.source):
@@ -467,7 +467,7 @@ def mean_maps(info):
     return out
 
 
-def fig_mean_maps(info, tab, maps=('T', 'EB')):
+def fig_mean_maps(info, tab, maps=('T', 'EB'), name='cornea_mean_maps'):
     """E3c: mean map of referred vs not-referred first-visit eyes and their difference, with the top-3 own-eye
     sectors of each map outlined (from the noH importance table)."""
     mm = mean_maps(info)
@@ -509,7 +509,7 @@ def fig_mean_maps(info, tab, maps=('T', 'EB')):
     fig.text(0.5, 0.0, 'First-visit eyes, central 8 mm, +x nasal; group means, smoothed (Gaussian, 0.1 mm); outlined: top 3 own-eye sectors by mean |SHAP| (noH).',
              ha='center', fontsize=6, color=S.C['mute'])
     fig.tight_layout()
-    return S.save(fig, 'cornea_mean_maps')
+    return S.save(fig, name)
 
 
 def fig_stage_shap(shs, info, staging):

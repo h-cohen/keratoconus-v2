@@ -971,3 +971,16 @@ age. SHAP of age falls monotonically with age and crosses 0 near 30 years (both 
 **Operating characteristics** (thresholds on the same OOF scores, descriptive): at sensitivity 0.90, specificity
 noH 0.500 [0.450–0.551] (312/523 flagged), H 0.555 [0.508–0.606] (290), L1 0.379 [0.320–0.438] (360), age only 0.405
 (350). Average precision (prevalence 0.239): noH 0.489 [0.408–0.592], H 0.555 [0.468–0.652], L1 0.380, age 0.327.
+
+## 2026-11-16 — Appendix C (clinical reading atlas) and a fix to per-column SHAP importance
+- **Fix.** `publication_v2/plots.col_importance` summed |SHAP| over all 944 scans but divided by the number of eyes in
+  the requested subset (first visit). Now it sums over the subset only (test: `publication_v2/test_atlas.py`).
+  Affected the corneal importance figures and tables, beeswarm/dependence ordering and robustness figures; not the
+  source shares (`group_importance`), the stage figures or `shap_top_*.csv` (computed separately; unchanged).
+  Corneal top 3 (noH) after the fix: front elevation inferior − superior 2–4 mm (own − fellow); front elevation
+  1–2 mm nasal (fellow); back elevation nasal − temporal 2–4 mm (own). Before: the first, then back elevation
+  nasal − temporal 2–4 mm (own) and back elevation 2–3 mm temporal (own).
+- **Appendix C** (descriptive, both arms; no model refitted, no experiments.csv row): ten leading sectors over the four
+  maps with side and direction; the twelve leading R measurements (SHAP vs value, where the rolling-median SHAP crosses
+  0); sector atlas by referral status, stage A, stage B and age group (share of the group total); mean maps of all four
+  maps. A 12-eye case gallery is built locally only (`publication_v2/local/`).
