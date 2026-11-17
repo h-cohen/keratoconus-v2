@@ -44,8 +44,31 @@ def panel_letter(ax, s, x=-0.14, y=1.06):
     ax.text(x, y, s, transform=ax.transAxes, fontsize=10, fontweight='bold', va='bottom', ha='left')
 
 
+# Row scope of the explanation figures. Default: first-visit eyes. all_scans(): every cohort scan (all visits);
+# figure and table names then get the suffix '_allscans' so the first-visit outputs are never overwritten.
+FIRST = dict(scope='first visit', unit='first-visit eyes', n='eyes', suffix='')
+ALL = dict(scope='all scans', unit='scans (all visits)', n='scans', suffix='_allscans')
+W = dict(FIRST)
+
+
+class all_scans:
+    """Context manager: captions and output names for the all-scans scope."""
+    def __enter__(self):
+        W.update(ALL)
+
+    def __exit__(self, *a):
+        W.update(FIRST)
+
+
+def tab(name):
+    """tables/{name} with the scope suffix before the extension."""
+    p = Path(name)
+    return OUT / 'tables' / f'{p.stem}{W["suffix"]}{p.suffix}'
+
+
 def save(fig, name, local=False):
     """figures/{name}.pdf + .png (300 dpi), or local/ for individual-level figures (gitignored). Returns the PNG."""
+    name = name + W['suffix']
     d = OUT / ('local' if local else 'figures')
     d.mkdir(exist_ok=True)
     fig.savefig(d / f'{name}.pdf', bbox_inches='tight', metadata={'CreationDate': None})  # reproducible bytes

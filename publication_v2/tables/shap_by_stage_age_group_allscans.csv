@@ -1,0 +1,53 @@
+arm,stage,n,source,share
+noH,1,217,"Own eye, numerics",0.01290491802569134
+noH,1,217,"Own eye, maps",0.06509420494563342
+noH,1,217,"Fellow-derived, numerics",0.3540016911985635
+noH,1,217,"Fellow-derived, maps",0.13081892057191855
+noH,1,217,Age,0.4238496588306468
+noH,1,217,Map availability,0.01333060642754643
+noH,2,253,"Own eye, numerics",0.018397388011071544
+noH,2,253,"Own eye, maps",0.09222527323572148
+noH,2,253,"Fellow-derived, numerics",0.4228549035460485
+noH,2,253,"Fellow-derived, maps",0.1427597332594369
+noH,2,253,Age,0.30736664251408924
+noH,2,253,Map availability,0.016396059433632343
+noH,3,221,"Own eye, numerics",0.018218049553222232
+noH,3,221,"Own eye, maps",0.125380916415966
+noH,3,221,"Fellow-derived, numerics",0.485145345376634
+noH,3,221,"Fellow-derived, maps",0.1996525208844549
+noH,3,221,Age,0.1520746268709833
+noH,3,221,Map availability,0.019528540898739514
+noH,4,253,"Own eye, numerics",0.013768638098071117
+noH,4,253,"Own eye, maps",0.07665830111180898
+noH,4,253,"Fellow-derived, numerics",0.28104883303152817
+noH,4,253,"Fellow-derived, maps",0.1247815814964439
+noH,4,253,Age,0.4917410664014602
+noH,4,253,Map availability,0.012001579860687674
+H,1,217,"Own eye, numerics",0.011817706486928262
+H,1,217,"Own eye, maps",0.05456755950731592
+H,1,217,"Fellow-derived, numerics",0.2565242242984176
+H,1,217,"Fellow-derived, maps",0.15133953039051104
+H,1,217,Age,0.3243470056456044
+H,1,217,Map availability,0.02027244076233711
+H,1,217,Fellow treatment history,0.18113153290888567
+H,2,253,"Own eye, numerics",0.016045861478842505
+H,2,253,"Own eye, maps",0.06864771756193755
+H,2,253,"Fellow-derived, numerics",0.2887265030454575
+H,2,253,"Fellow-derived, maps",0.15144889016979593
+H,2,253,Age,0.23575131871413835
+H,2,253,Map availability,0.02243397267937151
+H,2,253,Fellow treatment history,0.2169457363504567
+H,3,221,"Own eye, numerics",0.017839428737840942
+H,3,221,"Own eye, maps",0.09108395735797545
+H,3,221,"Fellow-derived, numerics",0.31702331780571436
+H,3,221,"Fellow-derived, maps",0.1996193483663662
+H,3,221,Age,0.10893405598757319
+H,3,221,Map availability,0.02559783750350075
+H,3,221,Fellow treatment history,0.2399020542410292
+H,4,253,"Own eye, numerics",0.011299129133402816
+H,4,253,"Own eye, maps",0.06491115076785857
+H,4,253,"Fellow-derived, numerics",0.21418531222550383
+H,4,253,"Fellow-derived, maps",0.14242822150215745
+H,4,253,Age,0.40524960173561186
+H,4,253,Map availability,0.02085736911929221
+H,4,253,Fellow treatment history,0.14106921551617327

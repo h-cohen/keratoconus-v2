@@ -60,7 +60,10 @@ def age_only(coh):
 
 
 def img(path):
-    """Embed a saved PNG (figures/) in the self-contained report."""
+    """Embed a saved PNG (figures/) in the self-contained report; already-built HTML passes through."""
+    if isinstance(path, str) and path.lstrip().startswith('<'):
+        return path
+    path = Path(path)
     return f'<img alt="{path.stem}" src="data:image/png;base64,{base64.b64encode(path.read_bytes()).decode()}">'
 
 
@@ -121,8 +124,8 @@ def atlas_sections():
     figs = {a: dict(read=AT.fig_reading_map(shs[a], info, a), gal=AT.fig_r_gallery(shs[a], info, a),
                     **{by: AT.fig_atlas(shs[a], info, a, by) for by in ('label', 'stageA', 'stageB', 'age')})
             for a in ARMS}
-    rm = pd.read_csv(OUT / 'tables' / 'reading_map_noH.csv')
-    rg = pd.read_csv(OUT / 'tables' / 'reading_guide_noH.csv')
+    rm = pd.read_csv(PL.S.tab('reading_map_noH.csv'))
+    rg = pd.read_csv(PL.S.tab('reading_guide_noH.csv'))
     top3 = '; '.join(f'{r.map.lower()} {r.location} (mostly {r.leading_side}, {r.direction})'
                      for r in rm.head(3).itertuples())
     by_map = rm.groupby('map').importance.sum().sort_values(ascending=False)
@@ -167,6 +170,70 @@ their maps, the sectors that moved their score and their per-family contribution
 <code>publication_v2/local/report_cases.html</code>. It stays on the local machine (individual maps are not part of the
 repository; user decision 2026-11-13).</p>"""
     return {'atlas': html}
+
+
+def allscans_sections(coh, y, g, fv, P):
+    """Appendix D: every explanation figure recomputed over all 944 cohort scans (all visits) instead of first-visit
+    eyes, plus AUC by visit scope and a first-visit vs all-scans importance comparison. Same OOF SHAP file."""
+    if not all((RES / 'shap' / f'{a}_oof.npz').exists() for a in ARMS):
+        return {'allscans': PENDING.format(what='OOF SHAP explanation pass')}
+    info = PL.cohort_info()
+    info['age_group'] = AO.age_group(info['age'])
+    shs = {a: PL.load_shap(a) for a in ARMS}
+    ia = PL.all_scans(info)
+    fu = ~fv
+    rows = []
+    for a in ARMS:
+        for lab, m in (('first visit (one per eye)', fv), ('follow-up visits only', fu), ('all scans', np.ones(len(y), bool))):
+            rows.append({'arm': a, 'scans': lab, 'n': int(m.sum()), 'positive': int(y[m].sum()),
+                         'patients': len(set(g[m])), 'AUC [95% CI]': fmt(*ci(y[m], P[a][m], g[m]))})
+    auc = pd.DataFrame(rows)
+    auc.to_csv(OUT / 'tables' / 'auc_by_scope.csv', index=False)
+    cmp_rows, rho = [], {}
+    for a in ARMS:
+        i1, i2 = PL.col_importance(shs[a], fv), PL.col_importance(shs[a], np.ones(len(y), bool))
+        rho[a] = pd.Series(i1).corr(pd.Series(i2), method='spearman')
+        r1, r2 = (-i1).argsort().argsort() + 1, (-i2).argsort().argsort() + 1
+        for j in sorted(set(np.argsort(-i1)[:15]) | set(np.argsort(-i2)[:15]), key=lambda j: r2[j]):
+            cmp_rows.append({'arm': a, 'feature': PL.E.label(shs[a]['cols'][j]), 'rank, all scans': int(r2[j]),
+                             'rank, first visit': int(r1[j]), 'mean |SHAP|, all scans': i2[j],
+                             'mean |SHAP|, first visit': i1[j]})
+    cmp = pd.DataFrame(cmp_rows)
+    cmp.to_csv(OUT / 'tables' / 'shap_scope_compare.csv', index=False)
+    det = lambda title, *ps: f'<details><summary>{title}</summary>' + ''.join(img(q) for q in ps) + '</details>'
+    with PL.S.all_scans():
+        src = img(PL.fig_sources(shs, ia))
+        bee = {a: (PL.fig_beeswarm(shs[a], ia, a), PL.fig_dependence(shs[a], ia, a)) for a in ARMS}
+        cor = {a: (PL.fig_cornea(shs[a], ia, a), PL.fig_cornea(shs[a], ia, a, True)) for a in ARMS}
+        mm = PL.fig_mean_maps(ia, PL.r_table(shs['noH'], ia), maps=('T', 'K', 'EF', 'EB'), name='cornea_mean_maps_all')
+        stg = [PL.fig_stage_shap(shs, ia, k) for k in ('A', 'B', 'age_group')]
+        age = AO.fig_age_shap(shs, ia)
+        atl = {a: dict(read=AT.fig_reading_map(shs[a], ia, a), gal=AT.fig_r_gallery(shs[a], ia, a),
+                       **{by: AT.fig_atlas(shs[a], ia, a, by) for by in ('label', 'stageA', 'stageB', 'age')})
+               for a in ARMS}
+        rm = pd.read_csv(PL.S.tab('reading_map_noH.csv'))
+    html = f"""<div class="box">The main text explains the model on <b>first-visit eyes</b> (one scan per eye, {int(fv.sum())} eyes), the
+pre-declared primary population. This appendix recomputes <b>every explanation figure over all {len(y)} cohort scans</b>
+(all visits; {int(fu.sum())} are follow-up scans of eyes already in the first-visit set). It uses the same out-of-fold SHAP
+values (each scan explained by the fit that did not train on its patient); only the rows averaged change. Eyes with many
+visits weigh more here, and follow-up scans of the same eye are correlated, so CIs on all scans are patient-cluster
+bootstrap. Spearman ρ between the per-column importances of the two scopes: noH {rho['noH']:.3f}, H {rho['H']:.3f}.
+Robustness across fits (§19) and matched pairs (§20) are defined on first-visit eyes only and are not repeated.</div>
+<h3>D.1 AUC by visit scope</h3>{table(auc)}
+<h3>D.2 Feature ranks: all scans vs first visit</h3>
+<p>Union of the top 15 features of each scope, ordered by the all-scans rank.</p>{table(cmp.round(4), 'small')}
+<h3>D.3 Information sources</h3>{img(src)}
+<h3>D.4 Top features and dependence (noH)</h3>{img(bee['noH'][0])}{img(bee['noH'][1])}
+{det('H arm: top features and dependence, all scans', *bee['H'])}
+<h3>D.5 Where on the cornea</h3>{img(cor['noH'][0])}{img(cor['noH'][1])}{img(mm)}
+{det('H arm: corneal importance, all scans', *cor['H'])}
+<h3>D.6 Explanations by stage and age</h3>{''.join(img(q) for q in stg)}{img(age)}
+<h3>D.7 Clinical reading atlas, all scans</h3>
+<p>Short version (noH, all scans): look first at {'; '.join(f'{r.map.lower()} {r.location} (mostly {r.leading_side})' for r in rm.head(3).itertuples())}.</p>
+{img(atl['noH']['read'])}{img(atl['noH']['gal'])}
+{''.join(img(atl['noH'][k]) for k in ('label', 'stageA', 'stageB', 'age'))}
+{det('H arm: reading atlas, all scans', *(atl['H'][k] for k in ('read', 'gal', 'label', 'stageA', 'stageB', 'age')))}"""
+    return {'allscans': html}
 
 
 def age_sections(coh, y, g, fv, P, pa):
@@ -378,6 +445,7 @@ def main():
     e29 = e29_sections(coh, y, g, fv, P, pa)
     e30 = age_sections(coh, y, g, fv, P, pa)
     e31a = atlas_sections()
+    e31b = allscans_sections(coh, y, g, fv, P)
     n_first, pos_first = int(fv.sum()), int(y[fv].sum())
     body = TEMPLATE.format(
         date=dt.date.today().isoformat(), n=len(y), pos=int(y.sum()), n_pat=coh.pid.nunique(),
@@ -385,7 +453,7 @@ def main():
         age_mean=f'{coh.age.mean():.1f}', age_sd=f'{coh.age.std():.1f}', age_min=int(coh.age.min()),
         age_max=int(coh.age.max()),
         head=table(head, 'hl'), deltas=table(deltas), members=table(members), strata=table(st, 'small'),
-        roc=roc_img, strata_img=strata_img, flow_img=img(DG.fig_dataflow()), filter_img=img(DG.fig_filtering()), filter_cohort=table(DG.funnel_tables()['cohort']), filter_extra=table(DG.funnel_tables()['extra']), rdict=table(rdict, 'small'), **e29, **e30, **e31a,
+        roc=roc_img, strata_img=strata_img, flow_img=img(DG.fig_dataflow()), filter_img=img(DG.fig_filtering()), filter_cohort=table(DG.funnel_tables()['cohort']), filter_extra=table(DG.funnel_tables()['extra']), rdict=table(rdict, 'small'), **e29, **e30, **e31a, **e31b,
         noH_first=f'{log.loc[FINAL["noH"]].auc_first:.3f}', H_first=f'{log.loc[FINAL["H"]].auc_first:.3f}')
     (OUT / 'report.html').write_text(body, encoding='utf-8')
     print('wrote', OUT / 'report.html')

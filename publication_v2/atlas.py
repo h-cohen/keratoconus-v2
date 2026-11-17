@@ -115,12 +115,12 @@ def fig_reading_map(sh, info, arm, top=10):
         ax.text(x + 0.025, y - 0.085, f'mostly {r.leading_side}; {r.direction} (ρ {r.rho_leading:+.2f})',
                 fontsize=5.9, color=S.C['mute'], transform=ax.transAxes, va='top')
     colorbar(fig, [0.93, 0.5, 0.01, 0.33], vmax, 'Mean |SHAP|\n(own + fellow + own − fellow)')
-    fig.text(0.5, -0.01, f'{arm} arm, first-visit eyes. Numbers: the {top} most important sectors over all four maps '
+    fig.text(0.5, -0.01, f'{arm} arm, {S.W["unit"]}. Numbers: the {top} most important sectors over all four maps '
              '(rings 0–1 … 3–4 mm × quadrants; +x nasal, left eyes mirrored). ρ: Spearman correlation of value '
              'and SHAP for the side that carries most of the sector.', ha='center', fontsize=5.8, color=S.C['mute'],
              wrap=True)
     fig.subplots_adjust(left=0.02, right=0.9, top=0.92, bottom=0.04)
-    rt.drop(columns='sec').to_csv(TAB / f'reading_map_{arm}.csv', index=False)
+    rt.drop(columns='sec').to_csv(S.tab(f'reading_map_{arm}.csv'), index=False)
     return S.save(fig, f'reading_map_{arm}')
 
 
@@ -168,12 +168,12 @@ def fig_atlas(sh, info, arm, by):
             recs += [dict(group=lab, map=mp, r0=s[0], r1=s[1], quadrant=s[2], share_pct=x, group_total=tot[lab])
                      for s, x in v.items()]
     colorbar(fig, [0.92, 0.35, 0.01, 0.3], vmax, 'Share of the group\'s sector importance (%)')
-    fig.text(0.5, 0.005, f'{arm} arm, first-visit eyes with the map. Colour: sector share of the group total (64 '
+    fig.text(0.5, 0.005, f'{arm} arm, {S.W["unit"]} with the map. Colour: sector share of the group total (64 '
              'sectors, own + fellow + own − fellow). Outlined: top 3 per panel. Superior up, nasal right (left eyes '
              f'mirrored). Groups with < {MIN_N} eyes not drawn.',
              ha='center', fontsize=5.8, color=S.C['mute'])
     fig.subplots_adjust(left=0.01, right=0.9, top=0.95, bottom=0.045)
-    pd.DataFrame(recs).to_csv(TAB / f'atlas_{by}_{arm}.csv', index=False)
+    pd.DataFrame(recs).to_csv(S.tab(f'atlas_{by}_{arm}.csv'), index=False)
     return S.save(fig, f'atlas_{by}_{arm}')
 
 
@@ -250,9 +250,9 @@ def fig_r_gallery(sh, info, arm, top=12):
                         plt.Line2D([], [], color=S.C['ink'], lw=1.1, label='Rolling median'),
                         plt.Line2D([], [], color=S.C['H'], lw=0.9, ls=(0, (3, 2)), label='Trend crosses 0')],
                loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1.02), fontsize=6.3)
-    fig.text(0.5, -0.005, f'{arm} arm, first-visit eyes with the map; x axis in the map unit (µm or D; positions in '
+    fig.text(0.5, -0.005, f'{arm} arm, {S.W["unit"]} with the map; x axis in the map unit (µm or D; positions in '
              'mm). SHAP > 0 raises the referral score. Locator: the sector in navy, for the side named under the axis.',
              ha='center', fontsize=5.8, color=S.C['mute'])
     fig.tight_layout(rect=(0, 0.01, 1, 0.97), h_pad=1.0, w_pad=0.8)
-    pd.DataFrame(recs).to_csv(TAB / f'reading_guide_{arm}.csv', index=False)
+    pd.DataFrame(recs).to_csv(S.tab(f'reading_guide_{arm}.csv'), index=False)
     return S.save(fig, f'r_gallery_{arm}')

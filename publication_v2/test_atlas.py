@@ -34,6 +34,20 @@ def test_dirword():
     assert A.dirword(0.1) == 'non-monotone' and A.dirword(np.nan) == 'non-monotone'
 
 
+
+def test_all_scans_scope_suffixes_outputs():
+    import style as S
+    assert S.tab('x.csv').name == 'x.csv' and S.W['scope'] == 'first visit'
+    with S.all_scans():
+        assert S.tab('x.csv').name == 'x_allscans.csv' and S.W['scope'] == 'all scans'
+    assert S.tab('x.csv').name == 'x.csv'
+
+
+def test_all_scans_info_selects_every_row():
+    info = {'y': np.array([0, 1, 0]), 'first': np.array([True, False, False])}
+    assert PL.all_scans(info)['first'].all() and not info['first'][1]
+
+
 if __name__ == '__main__':
     for t in [v for k, v in dict(globals()).items() if k.startswith('test_')]:
         t()

@@ -1,0 +1,7 @@
+arm,scans,n,positive,patients,AUC [95% CI]
+noH,first visit (one per eye),523,125,385,0.786 [0.741–0.830]
+noH,follow-up visits only,421,42,179,0.733 [0.644–0.826]
+noH,all scans,944,167,385,0.763 [0.709–0.813]
+H,first visit (one per eye),523,125,385,0.808 [0.764–0.849]
+H,follow-up visits only,421,42,179,0.790 [0.709–0.868]
+H,all scans,944,167,385,0.808 [0.760–0.852]

@@ -1,0 +1,33 @@
+view,group,arm,mean_abs_shap
+Information source,Map availability,noH,0.021307389006079435
+Information source,"Own eye, numerics",noH,0.02235888515396933
+Information source,"Own eye, maps",noH,0.1245636734988113
+Information source,"Fellow-derived, maps",noH,0.20927082906336889
+Information source,Fellow treatment history,noH,
+Information source,"Fellow-derived, numerics",noH,0.5347882215268717
+Information source,Age,noH,0.5393062584905738
+Information source,Map availability,H,0.03895517048803157
+Information source,"Own eye, numerics",H,0.024481498932878095
+Information source,"Own eye, maps",H,0.12075572569900937
+Information source,"Fellow-derived, maps",H,0.28036904801178403
+Information source,Fellow treatment history,H,0.33347753639025934
+Information source,"Fellow-derived, numerics",H,0.46478375646503994
+Information source,Age,H,0.5099000832668698
+Encoded feature family,Map availability,noH,0.021307389006079435
+Encoded feature family,Own numerics,noH,0.02235888515396933
+Encoded feature family,Fellow maps (R),noH,0.08665113138241735
+Encoded feature family,Own − fellow numerics,noH,0.10006436351955658
+Encoded feature family,Own maps (R),noH,0.1245636734988113
+Encoded feature family,Own − fellow maps (R),noH,0.16779375203333177
+Encoded feature family,Fellow treatment history,noH,
+Encoded feature family,Fellow numerics,noH,0.48133980440651586
+Encoded feature family,Age,noH,0.5393062584905738
+Encoded feature family,Map availability,H,0.03895517048803157
+Encoded feature family,Own numerics,H,0.024481498932878095
+Encoded feature family,Fellow maps (R),H,0.11405995757714364
+Encoded feature family,Own − fellow numerics,H,0.06496118322576315
+Encoded feature family,Own maps (R),H,0.12075572569900937
+Encoded feature family,Own − fellow maps (R),H,0.20702791728062991
+Encoded feature family,Fellow treatment history,H,0.33347753639025934
+Encoded feature family,Fellow numerics,H,0.4308793416162887
+Encoded feature family,Age,H,0.5099000832668698

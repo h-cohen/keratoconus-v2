@@ -93,7 +93,7 @@ def age_cohort_table(info):
             row[f'A{s} referred/eyes'] = f'{int(y[ms].sum())}/{int(ms.sum())}'
         rows.append(row)
     df = pd.DataFrame(rows)
-    df.to_csv(TAB / 'age_cohort.csv', index=False)
+    df.to_csv(S.tab('age_cohort.csv'), index=False)
     return df
 
 
@@ -106,7 +106,7 @@ def age_adjusted_table(y, g, fv, grp, scores):
         rows.append(dict(arm=arm, method=meth, auc=a[0], lo=a[1], hi=a[2], auc_within=w[0], lo_within=w[1],
                          hi_within=w[2]))
     df = pd.DataFrame(rows)
-    df.to_csv(TAB / 'age_adjusted.csv', index=False)
+    df.to_csv(S.tab('age_adjusted.csv'), index=False)
     return df
 
 
@@ -123,7 +123,7 @@ def operating_table(y, g, fv, scores, targets=(0.80, 0.90, 0.95)):
                          'specificity [95% CI]': f'{r["spec"]:.3f} [{lo:.3f}–{hi:.3f}]', 'PPV': round(r['ppv'], 3),
                          'NPV': round(r['npv'], 3), 'eyes flagged': f'{r["flagged"]}/{int(fv.sum())}'})
     df = pd.DataFrame(rows)
-    df.to_csv(TAB / 'operating_points.csv', index=False)
+    df.to_csv(S.tab('operating_points.csv'), index=False)
     return df
 
 
@@ -236,7 +236,7 @@ def fig_age_roc(y, g, fv, P, grp):
     fig.text(0.5, -0.01, 'First visit. Dashed: < 10 referred or < 10 not referred, no CI. CI: 95% patient-cluster '
              'bootstrap.', ha='center', fontsize=6.2, color=S.C['mute'])
     fig.tight_layout(w_pad=2.5)
-    pd.DataFrame(rows).to_csv(TAB / 'roc_age.csv', index=False)
+    pd.DataFrame(rows).to_csv(S.tab('roc_age.csv'), index=False)
     return S.save(fig, 'roc_age')
 
 
@@ -285,7 +285,7 @@ def fig_age_shap(shs, info):
             ax.scatter(x[sel], z[sel], s=5, color=col, lw=0, alpha=0.85, label=lab, rasterized=True, zorder=2)
         tx, ty = PL._trend(x, z)
         ax.plot(tx, ty, color=S.C[a], lw=1.6, zorder=3, label='Rolling median')
-        ax.set(xlabel='Age at first visit (years)', xlim=(14, 70))
+        ax.set(xlabel=f'Age at visit ({S.W["scope"]}, years)', xlim=(14, 70))
         ax.set_title(f'{a} arm', color=S.C[a], loc='center', pad=14)
         S.panel_letter(ax, letter, x=-0.16, y=1.06)
         for k in AGE_LAB:
@@ -294,11 +294,10 @@ def fig_age_shap(shs, info):
                              mean_abs_shap_age=float(np.abs(z[m]).mean())))
     axes[0].set_ylabel('SHAP of age (member-standardised)')
     axes[1].legend(loc='upper right', fontsize=6.2, markerscale=1.8)
-    fig.text(0.5, -0.04, 'First visit. Above 0: age raises the referral score. Age also enters through '
-             'thinnest-pachymetry-per-age columns, which are not included here.', ha='center', fontsize=6.1,
+    fig.text(0.5, -0.04, f'{S.W["scope"].capitalize()}. Above 0: age raises the referral score.', ha='center', fontsize=6.1,
              color=S.C['mute'])
     fig.tight_layout(w_pad=1.2)
-    pd.DataFrame(rows).to_csv(TAB / 'shap_age.csv', index=False)
+    pd.DataFrame(rows).to_csv(S.tab('shap_age.csv'), index=False)
     return S.save(fig, 'shap_age')
 
 
@@ -325,7 +324,7 @@ def fig_operating(y, g, fv, curves, thr_scores):
     ax.legend(loc='upper right', fontsize=5.6, frameon=True, fancybox=False, edgecolor='#CCCCCC', framealpha=0.95)
     ax.set_title('Precision–recall, first visit', loc='center', fontsize=7.5)
     S.panel_letter(ax, 'a', x=-0.22, y=1.02)
-    pd.DataFrame(rows).to_csv(TAB / 'precision_recall.csv', index=False)
+    pd.DataFrame(rows).to_csv(S.tab('precision_recall.csv'), index=False)
     for (a, p), letter, k in zip(thr_scores.items(), 'bc', (1, 2)):
         ax = fig.add_subplot(gs[k])
         pf = p[fv]

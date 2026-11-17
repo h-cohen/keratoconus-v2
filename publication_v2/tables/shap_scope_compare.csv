@@ -1,0 +1,31 @@
+arm,feature,"rank, all scans","rank, first visit","mean |SHAP|, all scans","mean |SHAP|, first visit"
+noH,Age (years),1,1,0.539306258490574,0.5528227161806132
+noH,"IVA (index of vertical asymmetry), fellow",2,2,0.18039238966343255,0.17956167936835551
+noH,"KI (keratoconus index), fellow",3,3,0.06711614791499522,0.06528961416648302
+noH,"Pachymetric progression at 4 mm, fellow",4,4,0.06641933448923797,0.06301339240577557
+noH,"Front elevation (µm), inferior − superior, 2–4 mm, own − fellow",5,5,0.058017619055610016,0.060782635304520584
+noH,"IHD (index of height decentration), fellow",6,6,0.03863075059314339,0.03870027177058707
+noH,Worse than fellow: IVA (index of vertical asymmetry),7,7,0.036635844500660625,0.0367191648577448
+noH,"Front elevation (µm), 1–2 mm nasal, fellow",8,8,0.033519533498324365,0.03535720271595092
+noH,"Back elevation (µm), nasal − temporal, 2–4 mm, own",9,9,0.029256846165693448,0.028425792203890375
+noH,"Pupil-centre pachymetry (µm), fellow",10,11,0.028686283713984857,0.02718972581261647
+noH,"Corneal volume 3mm, fellow",11,10,0.02717879277567626,0.02750799819044314
+noH,"Back elevation (µm), 2–3 mm temporal, own",12,12,0.02454471859657315,0.025069987900502914
+noH,"Thickness (µm), thinnest point distance from centre (mm), fellow",13,13,0.02360072001937775,0.023421320410196504
+noH,"Corneal volume 3mm, own − fellow",14,15,0.023500963881240983,0.02292800873364334
+noH,"Back elevation (µm), 3–4 mm superior, own",15,14,0.023415552382911077,0.023334096859808803
+H,Age (years),1,1,0.5099000832668696,0.5254142434859445
+H,Years since fellow-eye CXL,2,2,0.25233544569372246,0.1930238628361851
+H,"IVA (index of vertical asymmetry), fellow",3,3,0.160645671484894,0.15922957481268465
+H,Fellow eye cross-linked before visit,4,4,0.08526403847852342,0.06954638802593535
+H,"Front elevation (µm), inferior − superior, 2–4 mm, own − fellow",5,5,0.0631289931674118,0.06586389774507537
+H,"Pachymetric progression at 4 mm, fellow",6,6,0.06286622696522182,0.060098110281245495
+H,"KI (keratoconus index), fellow",7,7,0.051784363150319014,0.050200056368713386
+H,"IHD (index of height decentration), fellow",8,8,0.04254809223284608,0.042095501627849016
+H,"Pupil-centre pachymetry (µm), fellow",9,9,0.03492212795145898,0.03315977843501454
+H,Fellow maps available,10,10,0.030803961865607483,0.03155880726662014
+H,"Thickness (µm), thinnest point distance from centre (mm), fellow",11,11,0.027921454313262546,0.027925493912375622
+H,"Back elevation (µm), nasal − temporal, 2–4 mm, own",12,15,0.027522516086786502,0.026640540505790313
+H,Worse than fellow: IVA (index of vertical asymmetry),13,12,0.027478705510415702,0.027575087409223747
+H,"Front elevation (µm), 1–2 mm nasal, fellow",14,13,0.025900338325572054,0.027308161039764123
+H,"Back elevation (µm), maximum x (mm, nasal +), own − fellow",15,14,0.02511689703961612,0.027089746238512725

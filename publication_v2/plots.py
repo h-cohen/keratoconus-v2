@@ -173,7 +173,7 @@ def fig_roc(y, g, fv, curves, name='roc_final', suptitle=None):
     if suptitle:
         fig.suptitle(suptitle, x=0.01, ha='left', fontsize=8.5, fontweight='bold', color=S.C['ink'])
     fig.tight_layout(w_pad=2.5)
-    pd.DataFrame(rows).to_csv(TAB / ('roc.csv' if name == 'roc_final' else f'{name}.csv'), index=False)
+    pd.DataFrame(rows).to_csv(S.tab(('roc.csv' if name == 'roc_final' else f'{name}.csv')), index=False)
     return S.save(fig, name)
 
 
@@ -224,6 +224,11 @@ def cohort_info():
     coh = pd.read_parquet(DATA / 'cohort.parquet')
     return dict(y=coh.y.values, first=coh.first_visit.values.astype(bool), pid=coh.pid.values,
                 A=stage_A(coh), B=stage_B(coh), km=coh['Km F (D):'].values, age=coh.age.values)
+
+
+def all_scans(info):
+    """Cohort info with every scan selected as the explanation rows (key 'first' is the row mask the SHAP figures use)."""
+    return dict(info, first=np.ones(len(info['y']), bool))
 
 
 def load_shap(arm):
@@ -277,13 +282,13 @@ def fig_sources(shs, info):
                 rows.append(dict(view=title, group=lab[k], arm=a, mean_abs_shap=x))
         ax.set_yticks(yy, [lab[k] for k in order])
         framed(ax, 'x')
-        ax.set_xlabel('Mean |SHAP| (member-standardised), first visit')
+        ax.set_xlabel(f'Mean |SHAP| (member-standardised), {S.W["scope"]}')
         ax.set_title(title)
         ax.tick_params(axis='y', length=0)
         S.panel_letter(ax, letter, x=-0.5 if letter == 'a' else -0.45)
     axes[0].legend(loc='lower right', handlelength=1, title='Arm', title_fontsize=6.5)
     fig.tight_layout(w_pad=3)
-    pd.DataFrame(rows).to_csv(TAB / 'shap_sources.csv', index=False)
+    pd.DataFrame(rows).to_csv(S.tab('shap_sources.csv'), index=False)
     return S.save(fig, 'shap_sources')
 
 
@@ -328,7 +333,7 @@ def fig_beeswarm(sh, info, arm, top=20):
     ax.tick_params(axis='y', length=0, pad=16)
     ax.set_ylim(-0.7, len(idx) - 0.3)
     ax.set_xlabel('SHAP value (member-standardised)  ←  lower referral score   ·   higher referral score  →')
-    ax.set_title(f'Top {top} features, {arm} arm, first visit ({int(fv.sum())} eyes)')
+    ax.set_title(f'Top {top} features, {arm} arm, {S.W["scope"]} ({int(fv.sum())} {S.W["n"]})')
     sm = plt.cm.ScalarMappable(cmap=cm, norm=Normalize(0, 1))
     cb = fig.colorbar(sm, ax=ax, fraction=0.025, pad=0.01, ticks=[0, 1])
     cb.ax.set_yticklabels(['low', 'high'])
@@ -338,7 +343,7 @@ def fig_beeswarm(sh, info, arm, top=20):
                        (('A', 'A: anterior curvature'), ('B', 'B: posterior surface'), ('C', 'C: thickness'))],
               loc='upper left', bbox_to_anchor=(1.02, 0.25), fontsize=6, title='Belin ABCD', title_fontsize=6)
     fig.tight_layout()
-    pd.DataFrame(rows[::-1]).to_csv(TAB / f'shap_top_{arm}.csv', index=False)
+    pd.DataFrame(rows[::-1]).to_csv(S.tab(f'shap_top_{arm}.csv'), index=False)
     return S.save(fig, f'shap_beeswarm_{arm}')
 
 
@@ -441,10 +446,10 @@ def fig_cornea(sh, info, arm, signed=False):
     cb.set_label('Spearman ρ (value, SHAP)' if signed else 'Mean |SHAP|', fontsize=6.3)
     cb.outline.set_visible(False)
     fig.text(0.5, 0.005, 'Sectors: rings 0–1, 1–2, 2–3, 3–4 mm × quadrants; +x nasal (left eyes mirrored), +y superior. '
-             'Black outline: top 3 sectors of the panel. First-visit eyes with the map.',
+             f'Black outline: top 3 sectors of the panel. {S.W["unit"].capitalize()} with the map.',
              ha='center', fontsize=6, color=S.C['mute'])
     name = f'cornea_{"signed" if signed else "importance"}_{arm}'
-    tab.to_csv(TAB / f'{name}.csv', index=False)
+    tab.to_csv(S.tab(f'{name}.csv'), index=False)
     return S.save(fig, name)
 
 
@@ -506,7 +511,7 @@ def fig_mean_maps(info, tab, maps=('T', 'EB'), name='cornea_mean_maps'):
             cb.outline.set_visible(False)
         axes[i, 0].text(-5.2, 0, dict(MAP_ORDER)[mp] + (' (µm)' if mp != 'K' else ' (D)'), rotation=90, ha='center',
                         va='center', fontsize=7.5, fontweight='bold')
-    fig.text(0.5, 0.0, 'First-visit eyes, central 8 mm, +x nasal; group means, smoothed (Gaussian, 0.1 mm); outlined: top 3 own-eye sectors by mean |SHAP| (noH).',
+    fig.text(0.5, 0.0, f'{S.W["unit"].capitalize()}, central 8 mm, +x nasal; group means, smoothed (Gaussian, 0.1 mm); outlined: top 3 own-eye sectors by mean |SHAP| (noH).',
              ha='center', fontsize=6, color=S.C['mute'])
     fig.tight_layout()
     return S.save(fig, name)
@@ -545,10 +550,10 @@ def fig_stage_shap(shs, info, staging):
             sp.set_visible(False)
         ax.set_title(f'{a} arm', color=S.C[a])
         S.panel_letter(ax, letter, x=-0.55 if letter == 'a' else -0.08)
-    fig.text(0.5, -0.06, f'{STAGE_TITLE[staging]}; cell = share of total |grouped SHAP| (first visit); '
-             '— = fewer than 10 eyes', ha='center', fontsize=6.3, color=S.C['mute'])
+    fig.text(0.5, -0.06, f'{STAGE_TITLE[staging]}; cell = share of total |grouped SHAP| ({S.W["scope"]}); '
+             f'— = fewer than 10 {S.W["n"]}', ha='center', fontsize=6.3, color=S.C['mute'])
     fig.tight_layout(w_pad=1)
-    pd.DataFrame(rows).to_csv(TAB / f'shap_by_stage_{staging}.csv', index=False)
+    pd.DataFrame(rows).to_csv(S.tab(f'shap_by_stage_{staging}.csv'), index=False)
     return S.save(fig, f'shap_by_stage_{staging}')
 
 
@@ -597,7 +602,7 @@ def fig_robustness(sh, info, arm, top=20):
     S.panel_letter(ax, 'b', x=-0.6)
     fig.suptitle(f'{arm} arm', x=0.01, ha='left', fontsize=8.5, fontweight='bold', color=S.C[arm])
     fig.tight_layout(w_pad=2)
-    pd.DataFrame(rows[::-1]).to_csv(TAB / f'robustness_{arm}.csv', index=False)
+    pd.DataFrame(rows[::-1]).to_csv(S.tab(f'robustness_{arm}.csv'), index=False)
     return S.save(fig, f'robustness_{arm}')
 
 
@@ -625,7 +630,7 @@ def pair_table(shs, info):
                      'ordered correctly, final': f'{st["frac_final"]:.1%}', 'only final correct': st['final_only'],
                      'only L1 correct': st['L1_only'], 'sign test p (two-sided)': f'{st["p_sign"]:.2g}'})
     t = pd.DataFrame(rows)
-    t.to_csv(TAB / 'pairs_stats.csv', index=False)
+    t.to_csv(S.tab('pairs_stats.csv'), index=False)
     return t
 
 
@@ -695,6 +700,6 @@ def fig_ladder(lad, dl, age_auc):
     ax.text(1.02, 0.5, 'Paired Δ AUC, first visit\n' + txt, transform=ax.transAxes, fontsize=5.8, va='center',
             family='monospace', color=S.C['ink'])
     fig.tight_layout()
-    lad.to_csv(TAB / 'ladder.csv', index=False)
-    dl.to_csv(TAB / 'ladder_deltas.csv', index=False)
+    lad.to_csv(S.tab('ladder.csv'), index=False)
+    dl.to_csv(S.tab('ladder_deltas.csv'), index=False)
     return S.save(fig, 'ladder')

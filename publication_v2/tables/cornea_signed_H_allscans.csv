@@ -1,0 +1,289 @@
+col,side,rname,label,mean_abs_shap,rho,n
+R_own0,own,T_r01_S,"Thickness (µm), 0–1 mm superior, own",0.0003196175434408036,-0.4102153409957066,944
+R_own1,own,T_r01_I,"Thickness (µm), 0–1 mm inferior, own",8.757033013826533e-05,-0.21490774750166616,944
+R_own2,own,T_r01_N,"Thickness (µm), 0–1 mm nasal, own",0.00024230396939871614,-0.3468388453192166,944
+R_own3,own,T_r01_T,"Thickness (µm), 0–1 mm temporal, own",0.00013751579823784003,0.05725693503725174,944
+R_own4,own,T_r12_S,"Thickness (µm), 1–2 mm superior, own",0.00036088794824512603,-0.44218805070322603,944
+R_own5,own,T_r12_I,"Thickness (µm), 1–2 mm inferior, own",0.0002640093076768086,0.011594339420076172,944
+R_own6,own,T_r12_N,"Thickness (µm), 1–2 mm nasal, own",0.00023618270009220836,-0.36654901520474936,944
+R_own7,own,T_r12_T,"Thickness (µm), 1–2 mm temporal, own",0.0004407600975849357,-0.6002799778743396,944
+R_own8,own,T_r23_S,"Thickness (µm), 2–3 mm superior, own",0.00023401926814244965,-0.5446729843000704,944
+R_own9,own,T_r23_I,"Thickness (µm), 2–3 mm inferior, own",0.0015896567963663106,0.3621859046538274,944
+R_own10,own,T_r23_N,"Thickness (µm), 2–3 mm nasal, own",0.0004125060477517904,-0.14815110389339278,944
+R_own11,own,T_r23_T,"Thickness (µm), 2–3 mm temporal, own",0.0026599696529131978,0.4638547605213478,944
+R_own12,own,T_r34_S,"Thickness (µm), 3–4 mm superior, own",0.00024943665677293087,-0.1457925860843959,944
+R_own13,own,T_r34_I,"Thickness (µm), 3–4 mm inferior, own",0.002422538571280139,0.804070601618126,944
+R_own14,own,T_r34_N,"Thickness (µm), 3–4 mm nasal, own",0.00046711785221964654,0.22986985863397763,944
+R_own15,own,T_r34_T,"Thickness (µm), 3–4 mm temporal, own",0.000729943737638779,0.1824844842003461,944
+R_own16,own,K_r01_S,"Front sagittal curvature (D), 0–1 mm superior, own",0.0003927716493552826,-0.6091338978768387,944
+R_own17,own,K_r01_I,"Front sagittal curvature (D), 0–1 mm inferior, own",0.0007290599527304848,0.24719891097664806,944
+R_own18,own,K_r01_N,"Front sagittal curvature (D), 0–1 mm nasal, own",0.0007731470224306183,0.09293441306652664,944
+R_own19,own,K_r01_T,"Front sagittal curvature (D), 0–1 mm temporal, own",0.0003300308077822565,-0.034870870379612756,944
+R_own20,own,K_r12_S,"Front sagittal curvature (D), 1–2 mm superior, own",0.0018928887955502408,-0.59569275263284,944
+R_own21,own,K_r12_I,"Front sagittal curvature (D), 1–2 mm inferior, own",0.0001834757036018897,0.3273339641605339,944
+R_own22,own,K_r12_N,"Front sagittal curvature (D), 1–2 mm nasal, own",0.0032137324625159,-0.41008742138807425,944
+R_own23,own,K_r12_T,"Front sagittal curvature (D), 1–2 mm temporal, own",0.000998258606570494,0.04051840177625705,944
+R_own24,own,K_r23_S,"Front sagittal curvature (D), 2–3 mm superior, own",0.0015429518193359768,-0.71427392338254,944
+R_own25,own,K_r23_I,"Front sagittal curvature (D), 2–3 mm inferior, own",0.00023408368414882538,0.22575425510017982,944
+R_own26,own,K_r23_N,"Front sagittal curvature (D), 2–3 mm nasal, own",0.0012657025405678824,-0.35074490141535225,944
+R_own27,own,K_r23_T,"Front sagittal curvature (D), 2–3 mm temporal, own",0.00030860311935175674,-0.5128035561864556,944
+R_own28,own,K_r34_S,"Front sagittal curvature (D), 3–4 mm superior, own",0.0011808937322410574,-0.3575761195403882,944
+R_own29,own,K_r34_I,"Front sagittal curvature (D), 3–4 mm inferior, own",0.0013881477626270346,-0.6061614311688754,944
+R_own30,own,K_r34_N,"Front sagittal curvature (D), 3–4 mm nasal, own",0.0027376299898053675,0.8068421634317189,944
+R_own31,own,K_r34_T,"Front sagittal curvature (D), 3–4 mm temporal, own",0.0004937791906522443,-0.5372316539566607,944
+R_own32,own,EF_r01_S,"Front elevation (µm), 0–1 mm superior, own",0.0012969262053805768,-0.13716673040141147,944
+R_own33,own,EF_r01_I,"Front elevation (µm), 0–1 mm inferior, own",0.00019117278380389647,-0.36934967747169256,944
+R_own34,own,EF_r01_N,"Front elevation (µm), 0–1 mm nasal, own",0.00020189480554885867,0.06026951245166635,944
+R_own35,own,EF_r01_T,"Front elevation (µm), 0–1 mm temporal, own",0.002526503634015304,-0.3884308732121902,944
+R_own36,own,EF_r12_S,"Front elevation (µm), 1–2 mm superior, own",0.0007016045805472998,0.3437222420782904,944
+R_own37,own,EF_r12_I,"Front elevation (µm), 1–2 mm inferior, own",0.0005104012185581202,-0.03996358506162943,944
+R_own38,own,EF_r12_N,"Front elevation (µm), 1–2 mm nasal, own",0.0016648594561484158,0.5028279510250757,944
+R_own39,own,EF_r12_T,"Front elevation (µm), 1–2 mm temporal, own",0.0013596889352760315,-0.7342310273134097,944
+R_own40,own,EF_r23_S,"Front elevation (µm), 2–3 mm superior, own",0.0016469905072030416,0.26822890022305335,944
+R_own41,own,EF_r23_I,"Front elevation (µm), 2–3 mm inferior, own",0.0006430165947054315,-0.40259241615356445,944
+R_own42,own,EF_r23_N,"Front elevation (µm), 2–3 mm nasal, own",0.0033234278595942975,0.8335441356962592,944
+R_own43,own,EF_r23_T,"Front elevation (µm), 2–3 mm temporal, own",0.0025527969882539366,-0.1660563700267024,944
+R_own44,own,EF_r34_S,"Front elevation (µm), 3–4 mm superior, own",0.0064706406322099855,0.8292075091253406,944
+R_own45,own,EF_r34_I,"Front elevation (µm), 3–4 mm inferior, own",0.0008983481387343547,-0.038017973290968,944
+R_own46,own,EF_r34_N,"Front elevation (µm), 3–4 mm nasal, own",0.00527201413419485,0.3362929419586905,944
+R_own47,own,EF_r34_T,"Front elevation (µm), 3–4 mm temporal, own",0.001022489066187575,0.6398643106773414,944
+R_own48,own,EB_r01_S,"Back elevation (µm), 0–1 mm superior, own",0.0006105824440432882,-0.48437130632916003,944
+R_own49,own,EB_r01_I,"Back elevation (µm), 0–1 mm inferior, own",0.0002706469723954165,-0.34591260308697386,944
+R_own50,own,EB_r01_N,"Back elevation (µm), 0–1 mm nasal, own",0.00026112197627508444,-0.5045702782597651,944
+R_own51,own,EB_r01_T,"Back elevation (µm), 0–1 mm temporal, own",0.00043273554569174684,-0.4358651590875962,944
+R_own52,own,EB_r12_S,"Back elevation (µm), 1–2 mm superior, own",0.0009374904317970067,0.6565851469169094,944
+R_own53,own,EB_r12_I,"Back elevation (µm), 1–2 mm inferior, own",0.0008950942399138972,-0.33381085200542504,944
+R_own54,own,EB_r12_N,"Back elevation (µm), 1–2 mm nasal, own",0.0013138156405654248,-0.051939285569170136,944
+R_own55,own,EB_r12_T,"Back elevation (µm), 1–2 mm temporal, own",0.0020284922073593036,0.05804505603293687,944
+R_own56,own,EB_r23_S,"Back elevation (µm), 2–3 mm superior, own",0.002559819789823892,0.7870173736820973,944
+R_own57,own,EB_r23_I,"Back elevation (µm), 2–3 mm inferior, own",0.0013491459703100022,-0.19467849770205745,944
+R_own58,own,EB_r23_N,"Back elevation (µm), 2–3 mm nasal, own",0.004098003711832767,0.6332711059725623,944
+R_own59,own,EB_r23_T,"Back elevation (µm), 2–3 mm temporal, own",0.01912165293861662,-0.42025161563417607,944
+R_own60,own,EB_r34_S,"Back elevation (µm), 3–4 mm superior, own",0.021750164301322972,0.6309350154236036,944
+R_own61,own,EB_r34_I,"Back elevation (µm), 3–4 mm inferior, own",0.002061666688903485,-0.21653477537264376,944
+R_own62,own,EB_r34_N,"Back elevation (µm), 3–4 mm nasal, own",0.0015148582984789295,0.51481649580537,944
+R_own63,own,EB_r34_T,"Back elevation (µm), 3–4 mm temporal, own",0.0074398549345675,0.3880325411441716,944
+R_own64,own,T_ext_val,"Thickness (µm), thinnest point value, own",0.0,,944
+R_own65,own,T_ext_x,"Thickness (µm), thinnest point x (mm, nasal +), own",0.00229647260210606,0.12893937743608352,944
+R_own66,own,T_ext_y,"Thickness (µm), thinnest point y (mm, superior +), own",0.001283935682931079,-0.7967411192706516,944
+R_own67,own,T_ext_r,"Thickness (µm), thinnest point distance from centre (mm), own",0.004040139523835702,-0.8370021641290083,944
+R_own68,own,K_ext_val,"Front sagittal curvature (D), maximum value, own",2.4465598852567626e-05,0.18862896931873765,944
+R_own69,own,K_ext_x,"Front sagittal curvature (D), maximum x (mm, nasal +), own",0.0018678282346642709,0.7163870503431518,944
+R_own70,own,K_ext_y,"Front sagittal curvature (D), maximum y (mm, superior +), own",0.001195973221373081,0.3077123308762591,944
+R_own71,own,K_ext_r,"Front sagittal curvature (D), maximum distance from centre (mm), own",0.005894498712073577,0.7778529228035385,944
+R_own72,own,EF_ext_val,"Front elevation (µm), maximum value, own",0.002523835310166955,-0.8501778355654239,944
+R_own73,own,EF_ext_x,"Front elevation (µm), maximum x (mm, nasal +), own",0.0007774672958721612,-0.6806094080999617,944
+R_own74,own,EF_ext_y,"Front elevation (µm), maximum y (mm, superior +), own",0.011373958068533781,-0.9329023392189526,944
+R_own75,own,EF_ext_r,"Front elevation (µm), maximum distance from centre (mm), own",0.004132167573261376,0.5987489009632848,944
+R_own76,own,EB_ext_val,"Back elevation (µm), maximum value, own",0.0001338753311683935,-0.40226401289113617,944
+R_own77,own,EB_ext_x,"Back elevation (µm), maximum x (mm, nasal +), own",0.007841117573065872,-0.9291939935789768,944
+R_own78,own,EB_ext_y,"Back elevation (µm), maximum y (mm, superior +), own",0.01757542684956369,-0.9767090459804341,944
+R_own79,own,EB_ext_r,"Back elevation (µm), maximum distance from centre (mm), own",0.0007040232768607407,-0.5041964796502209,944
+R_own80,own,T_IminusS,"Thickness (µm), inferior − superior, 2–4 mm, own",0.0008981485486886903,0.25104835704143963,944
+R_own81,own,T_NminusT,"Thickness (µm), nasal − temporal, 2–4 mm, own",0.0054183185041869475,-0.12137341811472871,944
+R_own82,own,K_IminusS,"Front sagittal curvature (D), inferior − superior, 2–4 mm, own",0.0003132078621986806,0.24931155636714927,944
+R_own83,own,K_NminusT,"Front sagittal curvature (D), nasal − temporal, 2–4 mm, own",0.0007983706216380968,0.589886976174357,944
+R_own84,own,EF_IminusS,"Front elevation (µm), inferior − superior, 2–4 mm, own",0.0034901223034357093,-0.8917290716792777,944
+R_own85,own,EF_NminusT,"Front elevation (µm), nasal − temporal, 2–4 mm, own",0.015892225441179308,0.9432139089209998,944
+R_own86,own,EB_IminusS,"Back elevation (µm), inferior − superior, 2–4 mm, own",0.025072234880479747,-0.9878645334511036,944
+R_own87,own,EB_NminusT,"Back elevation (µm), nasal − temporal, 2–4 mm, own",0.027522516086786502,0.8602906954843154,944
+R_own88,own,T_sd3,"Thickness (µm), SD within 3 mm, own",0.0005932953555787203,0.03531887572832644,944
+R_own89,own,K_sd3,"Front sagittal curvature (D), SD within 3 mm, own",0.0003058743501321963,0.4894055625315812,944
+R_own90,own,EF_sd3,"Front elevation (µm), SD within 3 mm, own",0.0003503404302833275,0.12735347353461746,944
+R_own91,own,EB_sd3,"Back elevation (µm), SD within 3 mm, own",0.0013748624291479179,-0.8286001277743326,944
+R_own92,own,T_prog1,"Thickness (µm), rise 1 mm around thinnest, own",0.0009388031618754661,0.24202090295195222,944
+R_own93,own,T_prog2,"Thickness (µm), rise 2 mm around thinnest, own",0.0005329273934119627,0.4121002950558499,944
+R_own94,own,T_prog3,"Thickness (µm), rise 3 mm around thinnest, own",0.0004087707548616726,0.5257923203895682,944
+R_own95,own,T_ratio31,"Thickness (µm), rise ratio 3 mm / 1 mm, own",0.0002662648066121297,0.08544447704573319,944
+R_fel0,fel,T_r01_S,"Thickness (µm), 0–1 mm superior, fellow",0.00016738574247118735,0.09004658048573017,563
+R_fel1,fel,T_r01_I,"Thickness (µm), 0–1 mm inferior, fellow",0.00018918472949340943,-0.05858190658952651,563
+R_fel2,fel,T_r01_N,"Thickness (µm), 0–1 mm nasal, fellow",0.0003655106597123628,-0.12022939921173693,563
+R_fel3,fel,T_r01_T,"Thickness (µm), 0–1 mm temporal, fellow",0.00041304745495195376,0.22776470938434237,563
+R_fel4,fel,T_r12_S,"Thickness (µm), 1–2 mm superior, fellow",0.004488345696028173,-0.7921344396806005,563
+R_fel5,fel,T_r12_I,"Thickness (µm), 1–2 mm inferior, fellow",0.0011021455146391305,-0.5101392536130825,563
+R_fel6,fel,T_r12_N,"Thickness (µm), 1–2 mm nasal, fellow",9.476172110796629e-05,-0.22926738397994567,563
+R_fel7,fel,T_r12_T,"Thickness (µm), 1–2 mm temporal, fellow",0.0007949711962020009,-0.371951210512863,563
+R_fel8,fel,T_r23_S,"Thickness (µm), 2–3 mm superior, fellow",0.0023081834254575764,-0.6979463071634796,563
+R_fel9,fel,T_r23_I,"Thickness (µm), 2–3 mm inferior, fellow",0.0010957412837196163,0.1498773677756348,563
+R_fel10,fel,T_r23_N,"Thickness (µm), 2–3 mm nasal, fellow",0.00010898557331013666,-0.21951757786148882,563
+R_fel11,fel,T_r23_T,"Thickness (µm), 2–3 mm temporal, fellow",0.0015976462942094243,-0.627202356699289,563
+R_fel12,fel,T_r34_S,"Thickness (µm), 3–4 mm superior, fellow",0.007052429000383243,-0.3761106222796779,563
+R_fel13,fel,T_r34_I,"Thickness (µm), 3–4 mm inferior, fellow",0.0004129579553533221,-0.06453874293041255,563
+R_fel14,fel,T_r34_N,"Thickness (µm), 3–4 mm nasal, fellow",0.0007533027116030757,-0.5808887476533225,563
+R_fel15,fel,T_r34_T,"Thickness (µm), 3–4 mm temporal, fellow",0.0019183187974353025,-0.5404780056707981,563
+R_fel16,fel,K_r01_S,"Front sagittal curvature (D), 0–1 mm superior, fellow",8.545683156336801e-05,0.236613137290133,563
+R_fel17,fel,K_r01_I,"Front sagittal curvature (D), 0–1 mm inferior, fellow",0.00021252373831321314,-0.2589776744701952,563
+R_fel18,fel,K_r01_N,"Front sagittal curvature (D), 0–1 mm nasal, fellow",5.4777799963691956e-05,-0.19761408984512369,563
+R_fel19,fel,K_r01_T,"Front sagittal curvature (D), 0–1 mm temporal, fellow",0.00015419095632536697,-0.12809391384420318,563
+R_fel20,fel,K_r12_S,"Front sagittal curvature (D), 1–2 mm superior, fellow",0.0034688760641799427,-0.37929997174559993,563
+R_fel21,fel,K_r12_I,"Front sagittal curvature (D), 1–2 mm inferior, fellow",0.00155745563423297,0.5313915862054726,563
+R_fel22,fel,K_r12_N,"Front sagittal curvature (D), 1–2 mm nasal, fellow",0.0002970252927981636,-0.6154052415094938,563
+R_fel23,fel,K_r12_T,"Front sagittal curvature (D), 1–2 mm temporal, fellow",0.00023567842017748863,-0.14761655143887695,563
+R_fel24,fel,K_r23_S,"Front sagittal curvature (D), 2–3 mm superior, fellow",0.005125838532325857,-0.6295151960616698,563
+R_fel25,fel,K_r23_I,"Front sagittal curvature (D), 2–3 mm inferior, fellow",0.001490910222564612,0.7533199887382315,563
+R_fel26,fel,K_r23_N,"Front sagittal curvature (D), 2–3 mm nasal, fellow",0.0022313899612811695,-0.735821055977236,563
+R_fel27,fel,K_r23_T,"Front sagittal curvature (D), 2–3 mm temporal, fellow",0.0012155775672953826,-0.4503211641841682,563
+R_fel28,fel,K_r34_S,"Front sagittal curvature (D), 3–4 mm superior, fellow",0.0015512931029264545,-0.7388518782945972,563
+R_fel29,fel,K_r34_I,"Front sagittal curvature (D), 3–4 mm inferior, fellow",0.0014119561136966723,0.4278450554134992,563
+R_fel30,fel,K_r34_N,"Front sagittal curvature (D), 3–4 mm nasal, fellow",0.0008215612981337092,0.6118611465746975,563
+R_fel31,fel,K_r34_T,"Front sagittal curvature (D), 3–4 mm temporal, fellow",0.000846208022565136,0.07924530776227307,563
+R_fel32,fel,EF_r01_S,"Front elevation (µm), 0–1 mm superior, fellow",0.005380106505381512,-0.8954765210863013,563
+R_fel33,fel,EF_r01_I,"Front elevation (µm), 0–1 mm inferior, fellow",0.0019425589597686346,0.7062985906998405,563
+R_fel34,fel,EF_r01_N,"Front elevation (µm), 0–1 mm nasal, fellow",0.0029632998464536302,0.36959552706057713,563
+R_fel35,fel,EF_r01_T,"Front elevation (µm), 0–1 mm temporal, fellow",0.00031034867625612397,0.437824794933056,563
+R_fel36,fel,EF_r12_S,"Front elevation (µm), 1–2 mm superior, fellow",0.008228747542967351,-0.8835224589642641,563
+R_fel37,fel,EF_r12_I,"Front elevation (µm), 1–2 mm inferior, fellow",0.0006101380436318579,0.43256979027515113,563
+R_fel38,fel,EF_r12_N,"Front elevation (µm), 1–2 mm nasal, fellow",0.025900338325572054,0.7410893234966389,563
+R_fel39,fel,EF_r12_T,"Front elevation (µm), 1–2 mm temporal, fellow",0.0006145378285514105,0.2474950552089234,563
+R_fel40,fel,EF_r23_S,"Front elevation (µm), 2–3 mm superior, fellow",0.0012278724569717864,-0.8025872220517627,563
+R_fel41,fel,EF_r23_I,"Front elevation (µm), 2–3 mm inferior, fellow",0.0009291033318726908,-0.1456557757170459,563
+R_fel42,fel,EF_r23_N,"Front elevation (µm), 2–3 mm nasal, fellow",0.018162133752483663,0.9585672886077643,563
+R_fel43,fel,EF_r23_T,"Front elevation (µm), 2–3 mm temporal, fellow",0.010586121670750947,0.8875151945814477,563
+R_fel44,fel,EF_r34_S,"Front elevation (µm), 3–4 mm superior, fellow",0.00044755818704986163,-0.37048562206781305,563
+R_fel45,fel,EF_r34_I,"Front elevation (µm), 3–4 mm inferior, fellow",0.000414513813340331,-0.3716877241317953,563
+R_fel46,fel,EF_r34_N,"Front elevation (µm), 3–4 mm nasal, fellow",0.0014225073645372228,0.8218364402351691,563
+R_fel47,fel,EF_r34_T,"Front elevation (µm), 3–4 mm temporal, fellow",0.00024258633113147642,0.5195273264386185,563
+R_fel48,fel,EB_r01_S,"Back elevation (µm), 0–1 mm superior, fellow",0.0005511630838477432,0.20150573700306232,563
+R_fel49,fel,EB_r01_I,"Back elevation (µm), 0–1 mm inferior, fellow",0.004020923565597649,0.7612944325687272,563
+R_fel50,fel,EB_r01_N,"Back elevation (µm), 0–1 mm nasal, fellow",0.0004509031895507767,0.5112375435382615,563
+R_fel51,fel,EB_r01_T,"Back elevation (µm), 0–1 mm temporal, fellow",0.000407580191038415,0.17802789239023406,563
+R_fel52,fel,EB_r12_S,"Back elevation (µm), 1–2 mm superior, fellow",0.0019294021966728557,-0.5467644995195463,563
+R_fel53,fel,EB_r12_I,"Back elevation (µm), 1–2 mm inferior, fellow",0.0009032859612946151,-0.34161290057097277,563
+R_fel54,fel,EB_r12_N,"Back elevation (µm), 1–2 mm nasal, fellow",0.0010951360592689975,0.712807533989527,563
+R_fel55,fel,EB_r12_T,"Back elevation (µm), 1–2 mm temporal, fellow",0.0008198127818364625,0.7120287533037841,563
+R_fel56,fel,EB_r23_S,"Back elevation (µm), 2–3 mm superior, fellow",0.0001981321095093451,0.03490838280382337,563
+R_fel57,fel,EB_r23_I,"Back elevation (µm), 2–3 mm inferior, fellow",0.00253488561381248,-0.8048660287559625,563
+R_fel58,fel,EB_r23_N,"Back elevation (µm), 2–3 mm nasal, fellow",0.00047933370313086384,0.5811796972452815,563
+R_fel59,fel,EB_r23_T,"Back elevation (µm), 2–3 mm temporal, fellow",0.0013273572917408627,0.605629816668393,563
+R_fel60,fel,EB_r34_S,"Back elevation (µm), 3–4 mm superior, fellow",0.0005493519922370665,0.5155739606563076,563
+R_fel61,fel,EB_r34_I,"Back elevation (µm), 3–4 mm inferior, fellow",0.0073101672701385585,-0.8070282133741828,563
+R_fel62,fel,EB_r34_N,"Back elevation (µm), 3–4 mm nasal, fellow",0.0058965152969372575,0.8452908327039815,563
+R_fel63,fel,EB_r34_T,"Back elevation (µm), 3–4 mm temporal, fellow",0.00022762687229719536,0.5001893375595158,563
+R_fel64,fel,T_ext_val,"Thickness (µm), thinnest point value, fellow",1.1284965750827227e-05,0.2089217128585041,563
+R_fel65,fel,T_ext_x,"Thickness (µm), thinnest point x (mm, nasal +), fellow",0.0001351230844738935,0.07895570882763965,563
+R_fel66,fel,T_ext_y,"Thickness (µm), thinnest point y (mm, superior +), fellow",0.000849779439162856,-0.5665451810838131,563
+R_fel67,fel,T_ext_r,"Thickness (µm), thinnest point distance from centre (mm), fellow",0.027921454313262546,-0.99328589175881,563
+R_fel68,fel,K_ext_val,"Front sagittal curvature (D), maximum value, fellow",0.009527182862022456,0.8681521986290832,563
+R_fel69,fel,K_ext_x,"Front sagittal curvature (D), maximum x (mm, nasal +), fellow",0.00021809819150157714,-0.25023109223474127,563
+R_fel70,fel,K_ext_y,"Front sagittal curvature (D), maximum y (mm, superior +), fellow",0.0005996171045688475,-0.5636104264141382,563
+R_fel71,fel,K_ext_r,"Front sagittal curvature (D), maximum distance from centre (mm), fellow",0.0009389525578275632,0.3696361189134025,563
+R_fel72,fel,EF_ext_val,"Front elevation (µm), maximum value, fellow",0.0,,563
+R_fel73,fel,EF_ext_x,"Front elevation (µm), maximum x (mm, nasal +), fellow",0.0003209108548992493,-0.009653128169670202,563
+R_fel74,fel,EF_ext_y,"Front elevation (µm), maximum y (mm, superior +), fellow",0.0009163849139535386,-0.14629042031766826,563
+R_fel75,fel,EF_ext_r,"Front elevation (µm), maximum distance from centre (mm), fellow",0.0007168415017973153,0.4031391400131887,563
+R_fel76,fel,EB_ext_val,"Back elevation (µm), maximum value, fellow",0.0001164228599105619,0.5109270632332517,563
+R_fel77,fel,EB_ext_x,"Back elevation (µm), maximum x (mm, nasal +), fellow",0.009826148977669265,-0.8979619880224219,563
+R_fel78,fel,EB_ext_y,"Back elevation (µm), maximum y (mm, superior +), fellow",0.01730906824381713,-0.976261059550049,563
+R_fel79,fel,EB_ext_r,"Back elevation (µm), maximum distance from centre (mm), fellow",0.0002317626490944291,0.13817188234280153,563
+R_fel80,fel,T_IminusS,"Thickness (µm), inferior − superior, 2–4 mm, fellow",0.006375865386966694,0.8798775983555224,563
+R_fel81,fel,T_NminusT,"Thickness (µm), nasal − temporal, 2–4 mm, fellow",0.01571819461785475,-0.5983661844028412,563
+R_fel82,fel,K_IminusS,"Front sagittal curvature (D), inferior − superior, 2–4 mm, fellow",0.0011643075519978952,0.4854936493713176,563
+R_fel83,fel,K_NminusT,"Front sagittal curvature (D), nasal − temporal, 2–4 mm, fellow",0.0006155799180927106,0.22216340172907897,563
+R_fel84,fel,EF_IminusS,"Front elevation (µm), inferior − superior, 2–4 mm, fellow",0.002590773256147394,0.20495467067960604,563
+R_fel85,fel,EF_NminusT,"Front elevation (µm), nasal − temporal, 2–4 mm, fellow",0.013755397210192142,0.9144757976618018,563
+R_fel86,fel,EB_IminusS,"Back elevation (µm), inferior − superior, 2–4 mm, fellow",0.011116540135596188,-0.9238573462769984,563
+R_fel87,fel,EB_NminusT,"Back elevation (µm), nasal − temporal, 2–4 mm, fellow",0.005542432899649294,0.8171520450748353,563
+R_fel88,fel,T_sd3,"Thickness (µm), SD within 3 mm, fellow",0.0018755155942186286,-0.06650720352133992,563
+R_fel89,fel,K_sd3,"Front sagittal curvature (D), SD within 3 mm, fellow",0.0006335544482683401,0.6146828382278724,563
+R_fel90,fel,EF_sd3,"Front elevation (µm), SD within 3 mm, fellow",0.002023489224275278,0.8060926255960337,563
+R_fel91,fel,EB_sd3,"Back elevation (µm), SD within 3 mm, fellow",0.0002847936403111438,0.4581748494212936,563
+R_fel92,fel,T_prog1,"Thickness (µm), rise 1 mm around thinnest, fellow",0.0009479167350000527,0.7750402931410619,563
+R_fel93,fel,T_prog2,"Thickness (µm), rise 2 mm around thinnest, fellow",0.0014529361700959384,0.5619412412829279,563
+R_fel94,fel,T_prog3,"Thickness (µm), rise 3 mm around thinnest, fellow",0.0020861749169311596,0.2795881682085404,563
+R_fel95,fel,T_ratio31,"Thickness (µm), rise ratio 3 mm / 1 mm, fellow",0.0019744017575084056,-0.3350459898615703,563
+R_asym0,asym,T_r01_S,"Thickness (µm), 0–1 mm superior, own − fellow",0.0001876652401715126,0.1942192575182163,563
+R_asym1,asym,T_r01_I,"Thickness (µm), 0–1 mm inferior, own − fellow",4.080283452795186e-05,0.2171865600767857,563
+R_asym2,asym,T_r01_N,"Thickness (µm), 0–1 mm nasal, own − fellow",0.0001404930137454672,0.14954213625052148,563
+R_asym3,asym,T_r01_T,"Thickness (µm), 0–1 mm temporal, own − fellow",0.00014174593270071693,0.5809551371471678,563
+R_asym4,asym,T_r12_S,"Thickness (µm), 1–2 mm superior, own − fellow",0.001155637415477236,0.621041646403525,563
+R_asym5,asym,T_r12_I,"Thickness (µm), 1–2 mm inferior, own − fellow",0.00034732488422054296,-0.43593142402091184,563
+R_asym6,asym,T_r12_N,"Thickness (µm), 1–2 mm nasal, own − fellow",0.00013495894357577385,-0.1336618698857517,563
+R_asym7,asym,T_r12_T,"Thickness (µm), 1–2 mm temporal, own − fellow",0.0013834546981474965,0.06509343235266142,563
+R_asym8,asym,T_r23_S,"Thickness (µm), 2–3 mm superior, own − fellow",0.01026226170106011,0.8311603151183645,563
+R_asym9,asym,T_r23_I,"Thickness (µm), 2–3 mm inferior, own − fellow",0.0006517807485365582,-0.4145650942206692,563
+R_asym10,asym,T_r23_N,"Thickness (µm), 2–3 mm nasal, own − fellow",0.003412764561264793,0.8314760288079254,563
+R_asym11,asym,T_r23_T,"Thickness (µm), 2–3 mm temporal, own − fellow",0.001643725204193885,0.1761776273334649,563
+R_asym12,asym,T_r34_S,"Thickness (µm), 3–4 mm superior, own − fellow",0.0067964913870760335,0.8536222625738978,563
+R_asym13,asym,T_r34_I,"Thickness (µm), 3–4 mm inferior, own − fellow",0.00017205039472777497,0.004153486900588608,563
+R_asym14,asym,T_r34_N,"Thickness (µm), 3–4 mm nasal, own − fellow",0.0011762786495646243,0.7235092008486066,563
+R_asym15,asym,T_r34_T,"Thickness (µm), 3–4 mm temporal, own − fellow",0.0023644409605760052,0.2904697293823972,563
+R_asym16,asym,K_r01_S,"Front sagittal curvature (D), 0–1 mm superior, own − fellow",0.0004360092743329283,0.46396489667485746,563
+R_asym17,asym,K_r01_I,"Front sagittal curvature (D), 0–1 mm inferior, own − fellow",0.00027498153257742545,-0.34826420893956167,563
+R_asym18,asym,K_r01_N,"Front sagittal curvature (D), 0–1 mm nasal, own − fellow",0.0012910977588807548,0.3276849014597348,563
+R_asym19,asym,K_r01_T,"Front sagittal curvature (D), 0–1 mm temporal, own − fellow",0.0006157030013307822,0.13817293133999636,563
+R_asym20,asym,K_r12_S,"Front sagittal curvature (D), 1–2 mm superior, own − fellow",0.0007805257997759178,0.5008009109544167,563
+R_asym21,asym,K_r12_I,"Front sagittal curvature (D), 1–2 mm inferior, own − fellow",1.573321797973817e-05,0.3825721619332644,563
+R_asym22,asym,K_r12_N,"Front sagittal curvature (D), 1–2 mm nasal, own − fellow",0.0009298874527810302,0.7934457973260027,563
+R_asym23,asym,K_r12_T,"Front sagittal curvature (D), 1–2 mm temporal, own − fellow",0.0023406038107712268,-0.17850868698845065,563
+R_asym24,asym,K_r23_S,"Front sagittal curvature (D), 2–3 mm superior, own − fellow",0.003953052986988149,0.8545723946632475,563
+R_asym25,asym,K_r23_I,"Front sagittal curvature (D), 2–3 mm inferior, own − fellow",6.357185886181768e-05,-0.48412037114909967,563
+R_asym26,asym,K_r23_N,"Front sagittal curvature (D), 2–3 mm nasal, own − fellow",0.003793584222796286,0.7191015922354046,563
+R_asym27,asym,K_r23_T,"Front sagittal curvature (D), 2–3 mm temporal, own − fellow",0.0013192101151908373,0.1152748241565595,563
+R_asym28,asym,K_r34_S,"Front sagittal curvature (D), 3–4 mm superior, own − fellow",0.002783118497062625,0.7658065960610535,563
+R_asym29,asym,K_r34_I,"Front sagittal curvature (D), 3–4 mm inferior, own − fellow",0.00012649005914583208,0.5622061090427073,563
+R_asym30,asym,K_r34_N,"Front sagittal curvature (D), 3–4 mm nasal, own − fellow",0.003788026065935622,0.46629306945862514,563
+R_asym31,asym,K_r34_T,"Front sagittal curvature (D), 3–4 mm temporal, own − fellow",0.0007263109649805589,0.46929895370660674,563
+R_asym32,asym,EF_r01_S,"Front elevation (µm), 0–1 mm superior, own − fellow",0.02205480819023935,0.9460687730772983,563
+R_asym33,asym,EF_r01_I,"Front elevation (µm), 0–1 mm inferior, own − fellow",0.0006235751279828682,0.35153918528624634,563
+R_asym34,asym,EF_r01_N,"Front elevation (µm), 0–1 mm nasal, own − fellow",0.00038424801264131536,0.7240367781069196,563
+R_asym35,asym,EF_r01_T,"Front elevation (µm), 0–1 mm temporal, own − fellow",0.00118749352799432,0.7044648949762787,563
+R_asym36,asym,EF_r12_S,"Front elevation (µm), 1–2 mm superior, own − fellow",0.0024612839345457887,0.7589135976045682,563
+R_asym37,asym,EF_r12_I,"Front elevation (µm), 1–2 mm inferior, own − fellow",0.0017751546701187033,-0.10872078611642824,563
+R_asym38,asym,EF_r12_N,"Front elevation (µm), 1–2 mm nasal, own − fellow",0.001942356230820108,-0.6624166915218904,563
+R_asym39,asym,EF_r12_T,"Front elevation (µm), 1–2 mm temporal, own − fellow",0.0005435911443653281,-0.013323098810694014,563
+R_asym40,asym,EF_r23_S,"Front elevation (µm), 2–3 mm superior, own − fellow",3.24210634008632e-05,-0.1502414015384237,563
+R_asym41,asym,EF_r23_I,"Front elevation (µm), 2–3 mm inferior, own − fellow",0.004724465865117956,-0.7300510574315404,563
+R_asym42,asym,EF_r23_N,"Front elevation (µm), 2–3 mm nasal, own − fellow",0.010701123146191066,-0.8212743831104743,563
+R_asym43,asym,EF_r23_T,"Front elevation (µm), 2–3 mm temporal, own − fellow",0.00459327603272906,-0.8056429096384178,563
+R_asym44,asym,EF_r34_S,"Front elevation (µm), 3–4 mm superior, own − fellow",0.0001403551782622026,-0.4491187998501342,563
+R_asym45,asym,EF_r34_I,"Front elevation (µm), 3–4 mm inferior, own − fellow",0.00015437993680207077,-0.015252488168564051,563
+R_asym46,asym,EF_r34_N,"Front elevation (µm), 3–4 mm nasal, own − fellow",0.005853826841515501,-0.882115865198343,563
+R_asym47,asym,EF_r34_T,"Front elevation (µm), 3–4 mm temporal, own − fellow",0.02007770310958389,-0.7341069390249155,563
+R_asym48,asym,EB_r01_S,"Back elevation (µm), 0–1 mm superior, own − fellow",0.009918863154296789,0.8385187231916246,563
+R_asym49,asym,EB_r01_I,"Back elevation (µm), 0–1 mm inferior, own − fellow",0.00015380158602707226,-0.021863040881841125,563
+R_asym50,asym,EB_r01_N,"Back elevation (µm), 0–1 mm nasal, own − fellow",0.0008781870315706128,0.7424401426465316,563
+R_asym51,asym,EB_r01_T,"Back elevation (µm), 0–1 mm temporal, own − fellow",0.0003910068319886506,-0.25168267160352653,563
+R_asym52,asym,EB_r12_S,"Back elevation (µm), 1–2 mm superior, own − fellow",0.0016025354526137926,0.7206660212779956,563
+R_asym53,asym,EB_r12_I,"Back elevation (µm), 1–2 mm inferior, own − fellow",0.0005724883576902927,-0.28154785196469034,563
+R_asym54,asym,EB_r12_N,"Back elevation (µm), 1–2 mm nasal, own − fellow",0.003504731573880943,-0.7013325935079413,563
+R_asym55,asym,EB_r12_T,"Back elevation (µm), 1–2 mm temporal, own − fellow",0.0017265022398049203,0.7962932547387601,563
+R_asym56,asym,EB_r23_S,"Back elevation (µm), 2–3 mm superior, own − fellow",0.00016582639700083503,-0.03570995698354235,563
+R_asym57,asym,EB_r23_I,"Back elevation (µm), 2–3 mm inferior, own − fellow",0.0005205951707317415,0.54334317596526,563
+R_asym58,asym,EB_r23_N,"Back elevation (µm), 2–3 mm nasal, own − fellow",0.013248603694366177,-0.6724190857192499,563
+R_asym59,asym,EB_r23_T,"Back elevation (µm), 2–3 mm temporal, own − fellow",0.001782675647720263,-0.7882187872480656,563
+R_asym60,asym,EB_r34_S,"Back elevation (µm), 3–4 mm superior, own − fellow",0.002526489091566328,-0.8273700024015233,563
+R_asym61,asym,EB_r34_I,"Back elevation (µm), 3–4 mm inferior, own − fellow",0.0005612486036847912,0.2640197768146119,563
+R_asym62,asym,EB_r34_N,"Back elevation (µm), 3–4 mm nasal, own − fellow",0.0010315728789512479,-0.6330970780355626,563
+R_asym63,asym,EB_r34_T,"Back elevation (µm), 3–4 mm temporal, own − fellow",0.004430198885209274,-0.2975370471767186,563
+R_asym64,asym,T_ext_val,"Thickness (µm), thinnest point value, own − fellow",2.463218987828146e-06,-0.1323451000018715,563
+R_asym65,asym,T_ext_x,"Thickness (µm), thinnest point x (mm, nasal +), own − fellow",0.002918537207311895,-0.851970104698919,563
+R_asym66,asym,T_ext_y,"Thickness (µm), thinnest point y (mm, superior +), own − fellow",0.0002836287941950512,-0.12348344763035375,563
+R_asym67,asym,T_ext_r,"Thickness (µm), thinnest point distance from centre (mm), own − fellow",0.023459645886978093,0.24722631471803563,563
+R_asym68,asym,K_ext_val,"Front sagittal curvature (D), maximum value, own − fellow",8.693557326212076e-05,-0.2179018451075814,563
+R_asym69,asym,K_ext_x,"Front sagittal curvature (D), maximum x (mm, nasal +), own − fellow",0.0042714346531606264,0.8145178242945953,563
+R_asym70,asym,K_ext_y,"Front sagittal curvature (D), maximum y (mm, superior +), own − fellow",0.004974536966131152,0.6158064889839786,563
+R_asym71,asym,K_ext_r,"Front sagittal curvature (D), maximum distance from centre (mm), own − fellow",0.00590817128231982,-0.7926979634180283,563
+R_asym72,asym,EF_ext_val,"Front elevation (µm), maximum value, own − fellow",0.00396609892228671,0.8668183161377813,563
+R_asym73,asym,EF_ext_x,"Front elevation (µm), maximum x (mm, nasal +), own − fellow",0.0013802533179211715,-0.301113934065298,563
+R_asym74,asym,EF_ext_y,"Front elevation (µm), maximum y (mm, superior +), own − fellow",0.003597588675923925,-0.865940585384995,563
+R_asym75,asym,EF_ext_r,"Front elevation (µm), maximum distance from centre (mm), own − fellow",0.0011514996658473708,0.0700188454194149,563
+R_asym76,asym,EB_ext_val,"Back elevation (µm), maximum value, own − fellow",0.0005838044144365447,-0.47625761951228285,563
+R_asym77,asym,EB_ext_x,"Back elevation (µm), maximum x (mm, nasal +), own − fellow",0.02511689703961612,0.614165683969156,563
+R_asym78,asym,EB_ext_y,"Back elevation (µm), maximum y (mm, superior +), own − fellow",0.002378050810659037,0.44748474283963896,563
+R_asym79,asym,EB_ext_r,"Back elevation (µm), maximum distance from centre (mm), own − fellow",0.017119067870162284,-0.1118974436321554,563
+R_asym80,asym,T_IminusS,"Thickness (µm), inferior − superior, 2–4 mm, own − fellow",0.0024762000360593673,-0.7693144242903217,563
+R_asym81,asym,T_NminusT,"Thickness (µm), nasal − temporal, 2–4 mm, own − fellow",0.005011574068562797,0.5073250382209159,563
+R_asym82,asym,K_IminusS,"Front sagittal curvature (D), inferior − superior, 2–4 mm, own − fellow",0.000189996960867647,-0.209111180087111,563
+R_asym83,asym,K_NminusT,"Front sagittal curvature (D), nasal − temporal, 2–4 mm, own − fellow",0.002751530860670108,-0.8196254732886755,563
+R_asym84,asym,EF_IminusS,"Front elevation (µm), inferior − superior, 2–4 mm, own − fellow",0.0631289931674118,-0.8665432974730187,563
+R_asym85,asym,EF_NminusT,"Front elevation (µm), nasal − temporal, 2–4 mm, own − fellow",0.0020862197040038967,-0.8064613693524665,563
+R_asym86,asym,EB_IminusS,"Back elevation (µm), inferior − superior, 2–4 mm, own − fellow",0.005896053800093959,0.5174877684456933,563
+R_asym87,asym,EB_NminusT,"Back elevation (µm), nasal − temporal, 2–4 mm, own − fellow",0.0002355158041107322,-0.17118019401219847,563
+R_asym88,asym,T_sd3,"Thickness (µm), SD within 3 mm, own − fellow",0.00038465859925853425,0.4713368233050594,563
+R_asym89,asym,K_sd3,"Front sagittal curvature (D), SD within 3 mm, own − fellow",0.000518988856521409,-0.5842425282171538,563
+R_asym90,asym,EF_sd3,"Front elevation (µm), SD within 3 mm, own − fellow",0.00021264361545255157,0.34196573371846617,563
+R_asym91,asym,EB_sd3,"Back elevation (µm), SD within 3 mm, own − fellow",0.00011630251065488831,0.34550516296232997,563
+R_asym92,asym,T_prog1,"Thickness (µm), rise 1 mm around thinnest, own − fellow",0.002073485089919503,0.7109350161431638,563
+R_asym93,asym,T_prog2,"Thickness (µm), rise 2 mm around thinnest, own − fellow",0.0003840243567822124,0.4805589230681723,563
+R_asym94,asym,T_prog3,"Thickness (µm), rise 3 mm around thinnest, own − fellow",0.0004521742439120552,-0.08745051735332175,563
+R_asym95,asym,T_ratio31,"Thickness (µm), rise ratio 3 mm / 1 mm, own − fellow",0.002130332499969413,-0.5833841857017916,563

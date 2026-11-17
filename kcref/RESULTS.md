@@ -1003,3 +1003,11 @@ First-visit AUC [95% CI] (paired Δ vs E28, patient-cluster bootstrap):
   data rebuilt (cohort identical: 944 scans, 523 eyes, 385 patients, 167 positive); all runs above repeated and
   reproduced the first E31 numbers to 3 decimals. E28 blend re-run (`--drop none`) reproduced 0.790 / 0.813.
   E22/E25 comparison OOFs are lost; the report drops those two comparisons. OOF scores and logs are now committed.
+
+## 2026-11-17 — Appendix D: explanations over all scans (descriptive; no model refitted, no experiments.csv row)
+- Every explanation figure of the report recomputed over all 944 scans (all visits) from the same OOF SHAP file
+  (outputs suffixed `_allscans`). Robustness across fits and matched pairs stay first-visit only.
+- AUC by scope [95% CI]: noH first visit 0.786 [0.741–0.830], follow-up only (421 scans, 42 positive) 0.733
+  [0.644–0.826], all 0.763 [0.709–0.813]; H 0.808 [0.764–0.849], 0.790 [0.709–0.868], 0.808 [0.760–0.852].
+- Per-column importance, all scans vs first visit: Spearman ρ 0.999 (both arms); noH top 9 identical. H: years since
+  fellow-eye CXL weighs more on all scans (mean |SHAP| 0.25 vs 0.19), as follow-ups come later.
