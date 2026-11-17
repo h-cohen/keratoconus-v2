@@ -236,6 +236,73 @@ Robustness across fits (§19) and matched pairs (§20) are defined on first-visi
     return {'allscans': html}
 
 
+def exec_summary(coh, y, g, fv, P, head, deltas, key_findings):
+    """Executive summary (opens the report): the best figures and numbers of this build, compact. Every figure and
+    table here is also in the full report; nothing is computed only for the summary except the short texts."""
+    F = lambda n: img(OUT / 'figures' / f'{n}.png')
+    T = lambda n: pd.read_csv(OUT / 'tables' / f'{n}.csv')
+    fin = {a: roc_auc_score(y[fv], P[a][fv]) for a in ARMS}
+    adj = T('age_adjusted').set_index(['arm', 'method'])
+    lt = T('ladder_deltas').set_index(['arm', 'step'])
+    ops = T('operating_points')
+    ops['target sensitivity'] = ops['target sensitivity'].map('{:.2f}'.format)
+    ops = ops[ops['target sensitivity'] == '0.90'].drop(columns='target sensitivity')
+    scope = T('auc_by_scope')
+    rm = T('reading_map_noH')
+    d = lambda a, st: f"{lt.loc[(a, st)].d:+.3f} [{lt.loc[(a, st)].lo:+.3f}, {lt.loc[(a, st)].hi:+.3f}]"
+    look = ''.join(f'<li><b>{r.map}</b>, {r.location} ({r.leading_side}): {r.direction}</li>' for r in rm.head(5).itertuples())
+    hd = head.drop(columns=['scans', 'positive scans'])
+    return f"""<div class="box"><b>In one paragraph.</b> From a single Pentacam visit (both eyes' numerics and four maps, and age) the
+model predicts whether a keratoconic eye will be referred for corneal cross-linking. In {len(y)} scans of {coh.eid.nunique()} eyes
+({coh.pid.nunique()} patients, {int(y.sum())} referred scans), cross-validated by patient, the final model reaches a first-visit
+ROC-AUC of <b>{fin['noH']:.3f}</b> (single visit, primary) and <b>{fin['H']:.3f}</b> with the fellow eye's treatment history (auxiliary),
+against {roc_auc_score(y[fv], age_only(coh)[fv]):.3f} for age alone. The gain comes from the <b>fellow eye</b>: adding it to a single-eye
+model adds {d('noH', 'L1→L2')} AUC. Within an age group the final model still separates referred eyes (age-adjusted AUC
+{adj.loc[('noH', 'Final')].auc_within:.3f}), where a single-eye model is near chance. SHAP explanations point to elevation maps (front
+elevation nasal in the fellow eye, back elevation in the scanned eye) and to the fellow eye's vertical-asymmetry indices.</div>
+{key_findings}
+<h3>ES.1 Data: from exports to the analysis cohort</h3>
+<p>Every scan passes the same inclusion filters; extra exams (no label at the visit) are used for training only, never scored.</p>
+{F('diagram_filtering')}
+<h3>ES.2 The model</h3>
+<p>Both eyes of one visit → numerics (block N, 171 columns) + 96 map measurements per eye (block R, 288) [+ fellow treatment
+history, H] → three learners (XGBoost, LightGBM bag, elastic-net LR) tuned inside each training fold → equal-weight rank blend.
+Evaluation: 5-fold patient-grouped CV × 5 repeats, patient-cluster bootstrap CIs.</p>
+{F('diagram_dataflow')}
+<h3>ES.3 Final results</h3>
+{table(hd, 'hl')}
+{F('roc_final')}
+<p><b>Paired comparisons</b> (same scans, patient bootstrap). The second row per arm is the simplification that removed 11 derived
+indices for interpretability (pre-declared tolerance 0.010).</p>
+{table(deltas)}
+<p><b>By visit scope.</b> First visit is the primary population; follow-up visits are harder and fewer.</p>
+{table(scope)}
+<h3>ES.4 Where the gain comes from: the fellow eye</h3>
+<p>Same model, nested column sets. Fellow eye (L1 → L2): {d('noH', 'L1→L2')} noH, {d('H', 'L1→L2')} H. Own maps instead
+(L1 → L2b): {d('noH', 'L1→L2b')}. Maps on top of both eyes' numerics (L2 → final): {d('noH', 'L2→final')}.</p>
+{F('ladder')}
+<h3>ES.5 Performance by disease stage and beyond age</h3>
+<div class="grid2">{F('stage_auc_A')}{F('stage_auc_B')}</div>
+{F('age_adjusted')}
+<h3>ES.6 What the model uses (SHAP)</h3>
+<p>Mean |SHAP| by information source, and the leading features with the direction of their effect (first visit; the same ranking
+holds over all scans, Spearman ρ ≥ 0.99, Appendix D).</p>
+{F('shap_sources')}
+{F('shap_beeswarm_noH')}
+<h3>ES.7 Where on the cornea to look</h3>
+<p>The five leading corneal sectors for the referral decision (noH, first visit):</p><ol>{look}</ol>
+{F('reading_map_noH')}
+{F('cornea_mean_maps_all')}
+{F('r_gallery_noH')}
+<h3>ES.8 Operating point</h3>
+<p>At sensitivity 0.90 (thresholds set on the same out-of-fold scores, so descriptive):</p>
+{table(ops)}
+{F('operating')}
+<div class="box warn"><b>Caveats.</b> One centre, retrospective; the label is the clinic's referral decision, not progression.
+The model was selected and evaluated on cross-validation of the same cohort (no external or held-out set). SHAP describes what the
+model uses, not causes. Full methods, every analysis for both arms and the development record follow below.</div>"""
+
+
 def age_sections(coh, y, g, fv, P, pa):
     """E30 (PROTOCOL.md 2026-11-15): age groups, age-adjusted AUC, operating characteristics, key findings."""
     out = {}
@@ -447,7 +514,8 @@ def main():
     e31a = atlas_sections()
     e31b = allscans_sections(coh, y, g, fv, P)
     n_first, pos_first = int(fv.sum()), int(y[fv].sum())
-    body = TEMPLATE.format(
+    exs = exec_summary(coh, y, g, fv, P, head, deltas, e30['key_findings'])
+    body = TEMPLATE.format(exec=exs, 
         date=dt.date.today().isoformat(), n=len(y), pos=int(y.sum()), n_pat=coh.pid.nunique(),
         n_eye=coh.eid.nunique(), n_first=n_first, pos_first=pos_first,
         age_mean=f'{coh.age.mean():.1f}', age_sd=f'{coh.age.std():.1f}', age_min=int(coh.age.min()),

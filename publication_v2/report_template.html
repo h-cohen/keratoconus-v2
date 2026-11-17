@@ -23,6 +23,7 @@ nav ol {{ columns:2; font-size:.95rem; }} @media (max-width:640px) {{ nav ol {{ 
 .flow {{ display:flex; flex-wrap:wrap; gap:8px; align-items:stretch; font:13px/1.35 system-ui, sans-serif; }}
 .flow div {{ background:var(--card); border:1px solid var(--line); padding:8px 10px; flex:1 1 170px; }}
 .flow b {{ display:block; color:var(--acc); }}
+.grid2 {{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }} @media (max-width:760px) {{ .grid2 {{ grid-template-columns:1fr; }} }}
 </style>
 </head>
 <body><main>
@@ -34,9 +35,11 @@ Aggregate data only.</p>
 <div class="box"><b>Headline.</b> The model sees one Pentacam visit, i.e. both eyes' numerics, both eyes' four maps, and age.
 It predicts whether a keratoconic eye will be referred for corneal cross-linking (CXL). First-visit AUC: <b>{noH_first}</b> (noH, primary).
 With the fellow eye's treatment history added (H, auxiliary), first-visit AUC is <b>{H_first}</b>.</div>
-{key_findings}
 
-<nav><h3>Contents</h3><ol>
+<h2 id="exec">Executive summary</h2>
+{exec}
+
+<nav><h3>Contents</h3><p><a href="#exec">Executive summary</a> (above)</p><ol>
 <li><a href="#task">Task, label and cohort</a></li><li><a href="#arms">Two arms: noH and H</a></li>
 <li><a href="#pipeline">Pipeline overview</a></li><li><a href="#fellow">Fellow eye at the same visit</a></li>
 <li><a href="#N">Block N: numerics</a></li><li><a href="#maps">Map decoding</a></li>
