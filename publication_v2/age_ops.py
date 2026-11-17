@@ -121,7 +121,7 @@ def operating_table(y, g, fv, scores, targets=(0.80, 0.90, 0.95)):
             lo, hi = _boot(lambda i: ((pf[i] < th) & (yf[i] == 0)).sum() / max((yf[i] == 0).sum(), 1), gf)
             rows.append({'method': lab, 'target sensitivity': f'{t:.2f}', 'sensitivity': round(r['sens'], 3),
                          'specificity [95% CI]': f'{r["spec"]:.3f} [{lo:.3f}–{hi:.3f}]', 'PPV': round(r['ppv'], 3),
-                         'NPV': round(r['npv'], 3), 'eyes flagged': f'{r["flagged"]}/{int(fv.sum())}'})
+                         'NPV': round(r['npv'], 3), f'{S.W["n"]} flagged': f'{r["flagged"]}/{int(fv.sum())}'})
     df = pd.DataFrame(rows)
     df.to_csv(S.tab('operating_points.csv'), index=False)
     return df
@@ -322,7 +322,7 @@ def fig_operating(y, g, fv, curves, thr_scores):
         rows.append(dict(method=lab, ap=ap, lo=lo, hi=hi, prevalence=prev))
     ax.set(xlim=(0, 1), ylim=(0, 1.02), xlabel='Recall (sensitivity)', ylabel='Precision (PPV)')
     ax.legend(loc='upper right', fontsize=5.6, frameon=True, fancybox=False, edgecolor='#CCCCCC', framealpha=0.95)
-    ax.set_title('Precision–recall, first visit', loc='center', fontsize=7.5)
+    ax.set_title(f"Precision–recall, {S.W['scope']}", loc='center', fontsize=7.5)
     S.panel_letter(ax, 'a', x=-0.22, y=1.02)
     pd.DataFrame(rows).to_csv(S.tab('precision_recall.csv'), index=False)
     for (a, p), letter, k in zip(thr_scores.items(), 'bc', (1, 2)):
@@ -345,6 +345,6 @@ def fig_operating(y, g, fv, curves, thr_scores):
         if k == 2:
             ax.legend(loc='upper left', fontsize=5.8, handlelength=1.2)
         S.panel_letter(ax, letter, x=-0.08, y=1.02)
-    fig.text(0.5, -0.06, 'First visit. Blend scores are within-fold ranks (not probabilities); the threshold is set '
+    fig.text(0.5, -0.06, f"{S.W['scope'].capitalize()} ({int(fv.sum())} {S.W['n']}). Blend scores are within-fold ranks (not probabilities); the threshold is set "
              'on the same out-of-fold scores (descriptive).', ha='center', fontsize=6.1, color=S.C['mute'])
     return S.save(fig, 'operating')

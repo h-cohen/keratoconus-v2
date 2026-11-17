@@ -21,6 +21,7 @@ import plots as PL  # noqa: E402
 import diagrams as DG  # noqa: E402
 import age_ops as AO  # noqa: E402
 import atlas as AT  # noqa: E402
+import howto as HT  # noqa: E402
 from common import DATA, RES  # noqa: E402
 from evaluate import cluster_boot_auc, paired_delta  # noqa: E402
 from radiomics import names as r_names  # noqa: E402
@@ -59,12 +60,14 @@ def age_only(coh):
     return o.mean(0)
 
 
-def img(path):
-    """Embed a saved PNG (figures/) in the self-contained report; already-built HTML passes through."""
+def img(path, howto=True):
+    """Embed a saved PNG (figures/) in the self-contained report, followed by its 'how to read it' note
+    (howto.py); already-built HTML passes through."""
     if isinstance(path, str) and path.lstrip().startswith('<'):
         return path
     path = Path(path)
-    return f'<img alt="{path.stem}" src="data:image/png;base64,{base64.b64encode(path.read_bytes()).decode()}">'
+    return (f'<img alt="{path.stem}" src="data:image/png;base64,{base64.b64encode(path.read_bytes()).decode()}">'
+            + (HT.box(path.stem) if howto else ''))
 
 
 PENDING = '<div class="box warn">Pending: {what}. Rebuild after the run finishes.</div>'
@@ -239,14 +242,19 @@ Robustness across fits (§19) and matched pairs (§20) are defined on first-visi
 def exec_summary(coh, y, g, fv, P, head, deltas, key_findings):
     """Executive summary (opens the report): the best figures and numbers of this build, compact. Every figure and
     table here is also in the full report; nothing is computed only for the summary except the short texts."""
-    F = lambda n: img(OUT / 'figures' / f'{n}.png')
+    F = lambda n, h=True: img(OUT / 'figures' / f'{n}.png', h)
     T = lambda n: pd.read_csv(OUT / 'tables' / f'{n}.csv')
     fin = {a: roc_auc_score(y[fv], P[a][fv]) for a in ARMS}
     adj = T('age_adjusted').set_index(['arm', 'method'])
     lt = T('ladder_deltas').set_index(['arm', 'step'])
-    ops = T('operating_points')
-    ops['target sensitivity'] = ops['target sensitivity'].map('{:.2f}'.format)
-    ops = ops[ops['target sensitivity'] == '0.90'].drop(columns='target sensitivity')
+    ops = []
+    for n, lab in (('operating_points', f'first visit ({int(fv.sum())} eyes)'), ('operating_points_allscans',
+                                                                              f'all scans ({len(y)}, all visits)')):
+        o = T(n)
+        o['target sensitivity'] = o['target sensitivity'].map('{:.2f}'.format)
+        o = o[o['target sensitivity'] == '0.90'].drop(columns='target sensitivity')
+        ops.append(o.rename(columns=lambda c: 'flagged' if c.endswith(' flagged') else c).assign(scope=lab))
+    ops = pd.concat(ops)[['scope', 'method', 'sensitivity', 'specificity [95% CI]', 'PPV', 'NPV', 'flagged']]
     scope = T('auc_by_scope')
     rm = T('reading_map_noH')
     d = lambda a, st: f"{lt.loc[(a, st)].d:+.3f} [{lt.loc[(a, st)].lo:+.3f}, {lt.loc[(a, st)].hi:+.3f}]"
@@ -282,7 +290,7 @@ indices for interpretability (pre-declared tolerance 0.010).</p>
 (L1 → L2b): {d('noH', 'L1→L2b')}. Maps on top of both eyes' numerics (L2 → final): {d('noH', 'L2→final')}.</p>
 {F('ladder')}
 <h3>ES.5 Performance by disease stage and beyond age</h3>
-<div class="grid2">{F('stage_auc_A')}{F('stage_auc_B')}</div>
+<div class="grid2">{F('stage_auc_A', False)}{F('stage_auc_B', False)}</div>{HT.box('stage_auc_A')}
 {F('age_adjusted')}
 <h3>ES.6 What the model uses (SHAP)</h3>
 <p>Mean |SHAP| by information source, and the leading features with the direction of their effect (first visit; the same ranking
@@ -295,9 +303,11 @@ holds over all scans, Spearman ρ ≥ 0.99, Appendix D).</p>
 {F('cornea_mean_maps_all')}
 {F('r_gallery_noH')}
 <h3>ES.8 Operating point</h3>
-<p>At sensitivity 0.90 (thresholds set on the same out-of-fold scores, so descriptive):</p>
+<p>At sensitivity 0.90 (thresholds set on the same out-of-fold scores, so descriptive), for first-visit eyes (one scan
+per eye, the primary population) and for every scan of the cohort (all visits; a threshold set over all scans):</p>
 {table(ops)}
 {F('operating')}
+{F('operating_allscans', False)}
 <div class="box warn"><b>Caveats.</b> One centre, retrospective; the label is the clinic's referral decision, not progression.
 The model was selected and evaluated on cross-validation of the same cohort (no external or held-out set). SHAP describes what the
 model uses, not causes. Full methods, every analysis for both arms and the development record follow below.</div>"""
@@ -348,7 +358,15 @@ def age_sections(coh, y, g, fv, P, pa):
     pr = pd.read_csv(OUT / 'tables' / 'precision_recall.csv')
     pr = pd.DataFrame({'method': pr.method, 'average precision [95% CI]': [fmt(r.ap, r.lo, r.hi) for r in pr.itertuples()],
                        'prevalence': pr.prevalence.round(3)})
-    out['operating'] = img(fig) + table(pr) + table(ops)
+    allm = np.ones(len(y), bool)
+    with PL.S.all_scans():
+        ops_all = AO.operating_table(y, g, allm, {'Final, noH': P['noH'], 'Final, H': P['H'],
+                                                  'Single-eye numerics (L1), noH': lad[('L1', 'noH')], 'Age only': pa})
+        fig_all = AO.fig_operating(y, g, allm, curves, P)
+    out['operating'] = (img(fig) + table(pr) + table(ops) +
+                        f'<h4>All scans ({len(y)} scans, all visits)</h4><p>The same analysis over every cohort scan; the '
+                        'threshold is set over all scans, and CIs are patient-cluster bootstrap.</p>' +
+                        img(fig_all, False) + table(ops_all))
     # key findings (numbers from this build)
     lt = pd.read_csv(OUT / 'tables' / 'ladder_deltas.csv').set_index(['arm', 'step'])
     ps = pd.read_csv(OUT / 'tables' / 'pairs_stats.csv').set_index('arm')
